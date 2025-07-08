@@ -1,1 +1,101 @@
 @import "tailwindcss";
+
+:root {
+    /* Typography */
+    --write: oklch(0.05 0.005 240);
+    --write-weak: oklch(0.3 0.005 240);
+    --write-strong: oklch(0.95 0.005 240);
+
+    /* Surface */
+    --surface: oklch(0.02 0.005 240);
+    --surface-weak: oklch(0.05 0.005 240);
+    --surface-strong: oklch(0.1 0.005 240);
+
+    /* Border */
+    --bound: oklch(0.2 0.01 240);
+    --bound-weak: oklch(0.15 0.01 240);
+    --bound-strong: oklch(0.3 0.01 240);
+
+    /* Primary */
+    --primary: oklch(0.6 0.15 240);
+    --primary-weak: oklch(0.7 0.1 240);
+    --primary-strong: oklch(0.5 0.2 240);
+
+    /* Secondary */
+    --secondary: oklch(0.65 0.08 260);
+    --secondary-weak: oklch(0.75 0.05 260);
+    --secondary-strong: oklch(0.55 0.12 260);
+
+    /* Semantic */
+    --warning: oklch(0.7 0.15 60);
+    --success: oklch(0.65 0.15 140);
+    --error: oklch(0.65 0.15 25);
+
+    /* Ring */
+    --outer-bound: oklch(0.6 0.15 240);
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+    /* Typography */
+    --write: oklch(0.95 0.005 240);
+    --write-weak: oklch(0.7 0.005 240);
+    --write-strong: oklch(0.05 0.005 240);
+
+    /* Surface */
+    --surface: oklch(0.98 0.005 240);
+    --surface-weak: oklch(0.95 0.005 240);
+    --surface-strong: oklch(0.9 0.005 240);
+
+    /* Border */
+    --bound: oklch(0.8 0.01 240);
+    --bound-weak: oklch(0.85 0.01 240);
+    --bound-strong: oklch(0.7 0.01 240);
+
+    /* Primary */
+    --primary: oklch(0.4 0.15 240);
+    --primary-weak: oklch(0.3 0.1 240);
+    --primary-strong: oklch(0.5 0.2 240);
+
+    /* Secondary */
+    --secondary: oklch(0.35 0.08 260);
+    --secondary-weak: oklch(0.25 0.05 260);
+    --secondary-strong: oklch(0.45 0.12 260);
+
+    /* Semantic */
+    --warning: oklch(0.3 0.15 60);
+    --success: oklch(0.35 0.15 140);
+    --error: oklch(0.35 0.15 25);
+
+    /* Ring */
+    --outer-bound: oklch(0.4 0.15 240);
+}
+
+@theme {
+    --color-write: var(--write);
+    --color-write-weak: var(--write-weak);
+    --color-write-strong: var(--write-strong);
+
+    --color-surface: var(--surface);
+    --color-surface-weak: var(--surface-weak);
+    --color-surface-strong: var(--surface-strong);
+
+    --color-bound: var(--bound);
+    --color-bound-weak: var(--bound-weak);
+    --color-bound-strong: var(--bound-strong);
+    
+    --color-primary: var(--primary);
+    --color-primary-weak: var(--primary-weak);
+    --color-primary-strong: var(--primary-strong);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-weak: var(--secondary-weak);
+    --color-secondary-strong: var(--secondary-strong);
+
+    --color-warning: var(--warning);
+    --color-success: var(--success);
+    --color-error: var(--error);
+
+    --color-outer-bound: var(--ring);
+}
