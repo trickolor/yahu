@@ -7,22 +7,22 @@ const variants = cva(
         '[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg:not([class*="size-"])]:size-4 [&_svg]:shrink-0',
         'focus-visible:outline-none focus-visible:ring-outer-bound focus-visible:ring-2',
         'disabled:cursor-not-allowed disabled:opacity-70 disabled:pointer-events-none',
-        'aria-invalid:ring-error aria-invalid:border-error',
+        'aria-invalid:ring-error-bound aria-invalid:border-error-bound',
     ),
     {
         variants: {
 
             variant: {
-                default: 'bg-primary text-write hover:bg-primary/85',
-                secondary: 'bg-secondary text-write hover:bg-secondary/85',
+                default: 'bg-primary-surface text-primary-write hover:bg-primary-surface/85',
+                secondary: 'bg-secondary-surface text-secondary-write hover:bg-secondary-surface/85',
 
-                outline: 'border-2 border-bound text-write hover:bg-surface-weak hover:text-write-weak',
+                outline: 'border-2 border-bound text-write hover:bg-weak-surface',
 
-                ghost: 'hover:bg-surface-weak hover:text-write-weak',
+                ghost: 'text-write hover:bg-weak-surface',
 
-                warning: 'bg-warning text-write hover:bg-warning/85',
-                success: 'bg-success text-write hover:bg-success/85',
-                error: 'bg-error text-write hover:bg-error/85',
+                warning: 'bg-warning-surface text-warning-write hover:bg-warning-surface/85',
+                success: 'bg-success-surface text-success-write hover:bg-success-surface/85',
+                error: 'bg-error-surface text-error-write hover:bg-error-surface/85',
             },
 
 

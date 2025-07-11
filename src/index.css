@@ -1,101 +1,111 @@
 @import "tailwindcss";
 
 :root {
-    /* Typography */
-    --write: oklch(0.05 0.005 240);
-    --write-weak: oklch(0.3 0.005 240);
-    --write-strong: oklch(0.95 0.005 240);
+    --weak-surface: oklch(0.98 0 0);
+    --weak-bound: oklch(0.93 0 0);
+    --weak-write: oklch(0.62 0 0);
 
-    /* Surface */
-    --surface: oklch(0.02 0.005 240);
-    --surface-weak: oklch(0.05 0.005 240);
-    --surface-strong: oklch(0.1 0.005 240);
+    --surface: oklch(0.96 0 0);
+    --bound: oklch(0.80 0 0);
+    --write: oklch(0.18 0 0);
 
-    /* Border */
-    --bound: oklch(0.2 0.01 240);
-    --bound-weak: oklch(0.15 0.01 240);
-    --bound-strong: oklch(0.3 0.01 240);
+    --strong-surface: oklch(1 0 0);
+    --strong-bound: oklch(0.60 0 0);
+    --strong-write: oklch(0.10 0 0);
 
-    /* Primary */
-    --primary: oklch(0.6 0.15 240);
-    --primary-weak: oklch(0.7 0.1 240);
-    --primary-strong: oklch(0.5 0.2 240);
+    --primary-surface: oklch(0.25 0 0);
+    --primary-bound: oklch(0.65 0 0);
+    --primary-write: oklch(0.99 0 0);
 
-    /* Secondary */
-    --secondary: oklch(0.65 0.08 260);
-    --secondary-weak: oklch(0.75 0.05 260);
-    --secondary-strong: oklch(0.55 0.12 260);
+    --secondary-surface: oklch(0.90 0 0);
+    --secondary-bound: oklch(0.70 0 0);
+    --secondary-write: oklch(0.12 0 0);
 
-    /* Semantic */
-    --warning: oklch(0.7 0.15 60);
-    --success: oklch(0.65 0.15 140);
-    --error: oklch(0.65 0.15 25);
+    --warning-surface: oklch(0.76 0.12 85);
+    --warning-bound: oklch(0.73 0.13 85);
+    --warning-write: oklch(0.99 0 0);
 
-    /* Ring */
-    --outer-bound: oklch(0.6 0.15 240);
+    --success-surface: oklch(0.66 0.11 145);
+    --success-bound: oklch(0.58 0.13 145);
+    --success-write: oklch(0.99 0 0);
+
+    --error-surface: oklch(0.72 0.10 32);
+    --error-bound: oklch(0.62 0.12 32);
+    --error-write: oklch(0.99 0 0);
+
+    --outer-bound: oklch(0.80 0 0);
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 .dark {
-    /* Typography */
-    --write: oklch(0.95 0.005 240);
-    --write-weak: oklch(0.7 0.005 240);
-    --write-strong: oklch(0.05 0.005 240);
+    --weak-surface: oklch(0.23 0 0);
+    --weak-bound: oklch(0.30 0 0);
+    --weak-write: oklch(0.68 0 0);
 
-    /* Surface */
-    --surface: oklch(0.98 0.005 240);
-    --surface-weak: oklch(0.95 0.005 240);
-    --surface-strong: oklch(0.9 0.005 240);
+    --surface: oklch(0.26 0 0);
+    --bound: oklch(0.42 0 0);
+    --write: oklch(0.96 0 0);
 
-    /* Border */
-    --bound: oklch(0.8 0.01 240);
-    --bound-weak: oklch(0.85 0.01 240);
-    --bound-strong: oklch(0.7 0.01 240);
+    --strong-surface: oklch(0.18 0 0);
+    --strong-bound: oklch(0.56 0 0);
+    --strong-write: oklch(1 0 0);
 
-    /* Primary */
-    --primary: oklch(0.4 0.15 240);
-    --primary-weak: oklch(0.3 0.1 240);
-    --primary-strong: oklch(0.5 0.2 240);
+    --primary-surface: oklch(0.39 0 0);
+    --primary-bound: oklch(0.60 0 0);
+    --primary-write: oklch(0.96 0 0);
 
-    /* Secondary */
-    --secondary: oklch(0.35 0.08 260);
-    --secondary-weak: oklch(0.25 0.05 260);
-    --secondary-strong: oklch(0.45 0.12 260);
+    --secondary-surface: oklch(0.31 0 0);
+    --secondary-bound: oklch(0.48 0 0);
+    --secondary-write: oklch(0.85 0 0);
 
-    /* Semantic */
-    --warning: oklch(0.3 0.15 60);
-    --success: oklch(0.35 0.15 140);
-    --error: oklch(0.35 0.15 25);
+    --warning-surface: oklch(0.38 0.11 75);
+    --warning-bound: oklch(0.60 0.18 75);
+    --warning-write: oklch(0.88 0.19 75);
 
-    /* Ring */
-    --outer-bound: oklch(0.4 0.15 240);
+    --success-surface: oklch(0.37 0.10 145);
+    --success-bound: oklch(0.60 0.16 145);
+    --success-write: oklch(0.89 0.16 145);
+
+    --error-surface: oklch(0.35 0.08 30);
+    --error-bound: oklch(0.62 0.18 30);
+    --error-write: oklch(0.94 0.17 30);
+
+    --outer-bound: oklch(0.48 0 0);
 }
 
 @theme {
+    --color-weak-write: var(--weak-write);
+    --color-weak-bound: var(--weak-bound);
+    --color-weak-surface: var(--weak-surface);
+
     --color-write: var(--write);
-    --color-write-weak: var(--write-weak);
-    --color-write-strong: var(--write-strong);
-
-    --color-surface: var(--surface);
-    --color-surface-weak: var(--surface-weak);
-    --color-surface-strong: var(--surface-strong);
-
     --color-bound: var(--bound);
-    --color-bound-weak: var(--bound-weak);
-    --color-bound-strong: var(--bound-strong);
-    
-    --color-primary: var(--primary);
-    --color-primary-weak: var(--primary-weak);
-    --color-primary-strong: var(--primary-strong);
+    --color-surface: var(--surface);
 
-    --color-secondary: var(--secondary);
-    --color-secondary-weak: var(--secondary-weak);
-    --color-secondary-strong: var(--secondary-strong);
+    --color-strong-write: var(--strong-write);
+    --color-strong-bound: var(--strong-bound);
+    --color-strong-surface: var(--strong-surface);
 
-    --color-warning: var(--warning);
-    --color-success: var(--success);
-    --color-error: var(--error);
+    --color-primary-write: var(--primary-write);
+    --color-primary-bound: var(--primary-bound);
+    --color-primary-surface: var(--primary-surface);
 
-    --color-outer-bound: var(--ring);
+    --color-secondary-write: var(--secondary-write);
+    --color-secondary-bound: var(--secondary-bound);
+    --color-secondary-surface: var(--secondary-surface);
+
+    --color-warning-write: var(--warning-write);
+    --color-warning-bound: var(--warning-bound);
+    --color-warning-surface: var(--warning-surface);
+
+    --color-success-write: var(--success-write);
+    --color-success-bound: var(--success-bound);
+    --color-success-surface: var(--success-surface);
+
+    --color-error-write: var(--error-write);
+    --color-error-bound: var(--error-bound);
+    --color-error-surface: var(--error-surface);
+
+    --color-outer-bound: var(--outer-bound);
 }
