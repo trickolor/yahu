@@ -20,6 +20,8 @@ const variants = cva(
 
                 ghost: 'text-write hover:bg-weak-surface',
 
+                link: 'underline underline-offset-4 text-write',
+
                 warning: 'bg-warning-surface text-warning-write hover:bg-warning-surface/85',
                 success: 'bg-success-surface text-success-write hover:bg-success-surface/85',
                 error: 'bg-error-surface text-error-write hover:bg-error-surface/85',
@@ -49,5 +51,9 @@ export const Button = ({
     children,
     ...props
 }: VariantProps<typeof variants> & React.ComponentProps<'button'>) => {
-    return <button data-ui="button" className={cn(variants({ variant, size }), className)} {...props}>{children}</button>
+    return (
+        <button data-ui="button" className={cn(variants({ variant, size }), className)} {...props}>
+            {children}
+        </button>
+    );
 }
