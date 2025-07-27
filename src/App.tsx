@@ -1,6 +1,22 @@
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button"
 import { Input } from "./ui/input";
+import {
+    Select,
+    SelectContent,
+    SelectContentView,
+    SelectGroup,
+    SelectIcon,
+    SelectItem,
+    SelectItemIndicator,
+    SelectLabel,
+    SelectScrollDownButton,
+    SelectScrollUpButton,
+    SelectSeparator,
+    SelectTrigger,
+    SelectValue
+} from "./ui/select";
+import { Textarea } from "./ui/textarea";
 
 function App() {
     const themeToggle = () => {
@@ -8,13 +24,12 @@ function App() {
     }
 
     return (
-        <section className="w-full bg-surface space-y-12 relatives">
+        <section className="w-full bg-surface space-y-12 relatives pb-128">
             <Button className="fixed top-6 right-6" onClick={themeToggle}>
                 Change Theme
             </Button>
 
             <div className="w-fit grid grid-cols-2 gap-8 p-8">
-
                 <div className="flex gap-1 flex-col">
                     <div className="w-fit flex items-center gap-1">
                         <div className="size-8 border border-bound bg-primary-surface" />
@@ -154,7 +169,7 @@ function App() {
 
             <div className="flex flex-col gap-4 items-start p-8">
                 <h1 className="text-2xl font-bold mb-2 text-write">Button Variants</h1>
-                <div className="flex gap-3 flex-wrap">
+                <div className="flex gap-3 flex-wrap items-center">
                     <Button>Default</Button>
                     <Button variant="secondary">Secondary</Button>
                     <Button variant="outline">Outline</Button>
@@ -162,23 +177,22 @@ function App() {
                     <Button variant="warning">Warning</Button>
                     <Button variant="success">Success</Button>
                     <Button variant="error">Error</Button>
-                    <Button variant="link">Link</Button>
+                    <Button variant="link" asChild><a href="https://google.com">Link</a></Button>
                 </div>
 
                 <h2 className="text-xl font-semibold mt-6 mb-2 text-write">Button Sizes</h2>
-                <div className="flex gap-3 flex-wrap">
+                <div className="flex gap-3 flex-wrap items-center">
                     <Button size="small">Small</Button>
                     <Button size="default">Default</Button>
                     <Button size="large">Large</Button>
+
                     <Button size="icon" aria-label="Icon Button">
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <circle cx="10" cy="10" r="8" />
-                        </svg>
+                        <svg viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="8" /></svg>
                     </Button>
                 </div>
 
                 <h2 className="text-xl font-semibold mt-6 mb-2 text-write">Disabled</h2>
-                <div className="flex gap-3 flex-wrap">
+                <div className="flex gap-3 flex-wrap items-center">
                     <Button disabled>Default</Button>
                     <Button variant="secondary" disabled>Secondary</Button>
                     <Button variant="outline" disabled>Outline</Button>
@@ -187,46 +201,91 @@ function App() {
                 </div>
             </div>
 
-        <div className="flex flex-col gap-4 items-start p-8">
-            <h1 className="text-2xl font-bold mb-2 text-write">Badge Variants</h1>
-            <div className="flex gap-3 flex-wrap items-center">
-                <Badge>Default</Badge>
-                <Badge variant="secondary">Secondary</Badge>
-                <Badge variant="outline">Outline</Badge>
-                <Badge variant="ghost">Ghost</Badge>
-                <Badge variant="warning">Warning</Badge>
-                <Badge variant="success">Success</Badge>
-                <Badge variant="error">Error</Badge>
+            <div className="flex flex-col gap-4 items-start p-8">
+                <h1 className="text-2xl font-bold mb-2 text-write">Badge Variants</h1>
+                <div className="flex gap-3 flex-wrap items-center">
+                    <Badge>Default</Badge>
+                    <Badge variant="secondary">Secondary</Badge>
+                    <Badge variant="outline">Outline</Badge>
+                    <Badge variant="warning">Warning</Badge>
+                    <Badge variant="success">Success</Badge>
+                    <Badge variant="error">Error</Badge>
+                </div>
             </div>
 
-            <h2 className="text-xl font-semibold mt-6 mb-2 text-write">Badge Sizes</h2>
-            <div className="flex gap-3 flex-wrap items-center">
-                <Badge size="default">Default</Badge>
-                <Badge size="large">Large</Badge>
-            </div>
-        </div>
-
-        <div className="flex flex-col gap-4 items-start p-8">
-            <h1 className="text-2xl font-bold mb-2 text-write">Input Variants</h1>
-            <div className="flex gap-3 flex-wrap items-center w-full max-w-md">
-                <Input placeholder="Default" />
-                <Input variant="underline" placeholder="Underline" />
-                <Input variant="ghost" placeholder="Ghost" />
-                <Input disabled placeholder="Disabled" />
-                <Input aria-invalid placeholder="Invalid" />
+            <div className="flex flex-col gap-4 items-start p-8">
+                <h1 className="text-2xl font-bold mb-2 text-write">Input Variants</h1>
+                <div className="flex gap-3 flex-wrap items-center w-full max-w-md">
+                    <Input placeholder="Default" />
+                    <Input disabled placeholder="Disabled" />
+                    <Input aria-invalid placeholder="Invalid" />
+                    <Input type="file" />
+                </div>
             </div>
 
-            <h2 className="text-xl font-semibold mt-6 mb-2 text-write">Input Sizes</h2>
-            <div className="flex gap-3 flex-wrap items-center w-full max-w-md">
-                <Input size="default" placeholder="Default" />
-                <Input size="large" placeholder="Large" />
+            <div className="flex flex-col gap-4 items-start p-8">
+                <h1 className="text-2xl font-bold mb-2 text-write">Textarea Variants</h1>
+                <div className="flex flex-col gap-3 w-full max-w-md">
+                    <Textarea rows={3} placeholder="Default" />
+                    <Textarea rows={3} disabled placeholder="Disabled" />
+                    <Textarea rows={3} aria-invalid placeholder="Invalid" />
+                </div>
             </div>
 
-            <h2 className="text-xl font-semibold mt-6 mb-2 text-write">File Input</h2>
-            <div className="flex gap-3 flex-wrap items-center w-full max-w-md">
-                <Input type="file" />
+            <div className="flex flex-col gap-4 items-start p-8">
+                <h1 className="text-2xl font-bold mb-2 text-write">Select Demo</h1>
+                <Select placeholder="Choose an option">
+                    <SelectTrigger>
+                        <SelectValue />
+                        <SelectIcon />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                        <SelectScrollUpButton />
+
+                        <SelectContentView>
+
+                            <SelectGroup>
+                                <SelectLabel>
+                                    Group A
+                                </SelectLabel>
+
+                                <SelectItem value="a1">Option Variant A1 <SelectItemIndicator /></SelectItem>
+                                <SelectItem value="a2">Option Variant A2 <SelectItemIndicator /></SelectItem>
+                                <SelectItem value="a3">Option Variant A3 <SelectItemIndicator /></SelectItem>
+                            </SelectGroup>
+
+                            <SelectSeparator />
+
+                            <SelectGroup>
+                                <SelectLabel>
+                                    Group B
+                                </SelectLabel>
+
+                                <SelectItem value="b1">Option Variant B1 <SelectItemIndicator /></SelectItem>
+                                <SelectItem value="b2">Option Variant B2 <SelectItemIndicator /></SelectItem>
+                                <SelectItem value="b3">Option Variant B3 <SelectItemIndicator /></SelectItem>
+                            </SelectGroup>
+
+                            <SelectSeparator />
+
+                            <SelectGroup>
+                                <SelectLabel>
+                                    Group C
+                                </SelectLabel>
+
+                                <SelectItem value="c1">Option Variant C1 <SelectItemIndicator /></SelectItem>
+                                <SelectItem value="c2">Option Variant C2 <SelectItemIndicator /></SelectItem>
+                                <SelectItem value="c3">Option Variant C3 <SelectItemIndicator /></SelectItem>
+                            </SelectGroup>
+
+                        </SelectContentView>
+
+                        <SelectScrollDownButton />
+
+                    </SelectContent>
+                </Select>
             </div>
-        </div>
         </section>
     )
 }

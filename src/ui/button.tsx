@@ -1,10 +1,11 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../cn";
+import { Slot } from "./slot";
 
 const variants = cva(
     cn(
-        'w-fit inline-flex items-center justify-center gap-2 rounded text-sm shrink-0 font-medium whitespace-nowrap cursor-pointer ring-offset-2 transition-all',
-        '[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg:not([class*="size-"])]:size-4 [&_svg]:shrink-0',
+        'w-fit inline-flex items-center justify-center gap-2 rounded shrink-0 font-medium whitespace-nowrap cursor-pointer ring-offset-2 transition-all',
+        '[&_svg]:pointer-events-none [&_svg:not([class*="size-"])]:size-4 [&_svg]:shrink-0',
         'focus-visible:outline-none focus-visible:ring-outer-bound focus-visible:ring-2',
         'disabled:cursor-not-allowed disabled:opacity-70 disabled:pointer-events-none',
         'aria-invalid:ring-error-bound aria-invalid:border-error-bound',
@@ -16,11 +17,11 @@ const variants = cva(
                 default: 'bg-primary-surface text-primary-write hover:bg-primary-surface/85',
                 secondary: 'bg-secondary-surface text-secondary-write hover:bg-secondary-surface/85',
 
-                outline: 'border-2 border-bound text-write hover:bg-weak-surface',
+                outline: 'border-2 border-bound text-write hover:border-bound/85 hover:text-write/85',
 
                 ghost: 'text-write hover:bg-weak-surface',
 
-                link: 'underline underline-offset-4 text-write',
+                link: 'underline underline-offset-4 text-write hover:text-write/85',
 
                 warning: 'bg-warning-surface text-warning-write hover:bg-warning-surface/85',
                 success: 'bg-success-surface text-success-write hover:bg-success-surface/85',
@@ -29,9 +30,9 @@ const variants = cva(
 
 
             size: {
-                small: 'h-8 px-3 py-1 has-[&>svg]:px-2',
-                default: 'h-9 px-4 py-2 has-[&>svg]:px-3',
-                large: 'h-10 px-6 py-3 has-[&>svg]:px-5',
+                small: 'px-3 py-1 text-xs',
+                default: 'px-4 py-2 text-sm',
+                large: 'px-5 py-2.5 text-base',
 
                 icon: 'size-9',
             },
@@ -44,16 +45,30 @@ const variants = cva(
     }
 );
 
+export interface ButtonProps extends
+    VariantProps<typeof variants>,
+    React.ComponentProps<'button'> {
+    asChild?: boolean;
+}
+
 export const Button = ({
     variant,
     size,
     className,
     children,
+    asChild,
     ...props
-}: VariantProps<typeof variants> & React.ComponentProps<'button'>) => {
+}: ButtonProps) => {
+
+    const Element = asChild ? Slot : 'button';
+
+
     return (
-        <button data-ui="button" className={cn(variants({ variant, size }), className)} {...props}>
+        <Element data-ui="button"
+            className={cn(variants({ variant, size }), className)}
+            {...props}
+        >
             {children}
-        </button>
+        </Element>
     );
 }
