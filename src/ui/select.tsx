@@ -16,6 +16,7 @@ import {
 import { Slot } from "./slot";
 
 import { cn } from "../cn";
+import { useOutsideClick } from "./hooks/use-outside-click";
 
 interface SelectItemDescriptor {
     ref: HTMLElement | null;
@@ -157,38 +158,13 @@ export function Select({
     const [activeIndex, setActiveIndex] = useState<number>(-1);
     const [searchString, setSearchString] = useState<string>('');
 
-    useEffect(() => {
-        if (!searchString) return;
-
-        const index = items.findIndex((item) =>
-            item.text.toLowerCase()
-                .startsWith(searchString.toLowerCase())
-        );
-
-        if (index !== -1) setActiveIndex(index);
-
-        const timeoutId = window.setTimeout(() => setSearchString(""), 500);
-        return () => clearTimeout(timeoutId);
-
-    }, [searchString, items]);
+    const contentViewRef = useRef<HTMLDivElement>(null);
+    const contentRef = useRef<HTMLDivElement>(null);
 
     const triggerRef = useRef<HTMLButtonElement>(null);
-    const contentRef = useRef<HTMLDivElement>(null);
-    const contentViewRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const mouseDownHandler = (e: MouseEvent) => {
-            if (
-                selectOpen &&
-                !triggerRef.current?.contains(e.target as Node) &&
-                !contentRef.current?.contains(e.target as Node)
-            ) setSelectOpen(false);
-        };
-
-        document.addEventListener("mousedown", mouseDownHandler);
-        return () => document.removeEventListener("mousedown", mouseDownHandler);
-
-    }, [selectOpen, setSelectOpen]);
+    useOutsideClick(
+        () => { selectOpen && setSelectOpen(false) }, contentRef, triggerRef);
 
     const context: SelectContextState = {
         value: selectValue,
@@ -237,7 +213,7 @@ export function SelectTrigger({ children, className, asChild }: SelectTriggerPro
     const Element = asChild ? Slot : 'button';
     const { open, setOpen, triggerRef, dir, value, items, setActiveIndex } = useSelect();
 
-    
+
     const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
         switch (event.key) {
             case ' ':
