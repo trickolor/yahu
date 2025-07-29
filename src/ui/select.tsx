@@ -8,15 +8,16 @@ import {
     useState,
     useRef,
 
+    type HTMLAttributes,
     type KeyboardEvent,
     type ReactElement,
     type ReactNode,
 } from "react"
 
-import { Slot } from "./slot";
-
-import { cn } from "../cn";
 import { useOutsideClick } from "./hooks/use-outside-click";
+import { Slot } from "./slot";
+import { cn } from "../cn";
+
 
 interface SelectItemDescriptor {
     ref: HTMLElement | null;
@@ -25,27 +26,22 @@ interface SelectItemDescriptor {
 }
 
 interface SelectContextState {
+    contentViewRef: React.RefObject<HTMLDivElement | null>;
+    triggerRef: React.RefObject<HTMLButtonElement | null>;
+    contentRef: React.RefObject<HTMLDivElement | null>;
+
+    registerItem(item: SelectItemDescriptor): void;
+    unregisterItem(value: string): void;
+    valueToLabel: Record<string, string>;
+    items: SelectItemDescriptor[];
+
+    setValue(value: string): void;
+    setOpen(open: boolean): void;
+
     placeholder?: string;
     dir: "ltr" | "rtl";
     value: string;
     open: boolean;
-
-    valueToLabel: Record<string, string>;
-    items: SelectItemDescriptor[];
-    searchString: string;
-    activeIndex: number;
-
-    setSearchString(str: string): void;
-    setActiveIndex(idx: number): void;
-    setValue(value: string): void;
-    setOpen(open: boolean): void;
-
-    registerItem(item: SelectItemDescriptor): void;
-    unregisterItem(value: string): void;
-
-    contentViewRef: React.RefObject<HTMLDivElement | null>;
-    triggerRef: React.RefObject<HTMLButtonElement | null>;
-    contentRef: React.RefObject<HTMLDivElement | null>;
 }
 
 const SelectActions = {
@@ -58,7 +54,7 @@ const SelectActions = {
     Next: 5,
     Typeahead: 6,
     Close: 7,
-}
+} as const;
 
 const getActionFromKey = (key: string, isOpen: boolean) => {
 
@@ -80,70 +76,19 @@ const getActionFromKey = (key: string, isOpen: boolean) => {
     return SelectActions.None;
 }
 
-const SelectContext = createContext<SelectContextState | null>(null);
-
-const useSelect = () => {
-    const context = useContext(SelectContext);
-    if (!context) throw new Error("useSelect must be used within a <Select> component");
-
-    return context;
+interface UseItemRegistryReturn {
+    registerItem: (item: SelectItemDescriptor) => void;
+    unregisterItem: (value: string) => void;
+    valueToLabel: Record<string, string>;
+    items: SelectItemDescriptor[];
 }
 
-export interface SelectProps {
-    placeholder?: string;
-    children: ReactNode;
-    dir?: "ltr" | "rtl";
-    className?: string;
-
-    defaultValue?: string;
-    value?: string;
-
-    defaultOpen?: boolean;
-    open?: boolean;
-
-    onValueChange?: (v: string) => void;
-    onOpenChange?: (v: boolean) => void;
-}
-
-
-export function Select({
-    placeholder,
-    className,
-    children,
-    dir,
-
-    defaultValue,
-    value,
-
-    defaultOpen,
-    open,
-
-    onValueChange,
-    onOpenChange,
-}: SelectProps) {
-    const [internalValue, setInternalValue] = useState<string>(defaultValue ?? '');
-    const isControlled = value !== undefined;
-    const selectValue = isControlled ? value! : internalValue;
-
-    const setSelectValue = useCallback((targetValue: string) => {
-        if (!isControlled) setInternalValue(targetValue);
-        onValueChange?.(targetValue);
-    }, []);
-
-    const [isInternalOpen, setIsInternalOpen] = useState(!!defaultOpen);
-    const isOpenControlled = open !== undefined;
-    const selectOpen = isOpenControlled ? open! : isInternalOpen;
-
-    const setSelectOpen = useCallback((to: boolean) => {
-        if (!isOpenControlled) setIsInternalOpen(to);
-        onOpenChange?.(to);
-    }, []);
-
+const useItemRegistry = (): UseItemRegistryReturn => {
     const [items, setItems] = useState<SelectItemDescriptor[]>([]);
     const [valueToLabel, setValueToLabel] = useState<Record<string, string>>({});
 
     const registerItem = useCallback((item: SelectItemDescriptor) => {
-        setItems((current) => [...current.filter((i) => i.value !== item.value), item]);
+        setItems((current) => [...current.filter(otherItem => otherItem.value !== item.value), item]);
 
         setValueToLabel((map) => {
             if (map[item.value] === item.text) return map;
@@ -155,30 +100,103 @@ export function Select({
         setItems((current) => current.filter((i) => i.value !== value));
     }, []);
 
-    const [activeIndex, setActiveIndex] = useState<number>(-1);
-    const [searchString, setSearchString] = useState<string>('');
+    return {
+        unregisterItem,
+        registerItem,
+        valueToLabel,
+        items,
+    }
+}
 
+const SelectContext = createContext<SelectContextState | null>(null);
+
+const useSelect = (): SelectContextState => {
+    const context = useContext(SelectContext);
+    if (!context) throw new Error("useSelect must be used within a <Select> component");
+
+    return context;
+}
+
+export interface SelectProps extends HTMLAttributes<HTMLElement> {
+    onValueChange?: (v: string) => void;
+    onOpenChange?: (v: boolean) => void;
+
+    defaultValue?: string;
+    defaultOpen?: boolean;
+    value?: string;
+    open?: boolean;
+
+    placeholder?: string;
+    children: ReactNode;
+    dir: "ltr" | "rtl";
+
+}
+
+export function Select({
+    defaultValue,
+    defaultOpen,
+    value,
+    open,
+
+    onValueChange,
+    onOpenChange,
+
+    placeholder,
+    dir = 'ltr',
+    className,
+    children,
+
+    ...props
+}: SelectProps) {
+
+    // value state management
+    const [internalValue, setInternalValue] = useState<string>(defaultValue ?? '');
+    const isControlled = value !== undefined;
+    const selectValue = isControlled ? value! : internalValue;
+    const setSelectValue = useCallback((targetValue: string) => {
+        if (!isControlled) setInternalValue(targetValue);
+        onValueChange?.(targetValue);
+    }, []);
+
+    // open state management
+    const [isInternalOpen, setIsInternalOpen] = useState(!!defaultOpen);
+    const isOpenControlled = open !== undefined;
+    const selectOpen = isOpenControlled ? open! : isInternalOpen;
+    const setSelectOpen = useCallback((to: boolean) => {
+        if (!isOpenControlled) setIsInternalOpen(to);
+        onOpenChange?.(to);
+    }, []);
+
+    // item registry management
+    const {
+        unregisterItem,
+        registerItem,
+        valueToLabel,
+        items,
+    } = useItemRegistry();
+
+    // refs
     const contentViewRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLButtonElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
 
-    const triggerRef = useRef<HTMLButtonElement>(null);
-
+    // outside click case
     useOutsideClick(
-        () => { selectOpen && setSelectOpen(false) }, contentRef, triggerRef);
+        () => { selectOpen && setSelectOpen(false) },
+        contentRef, triggerRef,
+    );
 
+    // context
     const context: SelectContextState = {
         value: selectValue,
-        dir: dir ?? 'ltr',
         open: selectOpen,
         placeholder,
-
-        searchString,
-        valueToLabel,
-        activeIndex,
-        items,
+        dir,
 
         unregisterItem,
         registerItem,
+        valueToLabel,
+        items,
 
         contentViewRef,
         triggerRef,
@@ -186,16 +204,22 @@ export function Select({
 
         setValue: setSelectValue,
         setOpen: setSelectOpen,
-        setSearchString,
-        setActiveIndex,
     }
 
     return (
         <SelectContext.Provider value={context}>
             <div data-ui="select"
-                className={cn('relative w-fit', className)}
+
+                data-placeholder={!!placeholder && !!placeholder.length}
+                data-value={selectValue}
+                data-open={selectOpen}
+                data-disalbed={false} // TODO: add disabled state management
+
+                role="combobox"
                 dir={dir}
 
+                className={cn('relative', className)}
+                {...props}
             >
                 {children}
             </div>

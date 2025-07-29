@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 
 export const useOutsideClick = (
     callback: (callbackEvent: MouseEvent) => void,
@@ -10,7 +10,7 @@ export const useOutsideClick = (
                 event.target instanceof Node && ref.current?.contains(event.target);
 
             const isClickOutside = refs.every((ref) => !isElementClicked(ref));
-            if (isClickOutside) useCallback(() => callback(event), [callback]);
+            if (isClickOutside) callback(event);
         }
 
         document.addEventListener("mousedown", handleOutsideClick);
