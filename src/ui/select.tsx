@@ -1,7 +1,6 @@
 import {
     createContext,
 
-    useLayoutEffect,
     useCallback,
     useContext,
     useEffect,
@@ -12,17 +11,20 @@ import {
     type KeyboardEvent,
     type ReactElement,
     type ReactNode,
+    type Dispatch,
+    type SetStateAction,
+
 } from "react"
 
 import { useOutsideClick } from "./hooks/use-outside-click";
 import { Slot } from "./slot";
 import { cn } from "../cn";
 
-
-interface SelectItemDescriptor {
-    ref: HTMLElement | null;
+interface SelectItemData {
+    ref: React.RefObject<HTMLDivElement | null>;
+    index: number;
     value: string;
-    text: string;
+    label: string;
 }
 
 interface SelectContextState {
@@ -30,10 +32,13 @@ interface SelectContextState {
     triggerRef: React.RefObject<HTMLButtonElement | null>;
     contentRef: React.RefObject<HTMLDivElement | null>;
 
-    registerItem(item: SelectItemDescriptor): void;
-    unregisterItem(value: string): void;
+    setCursor: Dispatch<SetStateAction<number>>;
+    cursor: number;
+
     valueToLabel: Record<string, string>;
-    items: SelectItemDescriptor[];
+    addItem(item: SelectItemData): void;
+    removeItem(value: string): void;
+    items: SelectItemData[];
 
     setValue(value: string): void;
     setOpen(open: boolean): void;
@@ -58,54 +63,23 @@ const SelectActions = {
 
 const getActionFromKey = (key: string, isOpen: boolean) => {
 
-    if (!isOpen) {
-        if (['ArrowDown', 'ArrowUp'].includes(key)) return SelectActions.Open;
-        if (key === 'Enter') return SelectActions.OpenFirst;
-        if (key === ' ') return SelectActions.OpenCurrent;
+    if (!isOpen) switch (key) {
+        case 'ArrowDown': case 'ArrowUp': return SelectActions.Open;
+        case 'Enter': return SelectActions.OpenFirst;
+        case ' ': return SelectActions.OpenCurrent;
     }
 
-    else {
-        if (['Enter', ' '].includes(key)) return SelectActions.Select;
-        if (key === 'ArrowUp') return SelectActions.Previous;
-        if (key === 'ArrowDown') return SelectActions.Next;
-        if (key === 'Escape') return SelectActions.Close;
-
-        if (/^[a-zA-Z0-9]$/.test(key)) return SelectActions.Typeahead;
+    else switch (key) {
+        case 'Enter': case ' ': return SelectActions.Select;
+        case 'ArrowUp': return SelectActions.Previous;
+        case 'ArrowDown': return SelectActions.Next;
+        case 'Escape': return SelectActions.Close;
     }
+
+    if (isOpen && /^[a-zA-Z0-9]$/.test(key)) return SelectActions.Typeahead;
+
 
     return SelectActions.None;
-}
-
-interface UseItemRegistryReturn {
-    registerItem: (item: SelectItemDescriptor) => void;
-    unregisterItem: (value: string) => void;
-    valueToLabel: Record<string, string>;
-    items: SelectItemDescriptor[];
-}
-
-const useItemRegistry = (): UseItemRegistryReturn => {
-    const [items, setItems] = useState<SelectItemDescriptor[]>([]);
-    const [valueToLabel, setValueToLabel] = useState<Record<string, string>>({});
-
-    const registerItem = useCallback((item: SelectItemDescriptor) => {
-        setItems((current) => [...current.filter(otherItem => otherItem.value !== item.value), item]);
-
-        setValueToLabel((map) => {
-            if (map[item.value] === item.text) return map;
-            return { ...map, [item.value]: item.text };
-        });
-    }, []);
-
-    const unregisterItem = useCallback((value: string) => {
-        setItems((current) => current.filter((i) => i.value !== value));
-    }, []);
-
-    return {
-        unregisterItem,
-        registerItem,
-        valueToLabel,
-        items,
-    }
 }
 
 const SelectContext = createContext<SelectContextState | null>(null);
@@ -118,8 +92,8 @@ const useSelect = (): SelectContextState => {
 }
 
 export interface SelectProps extends HTMLAttributes<HTMLElement> {
-    onValueChange?: (v: string) => void;
-    onOpenChange?: (v: boolean) => void;
+    onValueChange?: (value: string) => void;
+    onOpenChange?: (open: boolean) => void;
 
     defaultValue?: string;
     defaultOpen?: boolean;
@@ -128,7 +102,7 @@ export interface SelectProps extends HTMLAttributes<HTMLElement> {
 
     placeholder?: string;
     children: ReactNode;
-    dir: "ltr" | "rtl";
+    dir?: "ltr" | "rtl";
 
 }
 
@@ -167,14 +141,6 @@ export function Select({
         onOpenChange?.(to);
     }, []);
 
-    // item registry management
-    const {
-        unregisterItem,
-        registerItem,
-        valueToLabel,
-        items,
-    } = useItemRegistry();
-
     // refs
     const contentViewRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
@@ -186,6 +152,22 @@ export function Select({
         contentRef, triggerRef,
     );
 
+    // items
+    const [items, setItems] = useState<SelectItemData[]>([]);
+    const [valueToLabel, setValueToLabel] = useState<Record<string, string>>({});
+
+    const addItem = useCallback((item: SelectItemData) => {
+        setItems(prev => [...prev, item]);
+        setValueToLabel(prev => ({ ...prev, [item.value]: item.label }));
+    }, []);
+
+    const removeItem = useCallback((value: string) => {
+        setItems(prev => prev.filter(item => item.value !== value));
+    }, []);
+
+    // cursor
+    const [cursor, setCursor] = useState<number>(-1);
+
     // context
     const context: SelectContextState = {
         value: selectValue,
@@ -193,9 +175,12 @@ export function Select({
         placeholder,
         dir,
 
-        unregisterItem,
-        registerItem,
+        setCursor,
+        cursor,
+
         valueToLabel,
+        removeItem,
+        addItem,
         items,
 
         contentViewRef,
@@ -209,16 +194,9 @@ export function Select({
     return (
         <SelectContext.Provider value={context}>
             <div data-ui="select"
-
-                data-placeholder={!!placeholder && !!placeholder.length}
-                data-value={selectValue}
-                data-open={selectOpen}
-                data-disalbed={false} // TODO: add disabled state management
-
-                role="combobox"
+                className={cn('relative', className)}
                 dir={dir}
 
-                className={cn('relative', className)}
                 {...props}
             >
                 {children}
@@ -235,51 +213,66 @@ export interface SelectTriggerProps {
 
 export function SelectTrigger({ children, className, asChild }: SelectTriggerProps) {
     const Element = asChild ? Slot : 'button';
-    const { open, setOpen, triggerRef, dir, value, items, setActiveIndex } = useSelect();
+    const { open, setOpen, triggerRef, dir, cursor, setCursor } = useSelect();
 
+    const clickHandler = () => setOpen(!open);
 
-    const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
-        switch (event.key) {
-            case ' ':
-            case 'Enter': {
-                event.preventDefault();
-                setOpen(true);
-                // Focus selected item, or first if none
-                const idx = items.findIndex(i => i.value === value);
-                setActiveIndex(idx >= 0 ? idx : 0);
-                break;
-            }
-            case 'ArrowDown': {
-                event.preventDefault();
-                setOpen(true);
-                // Focus selected item, or first
-                const idx = items.findIndex(i => i.value === value);
-                setActiveIndex(idx >= 0 ? idx : 0);
-                break;
-            }
-            case 'ArrowUp': {
-                event.preventDefault();
-                setOpen(true);
-                // Focus selected, or last
-                const idx = items.findIndex(i => i.value === value);
-                setActiveIndex(idx >= 0 ? idx : items.length - 1);
-                break;
-            }
-            default:
-                // Optionally implement typeahead here
-                break;
+    const keyDownHandler = (event: KeyboardEvent) => {
+        if (event.key !== 'Tab') event.preventDefault();
+
+        const action = getActionFromKey(event.key, open);
+
+        switch (action) {
+            case SelectActions.Open:
+                console.log('open');
+                setOpen(true); setCursor(-1); break; // TODO: simple open, active descendant is not present
+
+            case SelectActions.OpenFirst:
+                console.log('open first');
+                setOpen(true); setCursor(0); break; // TODO: active descendant is first item
+
+            case SelectActions.OpenCurrent:
+                console.log('open current');
+                setOpen(true); setCursor(cursor); break; //TODO: active descendant is current item
+
+            case SelectActions.Select:
+                console.log('select');
+                setOpen(false); setCursor(-1); break; //TODO: select current active descendant;
+
+            case SelectActions.Previous:
+                console.log('previous');
+                setCursor(cursor - 1); break; //TODO: set previous as active descendant, if present
+
+            case SelectActions.Next:
+                console.log('next');
+                setCursor(cursor + 1); break; //TODO: set next as active descendant, if present
+
+            case SelectActions.Typeahead:
+                console.log('typeahead');
+                break; //TODO: typeahead to target active descendant, 500ms delay until typeahead resets
+
+            case SelectActions.Close:
+                console.log('close');
+                setOpen(false); setCursor(-1); break; // TODO: keep the focus on the trigger
+
+            case SelectActions.None:
+                console.log('none');
+                break; // TODO: do nothing :D 
+
+            default: throw new Error(`Unregistered action detected: ${action}`); // TODO: impossible case, yet - who knows...
         }
-    };
+    }
+
 
     return (
         <Element data-ui="select-trigger"
             ref={triggerRef}
-            aria-haspopup="listbox"
-            aria-expanded={open}
-            aria-controls="select-content"
+
             tabIndex={0}
-            onClick={() => setOpen(!open)}
-            onKeyDown={handleKeyDown}
+
+            onKeyDown={keyDownHandler}
+            onClick={clickHandler}
+
             className={cn(
                 "w-fit min-w-xs min-h-8 inline-flex items-center justify-between gap-2 px-3 py-2 rounded text-write border border-bound bg-weak-surface",
                 dir === "rtl" && "flex-row-reverse",
@@ -299,8 +292,7 @@ export interface SelectValueProps {
 }
 
 export function SelectValue({ children, className, asChild }: SelectValueProps) {
-    const { value, placeholder, valueToLabel } = useSelect();
-    const display = valueToLabel[value] ?? placeholder ?? "";
+    const { value } = useSelect();
 
     const Element = asChild ? Slot : 'span';
 
@@ -316,7 +308,7 @@ export function SelectValue({ children, className, asChild }: SelectValueProps) 
         <Element data-ui="select-value"
             className={cn("text-write text-sm font-medium overflow-hidden", className)}
         >
-            {display}
+            {value}
         </Element>
     );
 }
@@ -362,95 +354,15 @@ export interface SelectContentProps {
 
 export function SelectContent({ children, className, asChild }: SelectContentProps) {
     const Element = asChild ? Slot : 'div';
-    const {
-        setSearchString,
-        setActiveIndex,
-        searchString,
-        activeIndex,
-        triggerRef,
-        contentRef,
-        setValue,
-        setOpen,
-        items,
-        open,
-        dir,
-    } = useSelect();
 
-    // Ensure content gets focus when opened
-    useEffect(() => {
-        if (open && contentRef.current) {
-            contentRef.current.focus();
-        }
-    }, [open, contentRef]);
-
-    const scrollIntoView = (index: number) => {
-        const item = items[index];
-        if (item?.ref) item.ref.scrollIntoView({ block: 'nearest' });
-    };
-
-    const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-        switch (event.key) {
-            case 'Escape':
-                event.preventDefault();
-                setOpen(false);
-                triggerRef.current?.focus();
-                break;
-
-            case 'ArrowDown':
-                event.preventDefault();
-                const adIndex = activeIndex < 0 ? 0 : Math.min(activeIndex + 1, items.length - 1);
-                scrollIntoView(adIndex);
-                setActiveIndex(adIndex);
-                break;
-
-            case 'ArrowUp':
-                event.preventDefault();
-                const auIndex = activeIndex < 0 ? items.length - 1 : Math.max(activeIndex - 1, 0);
-                scrollIntoView(auIndex);
-                setActiveIndex(auIndex);
-                break;
-
-            case 'Enter':
-            case ' ': // Space key
-                event.preventDefault();
-                if (activeIndex >= 0 && activeIndex < items.length) {
-                    const selection = items[activeIndex];
-                    setValue(selection.value);
-                    setOpen(false);
-                    triggerRef.current?.focus();
-                }
-                break;
-
-            default:
-                if (/^[a-z0-9]$/i.test(event.key)) {
-                    setSearchString(searchString + event.key);
-                }
-        }
-    };
-
-    useEffect(() => {
-        if (!searchString) return;
-        const index = items.findIndex(item =>
-            item.text.toLowerCase().startsWith(searchString.toLowerCase())
-        );
-        if (index !== -1) scrollIntoView(index);
-    }, [searchString, items]);
+    const { contentRef, open, dir } = useSelect();
 
     if (!open) return null;
 
     return (
-        <Element
-            id="select-content"
-            data-ui="select-content"
-            onKeyDown={handleKeyDown}
+        <Element data-ui="select-content"
             ref={contentRef}
-            role="listbox"
-            tabIndex={0}
-            aria-activedescendant={
-                activeIndex >= 0 && activeIndex < items.length
-                    ? `select-item-${items[activeIndex].value}`
-                    : undefined
-            }
+
             className={cn(
                 'absolute left-0 top-full z-10 mt-1 min-w-xs p-1.5 rounded shadow border border-weak-bound bg-weak-surface',
                 dir === 'rtl' && 'origin-top-right right-0 left-auto',
@@ -490,94 +402,55 @@ export interface SelectItemProps {
     children?: ReactNode;
     className?: string;
     disabled?: boolean;
-    text?: string;
-    value: string;
     asChild?: boolean;
-}
-
-interface SelectItemContextState {
+    label?: string;
     value: string;
 }
 
-const SelectItemContext = createContext<SelectItemContextState | null>(null);
-
-export function useSelectItemValue() {
-    const context = useContext(SelectItemContext);
-    if (!context) throw new Error("SelectItemIndicator must be used within a SelectItem");
-
-    return context;
-}
-
-export function SelectItem({ children, className, disabled, text, value, asChild }: SelectItemProps) {
+export function SelectItem({ children, className, asChild, value, label, disabled }: SelectItemProps) {
     const Element = asChild ? Slot : 'div';
-    const {
-        registerItem,
-        unregisterItem,
-        items,
-        activeIndex,
-        setActiveIndex,
-        setValue,
-        setOpen,
-        triggerRef,
-        open,
-    } = useSelect();
 
     const itemRef = useRef<HTMLDivElement>(null);
+    const { items, addItem, removeItem, cursor, setCursor } = useSelect();
+    const index = items.findIndex(item => item.value === value);
 
-    useLayoutEffect(() => {
-        if (disabled) return;
-        const searchText = text ?? itemRef.current?.textContent ?? '';
-        registerItem({ value, text: searchText, ref: itemRef.current });
-        return () => unregisterItem(value);
-    }, [value, text, disabled, registerItem, unregisterItem]);
-
-    const index = items.findIndex((item) => item.value === value);
-    const isHighlighted = open && index === activeIndex;
-
-    // For SR: focus highlighted item
     useEffect(() => {
-        if (isHighlighted && itemRef.current) {
-            itemRef.current.focus();
-        }
-    }, [isHighlighted]);
-
-    const handleClick = () => {
         if (disabled) return;
-        setValue(value);
-        setOpen(false);
-        triggerRef.current?.focus();
-    };
 
-    const handleMouseEnter = () => {
-        if (disabled) return;
-        setActiveIndex(index);
-    };
+        const confirmedLabel = label ?? itemRef.current?.textContent ?? '';
+        const itemData = { label: confirmedLabel, index, ref: itemRef, value };
+        addItem(itemData);
 
-    const context: SelectItemContextState = { value };
+        return () => { removeItem(value) }
+
+    }, [disabled, addItem, removeItem, value, label]);
+
+    const mouseEnterHandler = () => { if (disabled) return; if (index !== -1) setCursor(index); }
+    const mouseLeaveHandler = () => { if (disabled) return; setCursor(-1); }
+
+    const isActiveDescendant =
+        cursor === index &&
+        index !== -1 &&
+        !disabled;
 
     return (
-        <SelectItemContext.Provider value={context}>
-            <Element
-                id={`select-item-${value}`}
-                data-ui="select-item"
-                data-value={value}
-                ref={itemRef}
-                tabIndex={-1} // NOT 0, so only focused programmatically
-                aria-selected={isHighlighted}
-                aria-disabled={disabled}
-                role="option"
-                onMouseEnter={handleMouseEnter}
-                onClick={handleClick}
-                className={cn(
-                    "flex items-center justify-between w-full text-sm text-write py-2.5 px-1.5 rounded hover:bg-surface transition-colors",
-                    disabled && "opacity-50 cursor-not-allowed",
-                    isHighlighted && "bg-accent",
+        <Element data-ui="select-item"
+            ref={itemRef}
+
+            onMouseEnter={mouseEnterHandler}
+            onMouseLeave={mouseLeaveHandler}
+
+            className={
+                cn(
+                    "flex items-center justify-between w-full text-sm text-write py-2.5 px-1.5 rounded transition-colors",
+                    isActiveDescendant && "hover:bg-surface",
+                    disabled && "opacity-50",
                     className
-                )}
-            >
-                {children}
-            </Element>
-        </SelectItemContext.Provider>
+                )
+            }
+        >
+            {children}
+        </Element >
     );
 }
 
@@ -607,12 +480,6 @@ export interface SelectItemIndicatorProps {
 }
 
 export function SelectItemIndicator({ children, className, asChild }: SelectItemIndicatorProps) {
-    const { value: selectValue } = useSelect();
-    const { value: itemValue } = useSelectItemValue();
-
-    const isVisible = selectValue === itemValue;
-    if (!isVisible) return null;
-
     if (asChild) return (
         <Slot data-ui="select-item-indicator"
             className={className}
