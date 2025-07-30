@@ -250,7 +250,7 @@ function App() {
                                     Group A
                                 </SelectLabel>
 
-                                <SelectItem disabled value="a1">Option Variant A1 <SelectItemIndicator /></SelectItem>
+                                <SelectItem value="a1">Option Variant A1 <SelectItemIndicator /></SelectItem>
                                 <SelectItem value="a2">Option Variant A2 <SelectItemIndicator /></SelectItem>
                                 <SelectItem value="a3">Option Variant A3 <SelectItemIndicator /></SelectItem>
                             </SelectGroup>

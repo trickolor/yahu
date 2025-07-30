@@ -1,18 +1,17 @@
 import {
     createContext,
-
     useCallback,
     useContext,
     useEffect,
     useState,
     useRef,
 
+    type SetStateAction,
     type HTMLAttributes,
     type KeyboardEvent,
     type ReactElement,
     type ReactNode,
     type Dispatch,
-    type SetStateAction,
 
 } from "react"
 
@@ -47,6 +46,14 @@ interface SelectContextState {
     dir: "ltr" | "rtl";
     value: string;
     open: boolean;
+    
+    // Typeahead state
+    typeaheadQuery: string;
+    setTypeaheadQuery: Dispatch<SetStateAction<string>>;
+    
+    // Helper functions
+    getActiveOptionId(): string | undefined;
+    scrollOptionIntoView(index: number): void;
 }
 
 const SelectActions = {
@@ -54,30 +61,70 @@ const SelectActions = {
     Open: 0,
     OpenFirst: 1,
     OpenCurrent: 2,
-    Select: 3,
-    Previous: 4,
-    Next: 5,
-    Typeahead: 6,
-    Close: 7,
+    OpenLast: 3,
+    Select: 4,
+    Previous: 5,
+    Next: 6,
+    First: 7,
+    Last: 8,
+    PageUp: 9,
+    PageDown: 10,
+    Typeahead: 11,
+    Close: 12,
+    CloseSelect: 13,
 } as const;
 
-const getActionFromKey = (key: string, isOpen: boolean) => {
-
-    if (!isOpen) switch (key) {
-        case 'ArrowDown': case 'ArrowUp': return SelectActions.Open;
-        case 'Enter': return SelectActions.OpenFirst;
-        case ' ': return SelectActions.OpenCurrent;
+const getActionFromKey = (key: string, isOpen: boolean, hasAltKey = false): typeof SelectActions[keyof typeof SelectActions] => {
+    // Closed combobox actions
+    if (!isOpen) {
+        switch (key) {
+            case 'ArrowDown':
+                return hasAltKey ? SelectActions.Open : SelectActions.Open;
+            case 'ArrowUp':
+                return SelectActions.OpenFirst;
+            case 'Enter':
+            case ' ':
+                return SelectActions.Open;
+            case 'Home':
+                return SelectActions.OpenFirst;
+            case 'End':
+                return SelectActions.OpenLast;
+        }
+        
+        // Printable characters when closed
+        if (/^[a-zA-Z0-9]$/.test(key)) {
+            return SelectActions.OpenFirst;
+        }
     }
-
-    else switch (key) {
-        case 'Enter': case ' ': return SelectActions.Select;
-        case 'ArrowUp': return SelectActions.Previous;
-        case 'ArrowDown': return SelectActions.Next;
-        case 'Escape': return SelectActions.Close;
+    // Open combobox actions
+    else {
+        switch (key) {
+            case 'Enter':
+            case ' ':
+                return SelectActions.Select;
+            case 'Tab':
+                return SelectActions.CloseSelect;
+            case 'Escape':
+                return SelectActions.Close;
+            case 'ArrowUp':
+                return hasAltKey ? SelectActions.CloseSelect : SelectActions.Previous;
+            case 'ArrowDown':
+                return SelectActions.Next;
+            case 'Home':
+                return SelectActions.First;
+            case 'End':
+                return SelectActions.Last;
+            case 'PageUp':
+                return SelectActions.PageUp;
+            case 'PageDown':
+                return SelectActions.PageDown;
+        }
+        
+        // Printable characters when open
+        if (/^[a-zA-Z0-9]$/.test(key)) {
+            return SelectActions.Typeahead;
+        }
     }
-
-    if (isOpen && /^[a-zA-Z0-9]$/.test(key)) return SelectActions.Typeahead;
-
 
     return SelectActions.None;
 }
@@ -167,6 +214,58 @@ export function Select({
 
     // cursor
     const [cursor, setCursor] = useState<number>(-1);
+    
+    // typeahead
+    const [typeaheadQuery, setTypeaheadQuery] = useState<string>('');
+    const typeaheadTimeoutRef = useRef<number | null>(null);
+    
+    // Helper functions
+    const getActiveOptionId = useCallback(() => {
+        if (cursor >= 0 && cursor < items.length) {
+            return `select-option-${items[cursor].value}`;
+        }
+        return undefined;
+    }, [cursor, items]);
+    
+    const scrollOptionIntoView = useCallback((index: number) => {
+        const item = items[index];
+        if (item?.ref.current && contentViewRef.current) {
+            const option = item.ref.current;
+            const container = contentViewRef.current;
+            
+            const optionRect = option.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            
+            const isAbove = optionRect.top < containerRect.top;
+            const isBelow = optionRect.bottom > containerRect.bottom;
+            
+            if (isAbove || isBelow) {
+                option.scrollIntoView({
+                    block: 'nearest',
+                    behavior: 'smooth'
+                });
+            }
+        }
+    }, [items, contentViewRef]);
+    
+    // Reset typeahead after timeout
+    useEffect(() => {
+        if (typeaheadQuery) {
+            if (typeaheadTimeoutRef.current) {
+                clearTimeout(typeaheadTimeoutRef.current);
+            }
+            
+            typeaheadTimeoutRef.current = window.setTimeout(() => {
+                setTypeaheadQuery('');
+            }, 500);
+        }
+        
+        return () => {
+            if (typeaheadTimeoutRef.current) {
+                clearTimeout(typeaheadTimeoutRef.current);
+            }
+        };
+    }, [typeaheadQuery]);
 
     // context
     const context: SelectContextState = {
@@ -189,6 +288,12 @@ export function Select({
 
         setValue: setSelectValue,
         setOpen: setSelectOpen,
+        
+        typeaheadQuery,
+        setTypeaheadQuery,
+        
+        getActiveOptionId,
+        scrollOptionIntoView,
     }
 
     return (
@@ -213,61 +318,213 @@ export interface SelectTriggerProps {
 
 export function SelectTrigger({ children, className, asChild }: SelectTriggerProps) {
     const Element = asChild ? Slot : 'button';
-    const { open, setOpen, triggerRef, dir, cursor, setCursor } = useSelect();
+    const { 
+        open, setOpen, triggerRef, dir, cursor, setCursor, items, setValue, 
+        typeaheadQuery, setTypeaheadQuery, getActiveOptionId, scrollOptionIntoView 
+    } = useSelect();
 
     const clickHandler = () => setOpen(!open);
+    
+    // Helper function to find cursor position for current value
+    const getCurrentValueIndex = useCallback(() => {
+        return items.findIndex(item => item.value === useSelect().value);
+    }, [items]);
+    
+    // Helper function for typeahead matching
+    const findMatchingOption = useCallback((query: string, startIndex = 0) => {
+        const normalizedQuery = query.toLowerCase();
+        
+        // First try to find exact match from startIndex
+        for (let i = startIndex; i < items.length; i++) {
+            if (items[i].label.toLowerCase().startsWith(normalizedQuery)) {
+                return i;
+            }
+        }
+        
+        // If no match found, search from beginning
+        for (let i = 0; i < startIndex; i++) {
+            if (items[i].label.toLowerCase().startsWith(normalizedQuery)) {
+                return i;
+            }
+        }
+        
+        return -1;
+    }, [items]);
+    
+    // Helper function to constrain cursor within bounds
+    const constrainCursor = useCallback((newCursor: number) => {
+        return Math.max(0, Math.min(items.length - 1, newCursor));
+    }, [items.length]);
 
     const keyDownHandler = (event: KeyboardEvent) => {
-        if (event.key !== 'Tab') event.preventDefault();
-
-        const action = getActionFromKey(event.key, open);
+        const action = getActionFromKey(event.key, open, event.altKey);
+        
+        // Prevent default for most navigation keys
+        if (action !== SelectActions.None) {
+            event.preventDefault();
+        }
 
         switch (action) {
             case SelectActions.Open:
-                console.log('open');
-                setOpen(true); setCursor(-1); break; // TODO: simple open, active descendant is not present
+                setOpen(true);
+                setCursor(-1);
+                break;
 
             case SelectActions.OpenFirst:
-                console.log('open first');
-                setOpen(true); setCursor(0); break; // TODO: active descendant is first item
+                setOpen(true);
+                if (items.length > 0) {
+                    setCursor(0);
+                    scrollOptionIntoView(0);
+                }
+                break;
+                
+            case SelectActions.OpenLast:
+                setOpen(true);
+                if (items.length > 0) {
+                    const lastIndex = items.length - 1;
+                    setCursor(lastIndex);
+                    scrollOptionIntoView(lastIndex);
+                }
+                break;
 
-            case SelectActions.OpenCurrent:
-                console.log('open current');
-                setOpen(true); setCursor(cursor); break; //TODO: active descendant is current item
+            case SelectActions.OpenCurrent: {
+                setOpen(true);
+                const currentIndex = getCurrentValueIndex();
+                if (currentIndex >= 0) {
+                    setCursor(currentIndex);
+                    scrollOptionIntoView(currentIndex);
+                } else {
+                    setCursor(-1);
+                }
+                break;
+            }
 
             case SelectActions.Select:
-                console.log('select');
-                setOpen(false); setCursor(-1); break; //TODO: select current active descendant;
+            case SelectActions.CloseSelect: {
+                if (cursor >= 0 && cursor < items.length) {
+                    setValue(items[cursor].value);
+                }
+                setOpen(false);
+                setCursor(-1);
+                
+                // For Tab, we want to move focus to next element
+                if (action === SelectActions.CloseSelect && event.key === 'Tab') {
+                    // Let the default tab behavior happen
+                    event.preventDefault();
+                    // Focus next focusable element
+                    const focusableElements = document.querySelectorAll(
+                        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                    );
+                    const currentIndex = Array.from(focusableElements).indexOf(triggerRef.current!);
+                    const nextElement = focusableElements[currentIndex + 1] as HTMLElement;
+                    if (nextElement) {
+                        nextElement.focus();
+                    }
+                }
+                break;
+            }
 
-            case SelectActions.Previous:
-                console.log('previous');
-                setCursor(cursor - 1); break; //TODO: set previous as active descendant, if present
+            case SelectActions.Previous: {
+                if (cursor > 0) {
+                    const newCursor = cursor - 1;
+                    setCursor(newCursor);
+                    scrollOptionIntoView(newCursor);
+                }
+                break;
+            }
 
-            case SelectActions.Next:
-                console.log('next');
-                setCursor(cursor + 1); break; //TODO: set next as active descendant, if present
+            case SelectActions.Next: {
+                if (cursor < items.length - 1) {
+                    const newCursor = cursor + 1;
+                    setCursor(newCursor);
+                    scrollOptionIntoView(newCursor);
+                }
+                break;
+            }
+            
+            case SelectActions.First: {
+                if (items.length > 0) {
+                    setCursor(0);
+                    scrollOptionIntoView(0);
+                }
+                break;
+            }
+            
+            case SelectActions.Last: {
+                if (items.length > 0) {
+                    const lastIndex = items.length - 1;
+                    setCursor(lastIndex);
+                    scrollOptionIntoView(lastIndex);
+                }
+                break;
+            }
+            
+            case SelectActions.PageUp: {
+                if (items.length > 0) {
+                    const newCursor = constrainCursor(cursor - 10);
+                    setCursor(newCursor);
+                    scrollOptionIntoView(newCursor);
+                }
+                break;
+            }
+            
+            case SelectActions.PageDown: {
+                if (items.length > 0) {
+                    const newCursor = constrainCursor(cursor + 10);
+                    setCursor(newCursor);
+                    scrollOptionIntoView(newCursor);
+                }
+                break;
+            }
 
-            case SelectActions.Typeahead:
-                console.log('typeahead');
-                break; //TODO: typeahead to target active descendant, 500ms delay until typeahead resets
+            case SelectActions.Typeahead: {
+                const char = event.key;
+                const newQuery = typeaheadQuery + char;
+                setTypeaheadQuery(newQuery);
+                
+                // Find matching option
+                let matchIndex = -1;
+                
+                if (newQuery.length === 1 && newQuery === typeaheadQuery) {
+                    // Same character repeated - cycle through options starting with this character
+                    const currentMatchIndex = cursor >= 0 ? cursor : -1;
+                    matchIndex = findMatchingOption(char, currentMatchIndex + 1);
+                } else {
+                    // Multi-character search or first character
+                    matchIndex = findMatchingOption(newQuery);
+                }
+                
+                if (matchIndex >= 0) {
+                    if (!open) {
+                        setOpen(true);
+                    }
+                    setCursor(matchIndex);
+                    scrollOptionIntoView(matchIndex);
+                }
+                break;
+            }
 
             case SelectActions.Close:
-                console.log('close');
-                setOpen(false); setCursor(-1); break; // TODO: keep the focus on the trigger
+                setOpen(false);
+                setCursor(-1);
+                break;
 
             case SelectActions.None:
-                console.log('none');
-                break; // TODO: do nothing :D 
+                break;
 
-            default: throw new Error(`Unregistered action detected: ${action}`); // TODO: impossible case, yet - who knows...
+            default: throw new Error(`Unregistered action detected: ${action}`);
         }
     }
 
-
     return (
-        <Element data-ui="select-trigger"
+        <Element 
+            data-ui="select-trigger"
             ref={triggerRef}
-
+            
+            role="combobox"
+            aria-expanded={open}
+            aria-activedescendant={open ? getActiveOptionId() : undefined}
+            aria-haspopup="listbox"
             tabIndex={0}
 
             onKeyDown={keyDownHandler}
@@ -292,9 +549,12 @@ export interface SelectValueProps {
 }
 
 export function SelectValue({ children, className, asChild }: SelectValueProps) {
-    const { value } = useSelect();
+    const { value, placeholder, valueToLabel } = useSelect();
 
     const Element = asChild ? Slot : 'span';
+    
+    const displayValue = value ? (valueToLabel[value] || value) : placeholder;
+    const hasValue = Boolean(value);
 
     if (asChild) return (
         <Slot data-ui="select-value"
@@ -306,9 +566,13 @@ export function SelectValue({ children, className, asChild }: SelectValueProps) 
 
     return (
         <Element data-ui="select-value"
-            className={cn("text-write text-sm font-medium overflow-hidden", className)}
+            className={cn(
+                "text-sm font-medium overflow-hidden",
+                hasValue ? "text-write" : "text-muted-foreground",
+                className
+            )}
         >
-            {value}
+            {displayValue}
         </Element>
     );
 }
@@ -360,8 +624,11 @@ export function SelectContent({ children, className, asChild }: SelectContentPro
     if (!open) return null;
 
     return (
-        <Element data-ui="select-content"
+        <Element 
+            data-ui="select-content"
             ref={contentRef}
+            
+            role="listbox"
 
             className={cn(
                 'absolute left-0 top-full z-10 mt-1 min-w-xs p-1.5 rounded shadow border border-weak-bound bg-weak-surface',
@@ -411,7 +678,7 @@ export function SelectItem({ children, className, asChild, value, label, disable
     const Element = asChild ? Slot : 'div';
 
     const itemRef = useRef<HTMLDivElement>(null);
-    const { items, addItem, removeItem, cursor, setCursor } = useSelect();
+    const { items, addItem, removeItem, cursor, setCursor, setValue, setOpen, value: selectedValue } = useSelect();
     const index = items.findIndex(item => item.value === value);
 
     useEffect(() => {
@@ -425,32 +692,51 @@ export function SelectItem({ children, className, asChild, value, label, disable
 
     }, [disabled, addItem, removeItem, value, label]);
 
-    const mouseEnterHandler = () => { if (disabled) return; if (index !== -1) setCursor(index); }
-    const mouseLeaveHandler = () => { if (disabled) return; setCursor(-1); }
+    const mouseEnterHandler = () => { 
+        if (disabled) return; 
+        if (index !== -1) setCursor(index); 
+    }
+    
+    const mouseLeaveHandler = () => { 
+        if (disabled) return; 
+        setCursor(-1); 
+    }
+    
+    const clickHandler = () => {
+        if (disabled) return;
+        setValue(value);
+        setOpen(false);
+        setCursor(-1);
+    }
 
-    const isActiveDescendant =
-        cursor === index &&
-        index !== -1 &&
-        !disabled;
+    const isActiveDescendant = cursor === index && index !== -1 && !disabled;
+    const isSelected = selectedValue === value;
+    const optionId = `select-option-${value}`;
 
     return (
-        <Element data-ui="select-item"
+        <Element 
+            data-ui="select-item"
             ref={itemRef}
+            
+            role="option"
+            id={optionId}
+            aria-selected={isSelected}
+            data-index={index}
 
             onMouseEnter={mouseEnterHandler}
             onMouseLeave={mouseLeaveHandler}
+            onClick={clickHandler}
 
-            className={
-                cn(
-                    "flex items-center justify-between w-full text-sm text-write py-2.5 px-1.5 rounded transition-colors",
-                    isActiveDescendant && "hover:bg-surface",
-                    disabled && "opacity-50",
-                    className
-                )
-            }
+            className={cn(
+                "flex items-center justify-between w-full text-sm text-write py-2.5 px-1.5 rounded transition-colors cursor-pointer",
+                isActiveDescendant && "bg-surface",
+                isSelected && "font-medium",
+                disabled && "opacity-50 cursor-not-allowed",
+                className
+            )}
         >
             {children}
-        </Element >
+        </Element>
     );
 }
 
