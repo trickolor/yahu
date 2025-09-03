@@ -6,12 +6,11 @@ import {
     SelectContent,
     SelectContentView,
     SelectGroup,
-    SelectIcon,
     SelectItem,
     SelectItemIndicator,
+    SelectItemText,
     SelectLabel,
-    SelectScrollDownButton,
-    SelectScrollUpButton,
+    SelectTriggerIndicator,
     SelectSeparator,
     SelectTrigger,
     SelectValue
@@ -234,57 +233,87 @@ function App() {
 
             <div className="flex flex-col gap-4 items-start p-8">
                 <h1 className="text-2xl font-bold mb-2 text-write">Select Demo</h1>
-                <Select placeholder="Choose an option">
-                    <SelectTrigger>
-                        <SelectValue />
-                        <SelectIcon />
-                    </SelectTrigger>
 
-                    <SelectContent>
-                        <SelectScrollUpButton />
+                {/* Standard Select */}
+                <div className="space-y-2">
+                    <h2 className="text-lg font-semibold text-write">Standard Select</h2>
+                    
+                    <Select placeholder="Choose an option">
+                        <SelectTrigger>
+                            <SelectValue />
+                            <SelectTriggerIndicator />
+                        </SelectTrigger>
 
-                        <SelectContentView>
+                        <SelectContent>
 
-                            <SelectGroup>
-                                <SelectLabel>
-                                    Group A
-                                </SelectLabel>
+                            <SelectContentView>
 
-                                <SelectItem value="a1">Option Variant A1 <SelectItemIndicator /></SelectItem>
-                                <SelectItem value="a2">Option Variant A2 <SelectItemIndicator /></SelectItem>
-                                <SelectItem value="a3">Option Variant A3 <SelectItemIndicator /></SelectItem>
-                            </SelectGroup>
+                                <SelectGroup>
+                                    <SelectLabel>
+                                        Fruits
+                                    </SelectLabel>
 
-                            <SelectSeparator />
+                                    <SelectItem value="apple">
+                                        <SelectItemText>Apple</SelectItemText>
+                                        <SelectItemIndicator />
+                                    </SelectItem>
+                                    <SelectItem value="banana">
+                                        <SelectItemText>Banana</SelectItemText>
+                                        <SelectItemIndicator />
+                                    </SelectItem>
+                                    <SelectItem value="cherry">
+                                        <SelectItemText>Cherry</SelectItemText>
+                                        <SelectItemIndicator />
+                                    </SelectItem>
+                                </SelectGroup>
 
-                            <SelectGroup>
-                                <SelectLabel>
-                                    Group B
-                                </SelectLabel>
+                                <SelectSeparator />
 
-                                <SelectItem value="b1">Option Variant B1 <SelectItemIndicator /></SelectItem>
-                                <SelectItem value="b2">Option Variant B2 <SelectItemIndicator /></SelectItem>
-                                <SelectItem value="b3">Option Variant B3 <SelectItemIndicator /></SelectItem>
-                            </SelectGroup>
+                                <SelectGroup>
+                                    <SelectLabel>
+                                        Vegetables
+                                    </SelectLabel>
 
-                            <SelectSeparator />
+                                    <SelectItem value="carrot">
+                                        <SelectItemText>Carrot</SelectItemText>
+                                        <SelectItemIndicator />
+                                    </SelectItem>
+                                    <SelectItem value="broccoli">
+                                        <SelectItemText>Broccoli</SelectItemText>
+                                        <SelectItemIndicator />
+                                    </SelectItem>
+                                    <SelectItem value="spinach">
+                                        <SelectItemText>Spinach</SelectItemText>
+                                        <SelectItemIndicator />
+                                    </SelectItem>
+                                </SelectGroup>
 
-                            <SelectGroup>
-                                <SelectLabel>
-                                    Group C
-                                </SelectLabel>
+                                <SelectSeparator />
 
-                                <SelectItem value="c1">Option Variant C1 <SelectItemIndicator /></SelectItem>
-                                <SelectItem value="c2">Option Variant C2 <SelectItemIndicator /></SelectItem>
-                                <SelectItem value="c3">Option Variant C3 <SelectItemIndicator /></SelectItem>
-                            </SelectGroup>
+                                <SelectGroup>
+                                    <SelectLabel>
+                                        Animals
+                                    </SelectLabel>
 
-                        </SelectContentView>
+                                    <SelectItem value="dog">
+                                        <SelectItemText>Dog</SelectItemText>
+                                        <SelectItemIndicator />
+                                    </SelectItem>
+                                    <SelectItem value="cat">
+                                        <SelectItemText>Cat</SelectItemText>
+                                        <SelectItemIndicator />
+                                    </SelectItem>
+                                    <SelectItem value="bird">
+                                        <SelectItemText>Bird</SelectItemText>
+                                        <SelectItemIndicator />
+                                    </SelectItem>
+                                </SelectGroup>
 
-                        <SelectScrollDownButton />
+                            </SelectContentView>
 
-                    </SelectContent>
-                </Select>
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
         </section>
     )
