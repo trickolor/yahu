@@ -14,7 +14,7 @@ export function SelectContentView({ children, className, asChild, id, ...props }
 
     const {
         refManagement: { contentView: contentViewRef },
-        idManagement: { contentView: contentViewId },
+        idManagement: { contentView: contentViewId, trigger: triggerId },
         openStateManagement: { open },
     } = useSelect();
 
@@ -24,12 +24,15 @@ export function SelectContentView({ children, className, asChild, id, ...props }
             ref={contentViewRef as RefObject<HTMLDivElement>}
             id={id || contentViewId}
 
-            style={{ scrollbarWidth: 'none' }}
-            hidden={!open}
+            style={{ 
+                scrollbarWidth: 'none',
+                visibility: open ? 'visible' : 'hidden',
+                opacity: open ? 1 : 0,
+            }}
 
             role="listbox"
             tabIndex={-1}
-
+            aria-labelledby={triggerId}
             aria-multiselectable="false"
 
             className={cn(

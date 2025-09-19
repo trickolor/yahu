@@ -44,12 +44,19 @@ export interface SelectContextState {
         select: string;
     }
 
+    formProps: {
+        name?: string;
+        form?: string;
+        required?: boolean;
+        disabled?: boolean;
+    }
+
     placeholder?: ReactNode;
     dir?: "ltr" | "rtl";
 
     keyDownHandler: (event: KeyboardEvent) => void;
     getActiveItemId: () => string | undefined;
-    scrollIntoView: (index: number) => void;
+    scrollIntoView: (index: number, shouldCenter?: boolean) => void;
 }
 
 export const SelectContext = createContext<SelectContextState | null>(null);

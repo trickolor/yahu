@@ -1,14 +1,9 @@
-import { useState, useEffect, useRef } from "react";
 import type { ReactElement, HTMLAttributes } from "react";
 
 import { Slot } from "../../slot";
 import { cn } from "../../../cn";
 
-import { useSelect } from "../hooks/use-select";
-
-// ----------------------------------------------------------------- //
-// Component Props
-// ----------------------------------------------------------------- //
+import { useSelectScroll } from "../hooks/use-select-scroll";
 
 export interface SelectScrollDownButtonProps extends HTMLAttributes<HTMLElement> {
     children?: ReactElement;
@@ -17,64 +12,17 @@ export interface SelectScrollDownButtonProps extends HTMLAttributes<HTMLElement>
 }
 
 export function SelectScrollDownButton({ className, asChild, children, ...props }: SelectScrollDownButtonProps) {
-    const { refManagement: { contentView } } = useSelect();
-    const [disabled, setDisabled] = useState(true);
-
-    useEffect(() => {
-        const view = contentViewRef.current;
-        if (!view) return;
-
-        const update = () => { setDisabled(Math.ceil(view.scrollTop + view.clientHeight) >= view.scrollHeight); };
-        view.addEventListener('scroll', update);
-        update();
-
-        return () => view.removeEventListener('scroll', update);
-
-    }, [contentViewRef]);
-
-    const animationRef = useRef<number | null>(null);
-    const isScrolling = useRef(false);
-
-    const scrollStep = () => {
-        if (isScrolling.current && contentViewRef.current) {
-            contentViewRef.current.scrollBy({ top: 2, behavior: 'auto' });
-            animationRef.current = requestAnimationFrame(scrollStep);
-        }
-    };
-
-    const handleMouseEnter = () => {
-        if (!isScrolling.current) {
-            isScrolling.current = true;
-            scrollStep();
-        }
-    };
-
-    const handleMouseLeave = () => {
-        isScrolling.current = false;
-        if (animationRef.current) {
-            cancelAnimationFrame(animationRef.current);
-            animationRef.current = null;
-        }
-    };
-
-    // Cleanup on unmount
-    useEffect(() => {
-        return () => {
-            isScrolling.current = false;
-            if (animationRef.current) {
-                cancelAnimationFrame(animationRef.current);
-            }
-        };
-    }, []);
+    const { isDisabled, mouseEnterHandler, mouseLeaveHandler } = useSelectScroll({ direction: 'down' });
 
     if (asChild) return (
-
         <Slot data-ui="select-scroll-down-button"
-            disabled={disabled}
-
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-
+            role="button"
+            aria-label="Scroll down to see more options"
+            aria-hidden={isDisabled}
+            tabIndex={-1}
+            disabled={isDisabled}
+            onMouseEnter={mouseEnterHandler}
+            onMouseLeave={mouseLeaveHandler}
             className={className}
             {...props}
         >
@@ -84,14 +32,16 @@ export function SelectScrollDownButton({ className, asChild, children, ...props 
 
     return (
         <button data-ui="select-scroll-down-button"
-            disabled={disabled}
-
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-
+            type="button"
+            aria-label="Scroll down to see more options"
+            aria-hidden={isDisabled}
+            tabIndex={-1}
+            disabled={isDisabled}
+            onMouseEnter={mouseEnterHandler}
+            onMouseLeave={mouseLeaveHandler}
             className={cn(
                 "w-full flex justify-center py-1 hover:bg-surface transition-colors",
-                disabled && "opacity-50 cursor-not-allowed",
+                isDisabled && "opacity-50 cursor-not-allowed",
                 className
             )}
             {...props}

@@ -29,6 +29,12 @@ export interface SelectProps extends HTMLAttributes<HTMLElement> {
     placeholder?: string;
     children: ReactNode;
     dir?: "ltr" | "rtl";
+    
+    // Form compatibility
+    name?: string;
+    form?: string;
+    required?: boolean;
+    disabled?: boolean;
 }
 
 export function Select({
@@ -45,6 +51,12 @@ export function Select({
     className,
     children,
     id,
+
+    // Form props
+    name,
+    form,
+    required,
+    disabled,
 
     ...props
 }: SelectProps) {
@@ -77,19 +89,70 @@ export function Select({
 
     const [cursor, moveCursor] = useState(-1);
 
-    const scrollIntoView = useCallback((index: number) => {
+    const scrollIntoView = useCallback((index: number, shouldCenter: boolean = false) => {
         const item = items[index];
         if (!item?.ref.current || !contentView.current) return;
 
         const container = contentView.current;
-        const containerRect = container.getBoundingClientRect();
-
         const option = item.ref.current;
-        const optionRect = option.getBoundingClientRect();
 
-        if (optionRect.top < containerRect.top || optionRect.bottom > containerRect.bottom)
-            option.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        // For centering, we need to ensure the element is visible first
+        const performScroll = () => {
+            // If centering is requested (e.g., when opening to selected item)
+            if (shouldCenter) {
+                // First, reset scroll to top to get accurate measurements
+                container.scrollTop = 0;
+                
+                // Calculate measurements after reset
+                const containerHeight = container.clientHeight;
+                const optionTop = option.offsetTop;
+                const optionHeight = option.offsetHeight;
+                
+                // Calculate scroll position to center the option
+                const centerPosition = optionTop - (containerHeight / 2) + (optionHeight / 2);
+                
+                // Clamp the scroll position to valid bounds
+                const maxScroll = container.scrollHeight - containerHeight;
+                const targetScroll = Math.max(0, Math.min(centerPosition, maxScroll));
+                
+                // Use immediate scroll (no smooth behavior) for precise positioning
+                container.scrollTop = targetScroll;
+                return;
+            }
 
+            // For first item, scroll to top of container to show any labels above
+            if (index === 0) {
+                container.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            // For last item, scroll to bottom of container to show any separators/padding below
+            if (index === items.length - 1) {
+                container.scrollTo({ 
+                    top: container.scrollHeight - container.clientHeight, 
+                    behavior: 'smooth' 
+                });
+                return;
+            }
+
+            // For middle items, use normal scroll into view
+            const containerRect = container.getBoundingClientRect();
+            const optionRect = option.getBoundingClientRect();
+
+            if (optionRect.top < containerRect.top || optionRect.bottom > containerRect.bottom) {
+                option.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+        };
+
+        // Use requestAnimationFrame to ensure DOM is updated, with additional delay for centering
+        if (shouldCenter) {
+            // For centering, we need to wait a bit for the visibility/opacity transition
+            setTimeout(() => {
+                requestAnimationFrame(performScroll);
+            }, 50); // Increased delay to ensure visibility
+        } else {
+            requestAnimationFrame(performScroll);
+        }
     }, [items, contentView]);
 
     const typeaheadMatchHandler = useCallback((index: number) => {
@@ -127,10 +190,16 @@ export function Select({
         handlers: {
             typeahead: typeaheadHandler,
             move: cursorMoveHandler,
+            centerMove: (index: number) => scrollIntoView(index, true),
 
             select: (value: string) => setSelectValue(value),
             close: () => setSelectOpen(false),
             open: () => setSelectOpen(true),
+            restoreFocus: () => {
+                if (trigger.current) {
+                    trigger.current.focus();
+                }
+            },
         }
     });
 
@@ -142,9 +211,15 @@ export function Select({
     }, [cursor, items, selectId]);
 
     const outsideClickHandler = useCallback(() => {
-        setSelectOpen(false);
-        moveCursor(-1);
-    }, [setSelectOpen, moveCursor]);
+        if (selectOpen) {
+            setSelectOpen(false);
+            moveCursor(-1);
+            // Only restore focus to trigger if the select was actually open
+            if (trigger.current) {
+                trigger.current.focus();
+            }
+        }
+    }, [selectOpen, setSelectOpen, moveCursor]);
 
     useOutsideClick(outsideClickHandler, content, trigger);
 
@@ -183,6 +258,13 @@ export function Select({
             select: selectId,
         },
 
+        formProps: {
+            name,
+            form,
+            required,
+            disabled,
+        },
+
         getActiveItemId,
         scrollIntoView,
         keyDownHandler,
@@ -196,6 +278,44 @@ export function Select({
 
                 {...props}
             >
+                {/* Hidden native select for form compatibility */}
+                {name && (
+                    <select
+                        name={name}
+                        form={form}
+                        required={required}
+                        disabled={disabled}
+                        value={selectValue}
+                        onChange={() => {}} // Controlled by our custom select
+                        tabIndex={-1}
+                        aria-hidden="true"
+                        style={{
+                            position: 'absolute',
+                            opacity: 0,
+                            pointerEvents: 'none',
+                            width: 0,
+                            height: 0,
+                            border: 'none',
+                            padding: 0,
+                            margin: 0,
+                            overflow: 'hidden',
+                            clip: 'rect(0, 0, 0, 0)',
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
+                        {/* Empty option for when no value is selected */}
+                        <option value="" disabled={required}>
+                            {placeholder || ''}
+                        </option>
+                        {/* Render options based on items */}
+                        {items.map((item) => (
+                            <option key={item.value} value={item.value}>
+                                {item.textValue}
+                            </option>
+                        ))}
+                    </select>
+                )}
+                
                 {children}
             </div>
         </SelectContext.Provider>

@@ -1,20 +1,7 @@
+import SelectDemo from "./select-demo";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button"
 import { Input } from "./ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectContentView,
-    SelectGroup,
-    SelectItem,
-    SelectItemIndicator,
-    SelectItemText,
-    SelectLabel,
-    SelectTriggerIndicator,
-    SelectSeparator,
-    SelectTrigger,
-    SelectValue
-} from "./ui/select";
 import { Textarea } from "./ui/textarea";
 
 function App() {
@@ -231,90 +218,7 @@ function App() {
                 </div>
             </div>
 
-            <div className="flex flex-col gap-4 items-start p-8">
-                <h1 className="text-2xl font-bold mb-2 text-write">Select Demo</h1>
-
-                {/* Standard Select */}
-                <div className="space-y-2">
-                    <h2 className="text-lg font-semibold text-write">Standard Select</h2>
-                    
-                    <Select placeholder="Choose an option">
-                        <SelectTrigger>
-                            <SelectValue />
-                            <SelectTriggerIndicator />
-                        </SelectTrigger>
-
-                        <SelectContent>
-
-                            <SelectContentView>
-
-                                <SelectGroup>
-                                    <SelectLabel>
-                                        Fruits
-                                    </SelectLabel>
-
-                                    <SelectItem value="apple">
-                                        <SelectItemText>Apple</SelectItemText>
-                                        <SelectItemIndicator />
-                                    </SelectItem>
-                                    <SelectItem value="banana">
-                                        <SelectItemText>Banana</SelectItemText>
-                                        <SelectItemIndicator />
-                                    </SelectItem>
-                                    <SelectItem value="cherry">
-                                        <SelectItemText>Cherry</SelectItemText>
-                                        <SelectItemIndicator />
-                                    </SelectItem>
-                                </SelectGroup>
-
-                                <SelectSeparator />
-
-                                <SelectGroup>
-                                    <SelectLabel>
-                                        Vegetables
-                                    </SelectLabel>
-
-                                    <SelectItem value="carrot">
-                                        <SelectItemText>Carrot</SelectItemText>
-                                        <SelectItemIndicator />
-                                    </SelectItem>
-                                    <SelectItem value="broccoli">
-                                        <SelectItemText>Broccoli</SelectItemText>
-                                        <SelectItemIndicator />
-                                    </SelectItem>
-                                    <SelectItem value="spinach">
-                                        <SelectItemText>Spinach</SelectItemText>
-                                        <SelectItemIndicator />
-                                    </SelectItem>
-                                </SelectGroup>
-
-                                <SelectSeparator />
-
-                                <SelectGroup>
-                                    <SelectLabel>
-                                        Animals
-                                    </SelectLabel>
-
-                                    <SelectItem value="dog">
-                                        <SelectItemText>Dog</SelectItemText>
-                                        <SelectItemIndicator />
-                                    </SelectItem>
-                                    <SelectItem value="cat">
-                                        <SelectItemText>Cat</SelectItemText>
-                                        <SelectItemIndicator />
-                                    </SelectItem>
-                                    <SelectItem value="bird">
-                                        <SelectItemText>Bird</SelectItemText>
-                                        <SelectItemIndicator />
-                                    </SelectItem>
-                                </SelectGroup>
-
-                            </SelectContentView>
-
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
+            <SelectDemo />
         </section>
     )
 }

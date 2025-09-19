@@ -18,6 +18,7 @@ export const SelectActions = {
     Typeahead: 11,
     Close: 12,
     CloseSelect: 13,
+    OpenWithTypeahead: 14,
 } as const;
 
 export type SelectAction = typeof SelectActions[keyof typeof SelectActions];
@@ -31,11 +32,14 @@ export const getSelectAction = (key: string, isOpen: boolean, hasAltKey = false)
 
         switch (key) {
             case 'Enter': case ' ': case 'ArrowDown': return SelectActions.Open;
-            case 'ArrowUp': case 'Home': return SelectActions.OpenFirst;
+            case 'ArrowUp': 
+                return hasAltKey ? SelectActions.Open : SelectActions.OpenFirst;
+            case 'Home': return SelectActions.OpenFirst;
             case 'End': return SelectActions.OpenLast;
         }
 
-        if (/^[a-zA-Z0-9]$/.test(key)) return SelectActions.OpenFirst;
+        // For closed combobox, typing characters should open and move to first matching option
+        if (/^[a-zA-Z0-9 ]$/.test(key)) return SelectActions.OpenWithTypeahead;
     }
 
     else {
@@ -54,7 +58,8 @@ export const getSelectAction = (key: string, isOpen: boolean, hasAltKey = false)
             case 'End': return SelectActions.Last;
         }
 
-        if (/^[a-zA-Z0-9]$/.test(key)) return SelectActions.Typeahead;
+        // Include space in typeahead when listbox is open
+        if (/^[a-zA-Z0-9 ]$/.test(key)) return SelectActions.Typeahead;
 
     }
 

@@ -86,7 +86,8 @@ export function SelectItem({
     };
 
     const mouseLeaveHandler = () => {
-        moveCursor(-1);
+        // Don't reset cursor on mouse leave to avoid disrupting keyboard navigation
+        // The cursor will be managed by keyboard events and clicks
     };
 
     const clickHandler = () => {
@@ -118,7 +119,7 @@ export function SelectItem({
 
                 role="option"
 
-                aria-selected={isSelected}
+                aria-selected={isHighlighted}
                 aria-disabled={isDisabled}
 
                 data-highlighted={isHighlighted}

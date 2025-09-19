@@ -15,12 +15,14 @@ export function SelectScrollUpButton({ className, asChild, children, ...props }:
     const { isDisabled, mouseEnterHandler, mouseLeaveHandler } = useSelectScroll({ direction: 'up' });
 
     if (asChild) return (
-
         <Slot data-ui="select-scroll-up-button"
+            role="button"
+            aria-label="Scroll up to see more options"
+            aria-hidden={isDisabled}
+            tabIndex={-1}
             disabled={isDisabled}
             onMouseEnter={mouseEnterHandler}
             onMouseLeave={mouseLeaveHandler}
-
             className={className}
             {...props}
         >
@@ -30,6 +32,10 @@ export function SelectScrollUpButton({ className, asChild, children, ...props }:
 
     return (
         <button data-ui="select-scroll-up-button"
+            type="button"
+            aria-label="Scroll up to see more options"
+            aria-hidden={isDisabled}
+            tabIndex={-1}
             disabled={isDisabled}
             onMouseEnter={mouseEnterHandler}
             onMouseLeave={mouseLeaveHandler}

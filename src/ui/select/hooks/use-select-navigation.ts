@@ -17,8 +17,10 @@ export interface UseSelectNavigationOptions {
         typeahead: (char: string) => void;
         select: (value: string) => void;
         move: (index: number) => void;
+        centerMove: (index: number) => void;
         close: () => void;
         open: () => void;
+        restoreFocus?: () => void;
     }
 }
 
@@ -43,7 +45,15 @@ export function useSelectNavigation({
 
             case SelectActions.Open:
                 handlers.open();
-                cursor.move(-1);
+                
+                // Focus the selected item if there is one, otherwise no cursor
+                const selectedIndex = items.findIndex(i => i.value === value);
+                if (selectedIndex >= 0) {
+                    cursor.move(selectedIndex);
+                    handlers.centerMove(selectedIndex); // Center the selected item
+                } else {
+                    cursor.move(-1);
+                }
                 break;
 
             case SelectActions.OpenFirst:
@@ -86,6 +96,7 @@ export function useSelectNavigation({
 
                 handlers.close();
                 cursor.move(-1);
+                handlers.restoreFocus?.();
 
                 break;
 
@@ -142,6 +153,11 @@ export function useSelectNavigation({
 
                 break;
 
+            case SelectActions.OpenWithTypeahead:
+                handlers.open();
+                handlers.typeahead(event.key);
+                break;
+
             case SelectActions.Typeahead:
                 handlers.typeahead(event.key);
                 break;
@@ -149,6 +165,7 @@ export function useSelectNavigation({
             case SelectActions.Close:
                 handlers.close();
                 cursor.move(-1);
+                handlers.restoreFocus?.();
                 break;
 
             case SelectActions.None:
