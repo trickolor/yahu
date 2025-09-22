@@ -749,6 +749,86 @@ function App() {
                     </Button>
                 </div>
             </section>
+
+            <section className="w-fit p-8 grid grid-cols-3 gap-8">
+                <div className="w-80 p-8 bg-muted-surface shadow flex flex-col gap-4">
+                    <h3 className="text-lg font-semibold text-write mb-4">Primary Badges</h3>
+                    <Badge variant="solid" color="primary">Primary</Badge>
+                    <Badge variant="solid" color="secondary">Secondary</Badge>
+                    <Badge variant="solid" color="success">Success</Badge>
+                    <Badge variant="solid" color="warning">Warning</Badge>
+                    <Badge variant="solid" color="failure">Failure</Badge>
+                    <Badge variant="solid" color="red">Red</Badge>
+                    <Badge variant="solid" color="orange">Orange</Badge>
+                    <Badge variant="solid" color="amber">Amber</Badge>
+                    <Badge variant="solid" color="yellow">Yellow</Badge>
+                    <Badge variant="solid" color="lime">Lime</Badge>
+                    <Badge variant="solid" color="green">Green</Badge>
+                    <Badge variant="solid" color="emerald">Emerald</Badge>
+                    <Badge variant="solid" color="teal">Teal</Badge>
+                    <Badge variant="solid" color="cyan">Cyan</Badge>
+                    <Badge variant="solid" color="sky">Sky</Badge>
+                    <Badge variant="solid" color="blue">Blue</Badge>
+                    <Badge variant="solid" color="indigo">Indigo</Badge>
+                    <Badge variant="solid" color="violet">Violet</Badge>
+                    <Badge variant="solid" color="purple">Purple</Badge>
+                    <Badge variant="solid" color="fuchsia">Fuchsia</Badge>
+                    <Badge variant="solid" color="pink">Pink</Badge>
+                    <Badge variant="solid" color="rose">Rose</Badge>
+                </div>
+
+                <div className="w-80 p-8 bg-muted-surface shadow flex flex-col gap-4">
+                    <h3 className="text-lg font-semibold text-write mb-4">Outline Badges</h3>
+                    <Badge variant="outline" color="primary">Primary</Badge>
+                    <Badge variant="outline" color="secondary">Secondary</Badge>
+                    <Badge variant="outline" color="success">Success</Badge>
+                    <Badge variant="outline" color="warning">Warning</Badge>
+                    <Badge variant="outline" color="failure">Failure</Badge>
+                    <Badge variant="outline" color="red">Red</Badge>
+                    <Badge variant="outline" color="orange">Orange</Badge>
+                    <Badge variant="outline" color="amber">Amber</Badge>
+                    <Badge variant="outline" color="yellow">Yellow</Badge>
+                    <Badge variant="outline" color="lime">Lime</Badge>
+                    <Badge variant="outline" color="green">Green</Badge>
+                    <Badge variant="outline" color="emerald">Emerald</Badge>
+                    <Badge variant="outline" color="teal">Teal</Badge>
+                    <Badge variant="outline" color="cyan">Cyan</Badge>
+                    <Badge variant="outline" color="sky">Sky</Badge>
+                    <Badge variant="outline" color="blue">Blue</Badge>
+                    <Badge variant="outline" color="indigo">Indigo</Badge>
+                    <Badge variant="outline" color="violet">Violet</Badge>
+                    <Badge variant="outline" color="purple">Purple</Badge>
+                    <Badge variant="outline" color="fuchsia">Fuchsia</Badge>
+                    <Badge variant="outline" color="pink">Pink</Badge>
+                    <Badge variant="outline" color="rose">Rose</Badge>
+                </div>
+
+                <div className="w-80 p-8 bg-muted-surface shadow flex flex-col gap-4">
+                    <h3 className="text-lg font-semibold text-write mb-4">Ghost Badges</h3>
+                    <Badge variant="ghost" color="primary">Primary</Badge>
+                    <Badge variant="ghost" color="secondary">Secondary</Badge>
+                    <Badge variant="ghost" color="success">Success</Badge>
+                    <Badge variant="ghost" color="warning">Warning</Badge>
+                    <Badge variant="ghost" color="failure">Failure</Badge>
+                    <Badge variant="ghost" color="red">Red</Badge>
+                    <Badge variant="ghost" color="orange">Orange</Badge>
+                    <Badge variant="ghost" color="amber">Amber</Badge>
+                    <Badge variant="ghost" color="yellow">Yellow</Badge>
+                    <Badge variant="ghost" color="lime">Lime</Badge>
+                    <Badge variant="ghost" color="green">Green</Badge>
+                    <Badge variant="ghost" color="emerald">Emerald</Badge>
+                    <Badge variant="ghost" color="teal">Teal</Badge>
+                    <Badge variant="ghost" color="cyan">Cyan</Badge>
+                    <Badge variant="ghost" color="sky">Sky</Badge>
+                    <Badge variant="ghost" color="blue">Blue</Badge>
+                    <Badge variant="ghost" color="indigo">Indigo</Badge>
+                    <Badge variant="ghost" color="violet">Violet</Badge>
+                    <Badge variant="ghost" color="purple">Purple</Badge>
+                    <Badge variant="ghost" color="fuchsia">Fuchsia</Badge>
+                    <Badge variant="ghost" color="pink">Pink</Badge>
+                    <Badge variant="ghost" color="rose">Rose</Badge>
+                </div>
+            </section>
         </main>
     )
 }
