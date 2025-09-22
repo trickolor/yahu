@@ -6,220 +6,750 @@ import { Textarea } from "./ui/textarea";
 
 function App() {
     const themeToggle = () => {
-        document.documentElement.classList.toggle('dark');
+        document.documentElement.setAttribute('data-mode', document.documentElement.getAttribute('data-mode') === 'light' ? 'dark' : 'light');
     }
 
     return (
-        <section className="w-full bg-surface space-y-12 relatives pb-128">
+        <main className="w-full min-h-screen bg-surface space-y-12 relative">
             <Button className="fixed top-6 right-6" onClick={themeToggle}>
                 Change Theme
             </Button>
 
-            <div className="w-fit grid grid-cols-2 gap-8 p-8">
-                <div className="flex gap-1 flex-col">
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-primary-surface" />
-                        <span className="text-write">primary surface</span>
-                    </div>
+            <section className="w-fit p-8 grid grid-cols-5 gap-8">
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Surface</span>
+                    </li>
 
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-primary-bound" />
-                        <span className="text-write">primary bound</span>
-                    </div>
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Write</span>
+                    </li>
+                </ul>
 
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-primary-write" />
-                        <span className="text-write">primary write</span>
-                    </div>
-                </div>
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-muted-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Muted Surface</span>
+                    </li>
 
-                <div className="flex gap-1 flex-col">
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-secondary-surface" />
-                        <span className="text-write">secondary surface</span>
-                    </div>
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-muted-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Muted Write</span>
+                    </li>
+                </ul>
 
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-secondary-bound" />
-                        <span className="text-write">secondary bound</span>
-                    </div>
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-primary-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Primary Surface</span>
+                    </li>
 
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-secondary-write" />
-                        <span className="text-write">secondary write</span>
-                    </div>
-                </div>
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-primary-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Primary Write</span>
+                    </li>
+                </ul>
 
-                <div className="flex gap-1 flex-col">
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-weak-surface" />
-                        <span className="text-write">weak surface</span>
-                    </div>
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-secondary-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Secondary Surface</span>
+                    </li>
 
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-weak-bound" />
-                        <span className="text-write">weak bound</span>
-                    </div>
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-secondary-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Secondary Write</span>
+                    </li>
+                </ul>
 
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-weak-write" />
-                        <span className="text-write">weak write</span>
-                    </div>
-                </div>
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Bound</span>
+                    </li>
 
-                <div className="flex gap-1 flex-col">
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-surface" />
-                        <span className="text-write">surface</span>
-                    </div>
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-outer-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Outer Bound</span>
+                    </li>
 
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-bound" />
-                        <span className="text-write">bound</span>
-                    </div>
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-muted-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Muted Bound</span>
+                    </li>
+                </ul>
 
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-write" />
-                        <span className="text-write">write</span>
-                    </div>
-                </div>
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-success border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Success</span>
+                    </li>
 
-                <div className="flex gap-1 flex-col">
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-sharp-surface" />
-                        <span className="text-write">sharp surface</span>
-                    </div>
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-warning border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Warning</span>
+                    </li>
 
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-sharp-bound" />
-                        <span className="text-write">sharp bound</span>
-                    </div>
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-failure border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Failure</span>
+                    </li>
+                </ul>
 
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-sharp-write" />
-                        <span className="text-write">sharp write</span>
-                    </div>
-                </div>
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-red-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Red Surface</span>
+                    </li>
 
-                <div className="flex gap-1 flex-col">
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-success-surface" />
-                        <span className="text-write">success surface</span>
-                    </div>
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-red-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Red Bound</span>
+                    </li>
 
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-success-bound" />
-                        <span className="text-write">success bound</span>
-                    </div>
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-red-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Red Write</span>
+                    </li>
+                </ul>
 
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-success-write" />
-                        <span className="text-write">success write</span>
-                    </div>
-                </div>
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-orange-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Orange Surface</span>
+                    </li>
 
-                <div className="flex gap-1 flex-col">
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-warning-surface" />
-                        <span className="text-write">warning surface</span>
-                    </div>
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-orange-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Orange Bound</span>
+                    </li>
 
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-warning-bound" />
-                        <span className="text-write">warning bound</span>
-                    </div>
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-orange-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Orange Write</span>
+                    </li>
+                </ul>
 
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-warning-write" />
-                        <span className="text-write">warning write</span>
-                    </div>
-                </div>
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-amber-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Amber Surface</span>
+                    </li>
 
-                <div className="flex gap-1 flex-col">
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-error-surface" />
-                        <span className="text-write">error surface</span>
-                    </div>
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-amber-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Amber Bound</span>
+                    </li>
 
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-error-bound" />
-                        <span className="text-write">error bound</span>
-                    </div>
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-amber-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Amber Write</span>
+                    </li>
+                </ul>
 
-                    <div className="w-fit flex items-center gap-1">
-                        <div className="size-8 border border-bound bg-error-write" />
-                        <span className="text-write">error write</span>
-                    </div>
-                </div>
-            </div>
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-yellow-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Yellow Surface</span>
+                    </li>
 
-            <div className="flex flex-col gap-4 items-start p-8">
-                <h1 className="text-2xl font-bold mb-2 text-write">Button Variants</h1>
-                <div className="flex gap-3 flex-wrap items-center">
-                    <Button>Default</Button>
-                    <Button variant="secondary">Secondary</Button>
-                    <Button variant="outline">Outline</Button>
-                    <Button variant="ghost">Ghost</Button>
-                    <Button variant="warning">Warning</Button>
-                    <Button variant="success">Success</Button>
-                    <Button variant="error">Error</Button>
-                    <Button variant="link" asChild><a href="https://google.com">Link</a></Button>
-                </div>
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-yellow-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Yellow Bound</span>
+                    </li>
 
-                <h2 className="text-xl font-semibold mt-6 mb-2 text-write">Button Sizes</h2>
-                <div className="flex gap-3 flex-wrap items-center">
-                    <Button size="small">Small</Button>
-                    <Button size="default">Default</Button>
-                    <Button size="large">Large</Button>
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-yellow-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Yellow Write</span>
+                    </li>
+                </ul>
 
-                    <Button size="icon" aria-label="Icon Button">
-                        <svg viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="8" /></svg>
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-lime-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Lime Surface</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-lime-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Lime Bound</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-lime-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Lime Write</span>
+                    </li>
+                </ul>
+
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-green-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Green Surface</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-green-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Green Bound</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-green-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Green Write</span>
+                    </li>
+                </ul>
+
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-emerald-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Emerald Surface</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-emerald-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Emerald Bound</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-emerald-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Emerald Write</span>
+                    </li>
+                </ul>
+
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-teal-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Teal Surface</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-teal-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Teal Bound</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-teal-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Teal Write</span>
+                    </li>
+                </ul>
+
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-cyan-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Cyan Surface</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-cyan-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Cyan Bound</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-cyan-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Cyan Write</span>
+                    </li>
+                </ul>
+
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-sky-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Sky Surface</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-sky-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Sky Bound</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-sky-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Sky Write</span>
+                    </li>
+                </ul>
+
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-blue-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Blue Surface</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-blue-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Blue Bound</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-blue-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Blue Write</span>
+                    </li>
+                </ul>
+
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-indigo-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Indigo Surface</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-indigo-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Indigo Bound</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-indigo-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Indigo Write</span>
+                    </li>
+                </ul>
+
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-violet-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Violet Surface</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-violet-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Violet Bound</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-violet-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Violet Write</span>
+                    </li>
+                </ul>
+
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-purple-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Purple Surface</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-purple-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Purple Bound</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-purple-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Purple Write</span>
+                    </li>
+                </ul>
+
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-fuchsia-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Fuchsia Surface</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-fuchsia-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Fuchsia Bound</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-fuchsia-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Fuchsia Write</span>
+                    </li>
+                </ul>
+
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-pink-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Pink Surface</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-pink-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Pink Bound</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-pink-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Pink Write</span>
+                    </li>
+                </ul>
+
+                <ul className="w-64 space-y-4 bg-muted-surface p-4 shadow">
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-rose-surface border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Rose Surface</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-rose-bound border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Rose Bound</span>
+                    </li>
+
+                    <li className="flex items-center gap-4">
+                        <span className="size-7 rounded-full bg-accent-rose-write border border-bound"></span>
+                        <span className="text-write text-sm leading-none font-medium">Accent Rose Write</span>
+                    </li>
+                </ul>
+            </section>
+
+            <section className="w-full p-8 grid grid-cols-4 gap-8 ">
+                <div className="w-full p-8 bg-muted-surface shadow flex flex-col gap-6">
+                    <Button className="w-full" variant="solid" color="primary">
+                        Solid Primary
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="secondary">
+                        Solid Secondary
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="success">
+                        Solid Success
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="warning">
+                        Solid Warning
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="failure">
+                        Solid Failure
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="red">
+                        Solid Red
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="orange">
+                        Solid Orange
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="amber">
+                        Solid Amber
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="yellow">
+                        Solid Yellow
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="lime">
+                        Solid Lime
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="green">
+                        Solid Green
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="emerald">
+                        Solid Emerald
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="teal">
+                        Solid Teal
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="cyan">
+                        Solid Cyan
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="sky">
+                        Solid Sky
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="blue">
+                        Solid Blue
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="indigo">
+                        Solid Indigo
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="violet">
+                        Solid Violet
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="purple">
+                        Solid Purple
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="fuchsia">
+                        Solid Fuchsia
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="pink">
+                        Solid Pink
+                    </Button>
+
+                    <Button className="w-full" variant="solid" color="rose">
+                        Solid Rose
                     </Button>
                 </div>
 
-                <h2 className="text-xl font-semibold mt-6 mb-2 text-write">Disabled</h2>
-                <div className="flex gap-3 flex-wrap items-center">
-                    <Button disabled>Default</Button>
-                    <Button variant="secondary" disabled>Secondary</Button>
-                    <Button variant="outline" disabled>Outline</Button>
-                    <Button variant="ghost" disabled>Ghost</Button>
-                    <Button variant="link" disabled>Link</Button>
-                </div>
-            </div>
+                <div className="w-full p-8 bg-muted-surface shadow flex flex-col gap-6">
+                    <Button className="w-full" variant="outline" color="primary">
+                        Outline Primary
+                    </Button>
 
-            <div className="flex flex-col gap-4 items-start p-8">
-                <h1 className="text-2xl font-bold mb-2 text-write">Badge Variants</h1>
-                <div className="flex gap-3 flex-wrap items-center">
-                    <Badge>Default</Badge>
-                    <Badge variant="secondary">Secondary</Badge>
-                    <Badge variant="outline">Outline</Badge>
-                    <Badge variant="warning">Warning</Badge>
-                    <Badge variant="success">Success</Badge>
-                    <Badge variant="error">Error</Badge>
-                </div>
-            </div>
+                    <Button className="w-full" variant="outline" color="secondary">
+                        Outline Secondary
+                    </Button>
 
-            <div className="flex flex-col gap-4 items-start p-8">
-                <h1 className="text-2xl font-bold mb-2 text-write">Input Variants</h1>
-                <div className="flex gap-3 flex-wrap items-center w-full max-w-md">
-                    <Input placeholder="Default" />
-                    <Input disabled placeholder="Disabled" />
-                    <Input aria-invalid placeholder="Invalid" />
-                    <Input type="file" />
-                </div>
-            </div>
+                    <Button className="w-full" variant="outline" color="success">
+                        Outline Success
+                    </Button>
 
-            <div className="flex flex-col gap-4 items-start p-8">
-                <h1 className="text-2xl font-bold mb-2 text-write">Textarea Variants</h1>
-                <div className="flex flex-col gap-3 w-full max-w-md">
-                    <Textarea rows={3} placeholder="Default" />
-                    <Textarea rows={3} disabled placeholder="Disabled" />
-                    <Textarea rows={3} aria-invalid placeholder="Invalid" />
-                </div>
-            </div>
+                    <Button className="w-full" variant="outline" color="warning">
+                        Outline Warning
+                    </Button>
 
-            <SelectDemo />
-        </section>
+                    <Button className="w-full" variant="outline" color="failure">
+                        Outline Failure
+                    </Button>
+
+                    <Button className="w-full" variant="outline" color="red">
+                        Outline Red
+                    </Button>
+
+                    <Button className="w-full" variant="outline" color="orange">
+                        Outline Orange
+                    </Button>
+
+                    <Button className="w-full" variant="outline" color="amber">
+                        Outline Amber
+                    </Button>
+
+                    <Button className="w-full" variant="outline" color="yellow">
+                        Outline Yellow
+                    </Button>
+
+                    <Button className="w-full" variant="outline" color="lime">
+                        Outline Lime
+                    </Button>
+
+                    <Button className="w-full" variant="outline" color="green">
+                        Outline Green
+                    </Button>
+
+                    <Button className="w-full" variant="outline" color="emerald">
+                        Outline Emerald
+                    </Button>
+
+                    <Button className="w-full" variant="outline" color="teal">
+                        Outline Teal
+                    </Button>
+
+                    <Button className="w-full" variant="outline" color="cyan">
+                        Outline Cyan
+                    </Button>
+
+                    <Button className="w-full" variant="outline" color="sky">
+                        Outline Sky
+                    </Button>
+
+                    <Button className="w-full" variant="outline" color="blue">
+                        Outline Blue
+                    </Button>
+
+                    <Button className="w-full" variant="outline" color="indigo">
+                        Outline Indigo
+                    </Button>
+
+                    <Button className="w-full" variant="outline" color="violet">
+                        Outline Violet
+                    </Button>
+
+                    <Button className="w-full" variant="outline" color="purple">
+                        Outline Purple
+                    </Button>
+
+                    <Button className="w-full" variant="outline" color="fuchsia">
+                        Outline Fuchsia
+                    </Button>
+
+                    <Button className="w-full" variant="outline" color="pink">
+                        Outline Pink
+                    </Button>
+
+                    <Button className="w-full" variant="outline" color="rose">
+                        Outline Rose
+                    </Button>
+                </div>
+
+                <div className="w-full p-8 bg-muted-surface shadow flex flex-col gap-6">
+                    <Button className="w-full" variant="ghost" color="primary">
+                        Ghost Primary
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="secondary">
+                        Ghost Secondary
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="success">
+                        Ghost Success
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="warning">
+                        Ghost Warning
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="failure">
+                        Ghost Failure
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="red">
+                        Ghost Red
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="orange">
+                        Ghost Orange
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="amber">
+                        Ghost Amber
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="yellow">
+                        Ghost Yellow
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="lime">
+                        Ghost Lime
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="green">
+                        Ghost Green
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="emerald">
+                        Ghost Emerald
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="teal">
+                        Ghost Teal
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="cyan">
+                        Ghost Cyan
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="sky">
+                        Ghost Sky
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="blue">
+                        Ghost Blue
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="indigo">
+                        Ghost Indigo
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="violet">
+                        Ghost Violet
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="purple">
+                        Ghost Purple
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="fuchsia">
+                        Ghost Fuchsia
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="pink">
+                        Ghost Pink
+                    </Button>
+
+                    <Button className="w-full" variant="ghost" color="rose">
+                        Ghost Rose
+                    </Button>
+                </div>
+
+                <div className="w-full p-8 bg-muted-surface shadow flex flex-col gap-6">
+                    <Button className="w-full" variant="link" color="primary">
+                        Link Primary
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="secondary">
+                        Link Secondary
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="success">
+                        Link Success
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="warning">
+                        Link Warning
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="failure">
+                        Link Failure
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="red">
+                        Link Red
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="orange">
+                        Link Orange
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="amber">
+                        Link Amber
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="yellow">
+                        Link Yellow
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="lime">
+                        Link Lime
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="green">
+                        Link Green
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="emerald">
+                        Link Emerald
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="teal">
+                        Link Teal
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="cyan">
+                        Link Cyan
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="sky">
+                        Link Sky
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="blue">
+                        Link Blue
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="indigo">
+                        Link Indigo
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="violet">
+                        Link Violet
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="purple">
+                        Link Purple
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="fuchsia">
+                        Link Fuchsia
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="pink">
+                        Link Pink
+                    </Button>
+
+                    <Button className="w-full" variant="link" color="rose">
+                        Link Rose
+                    </Button>
+                </div>
+            </section>
+        </main>
     )
 }
 
