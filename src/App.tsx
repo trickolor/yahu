@@ -2,6 +2,7 @@ import SelectDemo from "./select-demo";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button"
 import { Input } from "./ui/input";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectContentView, SelectItem, SelectGroup, SelectLabel, SelectSeparator, SelectItemIndicator, SelectTriggerIndicator } from "./ui/select";
 import { Textarea } from "./ui/textarea";
 
 function App() {
@@ -390,6 +391,8 @@ function App() {
 
             <section className="w-full p-8 grid grid-cols-4 gap-8 ">
                 <div className="w-full p-8 bg-muted-surface shadow flex flex-col gap-6">
+                    <h3 className="text-lg font-semibold text-write mb-4">Solid Buttons</h3>
+
                     <Button className="w-full" variant="solid" color="primary">
                         Solid Primary
                     </Button>
@@ -480,6 +483,8 @@ function App() {
                 </div>
 
                 <div className="w-full p-8 bg-muted-surface shadow flex flex-col gap-6">
+                    <h3 className="text-lg font-semibold text-write mb-4">Outline Buttons</h3>
+
                     <Button className="w-full" variant="outline" color="primary">
                         Outline Primary
                     </Button>
@@ -570,6 +575,8 @@ function App() {
                 </div>
 
                 <div className="w-full p-8 bg-muted-surface shadow flex flex-col gap-6">
+                    <h3 className="text-lg font-semibold text-write mb-4">Ghost Buttons</h3>
+
                     <Button className="w-full" variant="ghost" color="primary">
                         Ghost Primary
                     </Button>
@@ -660,6 +667,8 @@ function App() {
                 </div>
 
                 <div className="w-full p-8 bg-muted-surface shadow flex flex-col gap-6">
+                    <h3 className="text-lg font-semibold text-write mb-4">Link Buttons</h3>
+
                     <Button className="w-full" variant="link" color="primary">
                         Link Primary
                     </Button>
@@ -829,6 +838,129 @@ function App() {
                     <Badge variant="ghost" color="rose">Rose</Badge>
                 </div>
             </section>
+
+            <section className="w-fit p-8 flex items-start gap-8">
+                <div className="w-100 p-8 bg-muted-surface shadow flex flex-col gap-4">
+                    <h3 className="text-lg font-semibold text-write mb-4">Basic Inputs</h3>
+                    <Input placeholder="Default input" />
+                    <Input placeholder="Disabled input" disabled />
+                    <Input placeholder="Required input" required />
+                    <Input placeholder="Invalid input" aria-invalid />
+                    <Input type="password" placeholder="Password input" />
+                    <Input type="email" placeholder="Email input" />
+                    <Input type="number" placeholder="Number input" />
+                    <Input type="search" placeholder="Search input" />
+                </div>
+
+                <div className="w-100 p-8 bg-muted-surface shadow flex flex-col gap-4">
+                    <h3 className="text-lg font-semibold text-write mb-4">Special Inputs</h3>
+                    <Input type="date" />
+                    <Input type="time" />
+                    <Input type="datetime-local" />
+                    <Input type="color" />
+                    <Input type="range" min="0" max="100" defaultValue="50" />
+                    <Input type="file" />
+                    <Input type="file" multiple />
+                    <Input type="image" />
+                </div>
+
+                <div className="w-100 p-8 bg-muted-surface shadow flex flex-col gap-4">
+                    <h3 className="text-lg font-semibold text-write mb-4">Textarea Examples</h3>
+                    <Textarea placeholder="Default textarea" />
+                    <Textarea placeholder="Disabled textarea" disabled />
+                    <Textarea placeholder="Required textarea" required />
+                    <Textarea placeholder="Invalid textarea" aria-invalid />
+                    <Textarea placeholder="Small textarea" rows={3} />
+                    <Textarea placeholder="Large textarea" rows={8} />
+                </div>
+            </section>
+
+            <section className="w-fit p-8 flex items-start gap-8">
+                <div className="w-100 p-8 bg-muted-surface shadow flex flex-col gap-4">
+                    <h3 className="text-lg font-semibold text-write mb-4">Select Examples</h3>
+
+                    <Select placeholder="Choose a fruit">
+                        <SelectTrigger>
+                            <SelectValue />
+                            <SelectTriggerIndicator />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectContentView>
+                                <SelectItem value="apple">Apple</SelectItem>
+                                <SelectItem value="banana">Banana</SelectItem>
+                                <SelectItem value="orange">Orange</SelectItem>
+                                <SelectItem value="grape">Grape</SelectItem>
+                                <SelectItem value="strawberry">Strawberry</SelectItem>
+                            </SelectContentView>
+                        </SelectContent>
+                    </Select>
+
+                    <Select placeholder="Choose a color" defaultValue="blue">
+                        <SelectTrigger>
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectContentView>
+                                <SelectGroup>
+                                    <SelectLabel>Warm Colors</SelectLabel>
+                                    <SelectItem value="red">Red</SelectItem>
+                                    <SelectItem value="orange">Orange</SelectItem>
+                                    <SelectItem value="yellow">Yellow</SelectItem>
+                                </SelectGroup>
+                                <SelectSeparator />
+                                <SelectGroup>
+                                    <SelectLabel>Cool Colors</SelectLabel>
+                                    <SelectItem value="blue">Blue</SelectItem>
+                                    <SelectItem value="green">Green</SelectItem>
+                                    <SelectItem value="purple">Purple</SelectItem>
+                                </SelectGroup>
+                            </SelectContentView>
+                        </SelectContent>
+                    </Select>
+
+                    <Select placeholder="Choose a size" disabled>
+                        <SelectTrigger>
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectContentView>
+                                <SelectItem value="xs">Extra Small</SelectItem>
+                                <SelectItem value="sm">Small</SelectItem>
+                                <SelectItem value="md">Medium</SelectItem>
+                                <SelectItem value="lg">Large</SelectItem>
+                                <SelectItem value="xl">Extra Large</SelectItem>
+                            </SelectContentView>
+                        </SelectContent>
+                    </Select>
+
+                    <Select placeholder="Choose multiple items" form="demo-form" name="items" required>
+                        <SelectTrigger>
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectContentView>
+                                <SelectItem value="item1">
+                                    Item One
+                                    <SelectItemIndicator />
+                                </SelectItem>
+                                <SelectItem value="item2">
+                                    Item Two
+                                    <SelectItemIndicator />
+                                </SelectItem>
+                                <SelectItem value="item3">
+                                    Item Three
+                                    <SelectItemIndicator />
+                                </SelectItem>
+                                <SelectItem value="item4">
+                                    Item Four
+                                    <SelectItemIndicator />
+                                </SelectItem>
+                            </SelectContentView>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </section>
+
         </main>
     )
 }

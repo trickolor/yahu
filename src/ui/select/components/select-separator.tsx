@@ -16,7 +16,7 @@ export function SelectSeparator({ className, asChild, children, ...props }: Sele
             role="separator"
             aria-orientation="horizontal"
 
-            className={cn("block m-1.5 text-weak-bound", className)}
+            className={cn("block h-px m-1.5 bg-weak-bound", className)}
 
             {...props}
         >

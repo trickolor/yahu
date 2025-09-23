@@ -134,6 +134,7 @@ export function SelectItem({
 
                 className={cn(
                     "flex items-center justify-between w-full text-sm text-write py-2.5 px-1.5 rounded transition-colors cursor-pointer",
+                    "hover:bg-surface focus:bg-surface focus:outline-none",
                     "[&[aria-disabled='true']]:opacity-50 [&[aria-disabled='true']]:cursor-not-allowed",
                     "[&[data-highlighted='true']]:bg-surface",
                     "[&[data-selected='true']]:font-medium",

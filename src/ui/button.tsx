@@ -62,19 +62,19 @@ const variants = cva(
             { variant: 'solid', color: 'failure', class: 'bg-failure text-white dark:text-black hover:bg-failure/85' },
 
             { variant: 'outline', color: 'primary', class: 'border-primary-surface text-primary-surface hover:border-primary-surface/85 hover:text-primary-surface/85' },
-            { variant: 'outline', color: 'secondary', class: 'dark:brightness-[3] brightness-[0.675] border-secondary-surface text-secondary-surface hover:border-secondary-surface/85 hover:text-secondary-surface/85' },
+            { variant: 'outline', color: 'secondary', class: 'invert-35 border-secondary-surface text-secondary-surface hover:border-secondary-surface/85 hover:text-secondary-surface/85' },
             { variant: 'outline', color: 'success', class: 'border-success text-success hover:border-success/85 hover:text-success/85' },
             { variant: 'outline', color: 'warning', class: 'border-warning text-warning hover:border-warning/85 hover:text-warning/85' },
             { variant: 'outline', color: 'failure', class: 'border-failure text-failure hover:border-failure/85 hover:text-failure/85' },
 
             { variant: 'ghost', color: 'primary', class: 'text-primary-surface hover:bg-primary-surface/10' },
-            { variant: 'ghost', color: 'secondary', class: 'dark:brightness-[3] brightness-[0.675] text-secondary-surface hover:bg-secondary-surface/10' },
+            { variant: 'ghost', color: 'secondary', class: 'invert-35 text-secondary-surface hover:bg-secondary-surface/10' },
             { variant: 'ghost', color: 'success', class: 'text-success hover:bg-success/10' },
             { variant: 'ghost', color: 'warning', class: 'text-warning hover:bg-warning/10' },
             { variant: 'ghost', color: 'failure', class: 'text-failure hover:bg-failure/10' },
 
             { variant: 'link', color: 'primary', class: 'text-primary-surface hover:text-primary-surface/85' },
-            { variant: 'link', color: 'secondary', class: 'dark:brightness-[3] brightness-[0.675] text-secondary-surface hover:text-secondary-surface/85' },
+            { variant: 'link', color: 'secondary', class: 'invert-35 text-secondary-surface hover:text-secondary-surface/85' },
             { variant: 'link', color: 'success', class: 'text-success hover:text-success/85' },
             { variant: 'link', color: 'warning', class: 'text-warning hover:text-warning/85' },
             { variant: 'link', color: 'failure', class: 'text-failure hover:text-failure/85' },

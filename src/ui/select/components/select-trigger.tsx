@@ -73,6 +73,7 @@ export function SelectTrigger({ children, className, asChild, ...props }: Select
 
             className={cn(
                 "w-fit min-w-xs min-h-8 inline-flex items-center justify-between gap-2 px-3 py-2 rounded text-write border border-bound bg-weak-surface",
+                "transition-colors hover:bg-surface focus:bg-surface focus:outline-none focus:ring-2 focus:ring-bound focus:ring-offset-1",
                 "[&[dir='rtl']]:flex-row-reverse",
                 disabled && "opacity-50 cursor-not-allowed",
                 className

@@ -40,7 +40,7 @@ export function SelectScrollDownButton({ className, asChild, children, ...props 
             onMouseEnter={mouseEnterHandler}
             onMouseLeave={mouseLeaveHandler}
             className={cn(
-                "w-full flex justify-center py-1 hover:bg-surface transition-colors",
+                "w-full flex justify-center py-1 hover:bg-surface transition-colors focus:bg-surface focus:outline-none",
                 isDisabled && "opacity-50 cursor-not-allowed",
                 className
             )}

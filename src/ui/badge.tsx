@@ -54,13 +54,13 @@ const badgeVariants = cva(
             { variant: 'solid', color: 'failure', class: 'bg-failure text-white dark:text-black' },
 
             { variant: 'outline', color: 'primary', class: 'border-primary-surface text-primary-surface' },
-            { variant: 'outline', color: 'secondary', class: 'mix-blend-screen border-secondary-surface text-secondary-surface' },
+            { variant: 'outline', color: 'secondary', class: 'invert-35 border-secondary-surface text-secondary-surface' },
             { variant: 'outline', color: 'success', class: 'border-success text-success' },
             { variant: 'outline', color: 'warning', class: 'border-warning text-warning' },
             { variant: 'outline', color: 'failure', class: 'border-failure text-failure' },
 
             { variant: 'ghost', color: 'primary', class: 'text-primary-surface bg-primary-surface/10' },
-            { variant: 'ghost', color: 'secondary', class: 'dark:brightness-[3] brightness-[0.675] text-secondary-surface bg-secondary-surface/10' },
+            { variant: 'ghost', color: 'secondary', class: 'invert-35 text-secondary-surface bg-secondary-surface/10' },
             { variant: 'ghost', color: 'success', class: 'text-success bg-success/10' },
             { variant: 'ghost', color: 'warning', class: 'text-warning bg-warning/10' },
             { variant: 'ghost', color: 'failure', class: 'text-failure bg-failure/10' },
@@ -143,7 +143,7 @@ const badgeVariants = cva(
 
 export interface BadgeProps extends
     VariantProps<typeof badgeVariants>,
-    Omit<React.ComponentProps<'span'>, 'color'> {}
+    Omit<React.ComponentProps<'span'>, 'color'> { }
 
 export const Badge = ({
     variant,

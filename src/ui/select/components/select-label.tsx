@@ -18,7 +18,7 @@ export function SelectLabel({ children, className, asChild, id, ...props }: Sele
             role="label"
 
             className={cn(
-                "block w-fit text-write px-1.5 py-1 text-xs leading-none font-medium",
+                "block w-fit text-write px-1.5 py-1 text-xs leading-none font-medium tracking-wide",
                 "[&[dir='rtl']]:text-right",
                 className
             )}

@@ -29,7 +29,7 @@ export function SelectValue({ children, className, asChild, ...props }: SelectVa
             data-placeholder={isPlaceholder}
 
             className={cn(
-                "text-sm font-medium overflow-hidden truncate",
+                "text-sm font-medium text-write overflow-hidden truncate",
                 className
             )}
             {...props}
