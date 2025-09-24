@@ -11,25 +11,25 @@ export interface SelectContentProps extends HTMLAttributes<HTMLElement> {
 
 export function SelectContent({ children, className, asChild, id, ...props }: SelectContentProps) {
     const Element = asChild ? Slot : 'div';
-    
+
     const {
         refManagement: { content: contentRef },
         idManagement: { content: contentId },
         openStateManagement: { open },
     } = useSelect();
 
+    if (!open) return null;
+
     return (
         <Element data-ui="select-content"
             ref={contentRef as RefObject<HTMLDivElement>}
             id={id || contentId}
-            style={{
-                visibility: open ? 'visible' : 'hidden',
-                opacity: open ? 1 : 0,
-            }}
+
+            data-state={open ? "open" : "closed"}
 
             className={cn(
-                'absolute left-0 top-full z-10 mt-1 min-w-xs p-1.5 rounded-md shadow-lg border border-weak-bound bg-weak-surface transition-opacity duration-150',
-                "[&[dir='rtl']]:origin-top-right [&[dir='rtl']]:right-0 [&[dir='rtl']]:left-auto",
+                'absolute left-0 top-full z-10 mt-1 min-w-xs p-1.5 rounded-md shadow-lg border border-muted-bound bg-muted-surface',
+                "[dir='rtl']:origin-top-right [dir='rtl']:right-0 [dir='rtl']:left-auto",
                 className
             )}
             {...props}

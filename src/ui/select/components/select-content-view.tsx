@@ -18,25 +18,22 @@ export function SelectContentView({ children, className, asChild, id, ...props }
         openStateManagement: { open },
     } = useSelect();
 
+    if (!open) return null;
 
     return (
         <Element data-ui="select-content-view"
             ref={contentViewRef as RefObject<HTMLDivElement>}
             id={id || contentViewId}
 
-            style={{ 
-                scrollbarWidth: 'none',
-                visibility: open ? 'visible' : 'hidden',
-                opacity: open ? 1 : 0,
-            }}
-
-            role="listbox"
-            tabIndex={-1}
             aria-labelledby={triggerId}
             aria-multiselectable="false"
 
+            role="listbox"
+
+            tabIndex={-1}
+
             className={cn(
-                "w-full max-h-96 overflow-y-auto [&::-webkit-scrollbar]:hidden",
+                "w-full max-h-96 overflow-y-auto sb-width-thin",
                 className
             )}
 

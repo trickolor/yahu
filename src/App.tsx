@@ -872,9 +872,7 @@ function App() {
                     <Textarea placeholder="Small textarea" rows={3} />
                     <Textarea placeholder="Large textarea" rows={8} />
                 </div>
-            </section>
 
-            <section className="w-fit p-8 flex items-start gap-8">
                 <div className="w-100 p-8 bg-muted-surface shadow flex flex-col gap-4">
                     <h3 className="text-lg font-semibold text-write mb-4">Select Examples</h3>
 
@@ -885,6 +883,16 @@ function App() {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectContentView>
+                                <SelectItem value="apple">Apple</SelectItem>
+                                <SelectItem value="banana">Banana</SelectItem>
+                                <SelectItem value="orange">Orange</SelectItem>
+                                <SelectItem value="grape">Grape</SelectItem>
+                                <SelectItem value="strawberry">Strawberry</SelectItem>
+                                <SelectItem value="apple">Apple</SelectItem>
+                                <SelectItem value="banana">Banana</SelectItem>
+                                <SelectItem value="orange">Orange</SelectItem>
+                                <SelectItem value="grape">Grape</SelectItem>
+                                <SelectItem value="strawberry">Strawberry</SelectItem>
                                 <SelectItem value="apple">Apple</SelectItem>
                                 <SelectItem value="banana">Banana</SelectItem>
                                 <SelectItem value="orange">Orange</SelectItem>
@@ -959,7 +967,6 @@ function App() {
                     </Select>
                 </div>
             </section>
-
         </main>
     )
 }
