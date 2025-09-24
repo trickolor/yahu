@@ -1,13 +1,17 @@
 import type { HTMLAttributes, ReactElement } from "react";
+import { Slot } from "../../slot";
 import { cn } from "../../../cn";
 
 export interface SelectTriggerIndicatorProps extends HTMLAttributes<HTMLSpanElement> {
     children?: ReactElement;
+    asChild?: boolean;
 }
 
-export function SelectTriggerIndicator({ className, children, ...props }: SelectTriggerIndicatorProps) {
+export function SelectTriggerIndicator({ className, children, asChild, ...props }: SelectTriggerIndicatorProps) {
+    const Element = asChild ? Slot : 'span';
+
     return (
-        <span data-ui="select-trigger-indicator"
+        <Element data-ui="select-trigger-indicator"
             aria-hidden
 
             className={cn("w-fit [&>svg]:size-4 text-write shrink-0", className)}
@@ -29,6 +33,6 @@ export function SelectTriggerIndicator({ className, children, ...props }: Select
                     />
                 </svg>
             }
-        </span>
+        </Element>
     );
 }

@@ -9,21 +9,16 @@
 @custom-variant dark (&:where([data-mode="dark"], [data-mode="dark"] *));
 
 @utility normalized-field {
-    --field-height: 2.25rem;
-    --color-field-padding: 0.25rem;
-
     &[type='file'] {
-        padding: 0;
+        @apply p-0;
     }
 
     &[type='color'] {
-        height: var(--field-height);
-        padding: var(--color-field-padding);
+        @apply h-9 p-1;
     }
 
     &[type='range'] {
-        height: var(--field-height);
-        padding: 0;
+        @apply h-9 p-0;
     }
 
     &::-webkit-calendar-picker-indicator {

@@ -861,7 +861,6 @@ function App() {
                     <Input type="range" min="0" max="100" defaultValue="50" />
                     <Input type="file" />
                     <Input type="file" multiple />
-                    <Input type="image" />
                 </div>
 
                 <div className="w-100 p-8 bg-muted-surface shadow flex flex-col gap-4">
