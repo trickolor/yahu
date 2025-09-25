@@ -30,57 +30,6 @@
     }
 }
 
-@utility sb-width-* {
-    scrollbar-width: --value("inherit", "initial", "revert", "revert-layer", "unset");
-    scrollbar-width: --value("auto", "thin", "none");
-    scrollbar-width: --value([generic-name]);
-}
-
-@utility sb-thumb-* {
-    --scrollbar-color-thumb: --value(--color);
-    --scrollbar-color-thumb: --value([color]);
-    --scrollbar-color-thumb: transparent;
-    --scrollbar-color-thumb: currentcolor;
-}
-
-@utility sb-track-* {
-    --scrollbar-color-track: --value(--color);
-    --scrollbar-color-track: --value([color]);
-    --scrollbar-color-track: transparent;
-    --scrollbar-color-track: currentcolor;
-}
-
-@utility sb-color-* {
-    scrollbar-color: --value("inherit", "initial", "revert", "revert-layer", "unset");
-    scrollbar-color: --value("auto");
-    scrollbar-color: --value([generic-name]);
-}
-
-@utility sb-color {
-    scrollbar-color: var(--sb-thumb) var(--sb-track);
-}
-
-@utility sb-gutter-* {
-    scrollbar-color: --value("inherit", "initial", "revert", "revert-layer", "unset");
-}
-
-@utility sb-gutter-stable {
-    scrollbar-gutter: stable;
-}
-
-@utility sb-gutter-auto {
-    scrollbar-gutter: auto;
-}
-
-@utility sb-gutter-stable-both {
-    scrollbar-gutter: stable both-edges;
-}
-
-:root,
-:root * {
-    scrollbar-color: var(--sb-thumb) var(--sb-track);
-}
-
 @layer base {
     :root {
         color-scheme: light dark;

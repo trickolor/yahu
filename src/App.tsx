@@ -2,7 +2,7 @@ import SelectDemo from "./select-demo";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button"
 import { Input } from "./ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectContentView, SelectItem, SelectGroup, SelectLabel, SelectSeparator, SelectItemIndicator, SelectTriggerIndicator } from "./ui/select";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectContentView, SelectItem, SelectGroup, SelectLabel, SelectSeparator, SelectItemIndicator, SelectTriggerIndicator, SelectItemText } from "./ui/select";
 import { Textarea } from "./ui/textarea";
 
 function App() {
@@ -881,87 +881,69 @@ function App() {
                             <SelectValue />
                             <SelectTriggerIndicator />
                         </SelectTrigger>
-                        <SelectContent>
-                            <SelectContentView>
-                                <SelectItem value="apple">Apple</SelectItem>
-                                <SelectItem value="banana">Banana</SelectItem>
-                                <SelectItem value="orange">Orange</SelectItem>
-                                <SelectItem value="grape">Grape</SelectItem>
-                                <SelectItem value="strawberry">Strawberry</SelectItem>
-                                <SelectItem value="apple">Apple</SelectItem>
-                                <SelectItem value="banana">Banana</SelectItem>
-                                <SelectItem value="orange">Orange</SelectItem>
-                                <SelectItem value="grape">Grape</SelectItem>
-                                <SelectItem value="strawberry">Strawberry</SelectItem>
-                                <SelectItem value="apple">Apple</SelectItem>
-                                <SelectItem value="banana">Banana</SelectItem>
-                                <SelectItem value="orange">Orange</SelectItem>
-                                <SelectItem value="grape">Grape</SelectItem>
-                                <SelectItem value="strawberry">Strawberry</SelectItem>
-                            </SelectContentView>
-                        </SelectContent>
-                    </Select>
 
-                    <Select placeholder="Choose a color" defaultValue="blue">
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
                         <SelectContent>
                             <SelectContentView>
                                 <SelectGroup>
-                                    <SelectLabel>Warm Colors</SelectLabel>
-                                    <SelectItem value="red">Red</SelectItem>
-                                    <SelectItem value="orange">Orange</SelectItem>
-                                    <SelectItem value="yellow">Yellow</SelectItem>
+                                    <SelectLabel>Citrus Fruits</SelectLabel>
+                                    <SelectItem value="orange"><SelectItemText>Orange</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                    <SelectItem value="lemon"><SelectItemText>Lemon</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                    <SelectItem value="lime"><SelectItemText>Lime</SelectItemText> <SelectItemIndicator /></SelectItem>
                                 </SelectGroup>
+
                                 <SelectSeparator />
+
                                 <SelectGroup>
-                                    <SelectLabel>Cool Colors</SelectLabel>
-                                    <SelectItem value="blue">Blue</SelectItem>
-                                    <SelectItem value="green">Green</SelectItem>
-                                    <SelectItem value="purple">Purple</SelectItem>
+                                    <SelectLabel>Tropical Fruits</SelectLabel>
+                                    <SelectItem value="mango"><SelectItemText>Mango</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                    <SelectItem value="pineapple"><SelectItemText>Pineapple</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                    <SelectItem value="papaya"><SelectItemText>Papaya</SelectItemText> <SelectItemIndicator /></SelectItem>
                                 </SelectGroup>
-                            </SelectContentView>
-                        </SelectContent>
-                    </Select>
 
-                    <Select placeholder="Choose a size" disabled>
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectContentView>
-                                <SelectItem value="xs">Extra Small</SelectItem>
-                                <SelectItem value="sm">Small</SelectItem>
-                                <SelectItem value="md">Medium</SelectItem>
-                                <SelectItem value="lg">Large</SelectItem>
-                                <SelectItem value="xl">Extra Large</SelectItem>
-                            </SelectContentView>
-                        </SelectContent>
-                    </Select>
+                                <SelectSeparator />
 
-                    <Select placeholder="Choose multiple items" form="demo-form" name="items" required>
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectContentView>
-                                <SelectItem value="item1">
-                                    Item One
-                                    <SelectItemIndicator />
-                                </SelectItem>
-                                <SelectItem value="item2">
-                                    Item Two
-                                    <SelectItemIndicator />
-                                </SelectItem>
-                                <SelectItem value="item3">
-                                    Item Three
-                                    <SelectItemIndicator />
-                                </SelectItem>
-                                <SelectItem value="item4">
-                                    Item Four
-                                    <SelectItemIndicator />
-                                </SelectItem>
+                                <SelectGroup>
+                                    <SelectLabel>Berries</SelectLabel>
+                                    <SelectItem value="strawberry"><SelectItemText>Strawberry</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                    <SelectItem value="blueberry"><SelectItemText>Blueberry</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                    <SelectItem value="raspberry"><SelectItemText>Raspberry</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                </SelectGroup>
+
+                                <SelectSeparator />
+
+                                <SelectGroup>
+                                    <SelectLabel>Stone Fruits</SelectLabel>
+                                    <SelectItem value="peach"><SelectItemText>Peach</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                    <SelectItem value="plum"><SelectItemText>Plum</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                    <SelectItem value="apricot"><SelectItemText>Apricot</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                </SelectGroup>
+
+                                <SelectSeparator />
+
+                                <SelectGroup>
+                                    <SelectLabel>Grapes & Melons</SelectLabel>
+                                    <SelectItem value="grape"><SelectItemText>Grape</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                    <SelectItem value="watermelon"><SelectItemText>Watermelon</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                    <SelectItem value="cantaloupe"><SelectItemText>Cantaloupe</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                </SelectGroup>
+
+                                <SelectSeparator />
+
+                                <SelectGroup>
+                                    <SelectLabel>Tree Fruits</SelectLabel>
+                                    <SelectItem value="apple"><SelectItemText>Apple</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                    <SelectItem value="pear"><SelectItemText>Pear</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                    <SelectItem value="cherry"><SelectItemText>Cherry</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                </SelectGroup>
+
+                                <SelectSeparator />
+
+                                <SelectGroup>
+                                    <SelectLabel>Exotic Fruits</SelectLabel>
+                                    <SelectItem value="kiwi"><SelectItemText>Kiwi</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                    <SelectItem value="dragon-fruit"><SelectItemText>Dragon Fruit</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                    <SelectItem value="passion-fruit"><SelectItemText>Passion Fruit</SelectItemText> <SelectItemIndicator /></SelectItem>
+                                </SelectGroup>
                             </SelectContentView>
                         </SelectContent>
                     </Select>

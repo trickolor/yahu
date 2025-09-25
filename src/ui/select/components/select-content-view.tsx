@@ -1,7 +1,6 @@
 import { type ReactNode, type HTMLAttributes, type RefObject } from "react";
-import { Slot } from "../../slot";
-import { cn } from "../../../cn";
 import { useSelect } from "../hooks/use-select";
+import { cn } from "../../../cn";
 
 
 export interface SelectContentViewProps extends HTMLAttributes<HTMLElement> {
@@ -10,18 +9,16 @@ export interface SelectContentViewProps extends HTMLAttributes<HTMLElement> {
 }
 
 export function SelectContentView({ children, className, asChild, id, ...props }: SelectContentViewProps) {
-    const Element = asChild ? Slot : 'div';
-
     const {
-        refManagement: { contentView: contentViewRef },
         idManagement: { contentView: contentViewId, trigger: triggerId },
+        refManagement: { contentView: contentViewRef },
         openStateManagement: { open },
     } = useSelect();
 
     if (!open) return null;
 
     return (
-        <Element data-ui="select-content-view"
+        <div data-ui="select-content-view"
             ref={contentViewRef as RefObject<HTMLDivElement>}
             id={id || contentViewId}
 
@@ -33,13 +30,13 @@ export function SelectContentView({ children, className, asChild, id, ...props }
             tabIndex={-1}
 
             className={cn(
-                "w-full max-h-96 overflow-y-auto sb-width-thin",
+                "[scrollbar-width:none] w-full max-h-96 overflow-y-auto",
                 className
             )}
 
             {...props}
         >
             {children}
-        </Element>
+        </div>
     )
 }

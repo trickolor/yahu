@@ -1,7 +1,6 @@
-import { Slot } from "../../slot";
-import { cn } from "../../../cn";
 import { type ReactNode, type HTMLAttributes, type RefObject } from "react";
 import { useSelect } from "../hooks/use-select";
+import { cn } from "../../../cn";
 
 export interface SelectContentProps extends HTMLAttributes<HTMLElement> {
     children?: ReactNode;
@@ -10,8 +9,6 @@ export interface SelectContentProps extends HTMLAttributes<HTMLElement> {
 }
 
 export function SelectContent({ children, className, asChild, id, ...props }: SelectContentProps) {
-    const Element = asChild ? Slot : 'div';
-
     const {
         refManagement: { content: contentRef },
         idManagement: { content: contentId },
@@ -21,7 +18,7 @@ export function SelectContent({ children, className, asChild, id, ...props }: Se
     if (!open) return null;
 
     return (
-        <Element data-ui="select-content"
+        <div data-ui="select-content"
             ref={contentRef as RefObject<HTMLDivElement>}
             id={id || contentId}
 
@@ -35,6 +32,6 @@ export function SelectContent({ children, className, asChild, id, ...props }: Se
             {...props}
         >
             {children}
-        </Element>
+        </div>
     );
 }

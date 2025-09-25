@@ -1,6 +1,4 @@
 import type { ReactNode, HTMLAttributes } from "react";
-
-import { Slot } from "../../slot";
 import { cn } from "../../../cn";
 
 export interface SelectGroupProps extends HTMLAttributes<HTMLElement> {
@@ -10,17 +8,15 @@ export interface SelectGroupProps extends HTMLAttributes<HTMLElement> {
 }
 
 export function SelectGroup({ children, className, asChild, ...props }: SelectGroupProps) {
-    const Element = asChild ? Slot : 'div';
-
     return (
-        <Element data-ui="select-group"
-            role="group"
+        <div data-ui="select-group"
 
             className={cn("w-full space-y-px py-1 px-1.5", className)}
+            role="group"
 
             {...props}
         >
             {children}
-        </Element>
+        </div>
     );
 }
