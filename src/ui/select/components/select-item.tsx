@@ -3,44 +3,36 @@ import {
     useRef,
 
     type HTMLAttributes,
-    type ReactNode,
 } from "react";
 
 import { SelectItemContext } from "../hooks/use-select-item";
 import { useSelect } from "../hooks/use-select";
 
-import { Slot } from "../../slot"
 import { cn } from "../../../cn";
 
 export interface SelectItemProps extends HTMLAttributes<HTMLElement> {
+    disabled?: boolean;
     textValue?: string;
     value?: string;
-
-    isDisabled?: boolean;
-
-    children?: ReactNode;
-    className?: string;
-    asChild?: boolean;
 }
 
 export function SelectItem({
     textValue,
     value,
 
-    isDisabled,
+    disabled,
     className,
     children,
-    asChild,
 
     ...props
 }: SelectItemProps) {
 
     const {
+        valueStateManagement: { value: selectedValue, setValue },
         itemManagement: { add, remove, getIndex, items },
         navigationManagement: { cursor, moveCursor },
-        valueStateManagement: { value: selectedValue, setValue },
-        openStateManagement: { setOpen },
         idManagement: { select: selectId },
+        openStateManagement: { setOpen },
         scrollIntoView,
     } = useSelect();
 
@@ -49,35 +41,39 @@ export function SelectItem({
     const reg = useRef<string>(value ?? "");
 
     useEffect(() => {
-        const resolvedValue = value ?? ref.current?.textContent ?? '';
-        const resolvedText = textValue ?? textRef.current?.textContent ?? resolvedValue;
+        const resolvedValue = value ?? ref.current?.dataset?.value ?? ref.current?.textContent?.trim() ?? '';
+        
+        // Get text content - prefer explicit textValue, then from textRef, then from content, finally fallback to value
+        const getResolvedText = () => {
+            if (textValue) return textValue;
+            if (textRef.current?.textContent) return textRef.current.textContent.trim();
+            if (ref.current?.textContent) return ref.current.textContent.trim();
+            return resolvedValue;
+        };
+        
+        const resolvedText = getResolvedText();
         reg.current = resolvedValue;
 
         add({
-            index: items.length,
-
             textValue: resolvedText,
             value: resolvedValue,
-
+            index: items.length,
             textRef,
             ref,
         });
 
         return () => { if (reg.current) remove(reg.current) };
-
-    }, [add, remove, textValue, value]);
-
-    const Element = asChild ? Slot : 'div';
+    }, [add, remove, textValue, value, items.length]);
 
     const resolvedValue = reg.current || value || '';
-    const index = getIndex(resolvedValue);
     const id = props.id || `${selectId}-item-${resolvedValue}`;
+    const index = getIndex(resolvedValue);
 
-    const isHighlighted = index >= 0 && cursor === index;
-    const isSelected = !!resolvedValue && selectedValue === resolvedValue;
+    const selected = !!resolvedValue && selectedValue === resolvedValue;
+    const highlighted = index >= 0 && cursor === index;
 
     const mouseEnterHandler = () => {
-        if (isDisabled) return;
+        if (disabled) return;
 
         if (index >= 0) {
             moveCursor(index);
@@ -85,17 +81,14 @@ export function SelectItem({
         }
     };
 
-    const mouseLeaveHandler = () => {
-        // Don't reset cursor on mouse leave to avoid disrupting keyboard navigation
-        // The cursor will be managed by keyboard events and clicks
-    };
-
     const clickHandler = () => {
-        if (isDisabled) return;
+        if (disabled) return;
 
         if (resolvedValue) {
             setValue(resolvedValue);
             setOpen(false);
+            // Move cursor to selected item
+            moveCursor(index);
         }
     };
 
@@ -106,42 +99,42 @@ export function SelectItem({
         value: resolvedValue,
         index,
 
-        isHighlighted,
-        isSelected,
-        isDisabled,
+        highlighted,
+        selected,
+        disabled,
     }
 
     return (
         <SelectItemContext.Provider value={context}>
-            <Element data-ui="select-item"
+            <div data-ui="select-item" role="option"
+
                 ref={ref}
                 id={id}
 
-                role="option"
+                aria-selected={highlighted ? true : selected}
+                aria-disabled={disabled}
 
-                aria-selected={isHighlighted}
-                aria-disabled={isDisabled}
-
-                data-highlighted={isHighlighted}
-                data-selected={isSelected}
-                data-disabled={isDisabled}
+                data-highlighted={highlighted}
+                data-selected={selected}
+                data-disabled={disabled}
 
                 onMouseEnter={mouseEnterHandler}
-                onMouseLeave={mouseLeaveHandler}
                 onClick={clickHandler}
 
                 className={cn(
-                    "flex items-center justify-between w-full text-sm text-write py-2.5 px-1.5 rounded transition-colors cursor-pointer",
-                    "[aria-disabled='true']:opacity-50 [aria-disabled='true']:cursor-not-allowed",
+                    "flex items-center justify-between w-full text-sm text-write py-2.5 px-1.5 rounded transition-colors cursor-pointer relative",
                     "hover:bg-surface focus:bg-surface focus:outline-none",
-                    "[data-highlighted='true']:bg-surface",
-                    "[data-selected='true']:font-medium",
+
+                    "[data-disabled='true']:opacity-50 [data-disabled='true']:cursor-not-allowed [data-disabled='true']:hover:bg-transparent",
+                    "[data-highlighted='true']:bg-surface [data-highlighted='true']:ring-2 [data-highlighted='true']:ring-blue-500/20",
+                    "[data-selected='true']:font-medium [data-selected='true']:bg-blue-50",
+
                     className
                 )}
                 {...props}
             >
                 {children}
-            </Element>
+            </div>
         </SelectItemContext.Provider>
     );
 }

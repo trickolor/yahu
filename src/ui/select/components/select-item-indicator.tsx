@@ -22,8 +22,9 @@ const Icon = () => {
 }
 
 export function SelectItemIndicator({ className, ...props }: SelectItemIndicatorProps) {
-    const { isSelected } = useSelectItem();
-    if (!isSelected) return null;
+    const { selected } = useSelectItem();
+
+    if (!selected) return null;
 
     return (
         <span data-ui="select-item-indicator"

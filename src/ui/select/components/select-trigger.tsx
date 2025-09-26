@@ -29,15 +29,17 @@ export function SelectTrigger({ children, className, asChild, ...props }: Select
 
         if (!open) {
             setOpen(true);
-            const index = items.findIndex(i => i.value === value);
 
-            if (index >= 0) {
-                moveCursor(index);
-                scrollIntoView(index, true);
-            } else moveCursor(-1);
-        }
-
-        else {
+            setTimeout(() => {
+                const index = items.findIndex(i => i.value === value);
+                if (index >= 0) {
+                    moveCursor(index);
+                    scrollIntoView(index, true);
+                } else {
+                    moveCursor(-1);
+                }
+            }, 0);
+        } else {
             setOpen(false);
             moveCursor(-1);
         }
@@ -46,6 +48,13 @@ export function SelectTrigger({ children, className, asChild, ...props }: Select
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
         if (disabled) return;
         keyDownHandler(event);
+    }
+
+    const handleFocus = () => {
+        // When focus returns to trigger (after closing), reset cursor
+        if (!open) {
+            moveCursor(-1);
+        }
     }
 
     const activeDescendant = open && getActiveItemId() ? getActiveItemId() : undefined;
@@ -60,6 +69,7 @@ export function SelectTrigger({ children, className, asChild, ...props }: Select
             aria-disabled={disabled}
             aria-haspopup="listbox"
             aria-expanded={open}
+            aria-autocomplete="none"
 
             role="combobox"
 
@@ -70,13 +80,15 @@ export function SelectTrigger({ children, className, asChild, ...props }: Select
 
             onKeyDown={handleKeyDown}
             onClick={clickHandler}
+            onFocus={handleFocus}
 
             className={cn(
                 "w-fit min-w-xs min-h-8 inline-flex items-center justify-between gap-2 px-3 py-2 rounded text-write border border-bound bg-weak-surface transition-colors",
                 "focus:bg-surface focus:outline-none focus:ring-2 focus:ring-bound focus:ring-offset-1",
+                "hover:bg-surface",
+
                 "[data-disabled]:opacity-50 [data-disabled]:cursor-not-allowed",
                 "[dir='rtl']:flex-row-reverse",
-                "hover:bg-surface",
                 className
             )}
 

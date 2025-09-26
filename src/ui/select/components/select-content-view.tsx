@@ -18,14 +18,13 @@ export function SelectContentView({ children, className, asChild, id, ...props }
     if (!open) return null;
 
     return (
-        <div data-ui="select-content-view"
+        <div data-ui="select-content-view" role="listbox"
+
             ref={contentViewRef as RefObject<HTMLDivElement>}
             id={id || contentViewId}
 
-            aria-labelledby={triggerId}
             aria-multiselectable="false"
-
-            role="listbox"
+            aria-labelledby={triggerId}
 
             tabIndex={-1}
 

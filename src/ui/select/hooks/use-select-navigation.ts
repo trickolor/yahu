@@ -105,6 +105,11 @@ export function useSelectNavigation({
                     const prev = cursor.value - 1;
                     cursor.move(prev);
                     handlers.move(prev);
+                } else if (cursor.value === -1 && items.length > 0) {
+                    // If no cursor is set, go to last item
+                    const last = items.length - 1;
+                    cursor.move(last);
+                    handlers.move(last);
                 }
 
                 break;
@@ -114,6 +119,10 @@ export function useSelectNavigation({
                     const next = cursor.value + 1;
                     cursor.move(next);
                     handlers.move(next);
+                } else if (cursor.value === -1 && items.length > 0) {
+                    // If no cursor is set, go to first item
+                    cursor.move(0);
+                    handlers.move(0);
                 }
 
                 break;

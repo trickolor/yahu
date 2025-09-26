@@ -28,40 +28,31 @@ export type SelectAction = typeof SelectActions[keyof typeof SelectActions];
 // ----------------------------------------------------------------- //
 
 export const getSelectAction = (key: string, isOpen: boolean, hasAltKey = false): SelectAction => {
-    if (!isOpen) {
-
-        switch (key) {
-            case 'Enter': case ' ': case 'ArrowDown': return SelectActions.Open;
-            case 'ArrowUp': 
-                return hasAltKey ? SelectActions.Open : SelectActions.OpenFirst;
-            case 'Home': return SelectActions.OpenFirst;
-            case 'End': return SelectActions.OpenLast;
-        }
-
-        // For closed combobox, typing characters should open and move to first matching option
-        if (/^[a-zA-Z0-9 ]$/.test(key)) return SelectActions.OpenWithTypeahead;
+    if (!isOpen) switch (key) {
+        case 'Enter': case ' ': case 'ArrowDown': return SelectActions.Open;
+        case 'ArrowUp':
+            return hasAltKey ? SelectActions.Open : SelectActions.OpenFirst;
+        case 'Home': return SelectActions.OpenFirst;
+        case 'End': return SelectActions.OpenLast;
     }
 
-    else {
-        switch (key) {
-            case 'ArrowUp': return hasAltKey ? SelectActions.CloseSelect : SelectActions.Previous;
-            case 'ArrowDown': return SelectActions.Next;
+    if (/^[a-zA-Z0-9 ]$/.test(key)) return SelectActions.OpenWithTypeahead;
 
-            case 'Enter': case ' ': return SelectActions.Select;
-            case 'Tab': return SelectActions.CloseSelect;
-            case 'Escape': return SelectActions.Close;
+    else switch (key) {
+        case 'ArrowUp': return hasAltKey ? SelectActions.CloseSelect : SelectActions.Previous;
+        case 'ArrowDown': return SelectActions.Next;
 
-            case 'PageDown': return SelectActions.PageDown;
-            case 'PageUp': return SelectActions.PageUp;
+        case 'Enter': case ' ': return SelectActions.Select;
+        case 'Tab': return SelectActions.CloseSelect;
+        case 'Escape': return SelectActions.Close;
 
-            case 'Home': return SelectActions.First;
-            case 'End': return SelectActions.Last;
-        }
+        case 'PageDown': return SelectActions.PageDown;
+        case 'PageUp': return SelectActions.PageUp;
 
-        // Include space in typeahead when listbox is open
-        if (/^[a-zA-Z0-9 ]$/.test(key)) return SelectActions.Typeahead;
-
+        case 'Home': return SelectActions.First;
+        case 'End': return SelectActions.Last;
     }
 
+    if (/^[a-zA-Z0-9 ]$/.test(key)) return SelectActions.Typeahead;
     return SelectActions.None;
 }

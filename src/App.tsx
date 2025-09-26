@@ -3,6 +3,7 @@ import { Badge } from "./ui/badge";
 import { Button } from "./ui/button"
 import { Input } from "./ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectContentView, SelectItem, SelectGroup, SelectLabel, SelectSeparator, SelectItemIndicator, SelectTriggerIndicator, SelectItemText } from "./ui/select";
+import { Test } from "./ui/select/wip";
 import { Textarea } from "./ui/textarea";
 
 function App() {
@@ -876,77 +877,7 @@ function App() {
                 <div className="w-100 p-8 bg-muted-surface shadow flex flex-col gap-4">
                     <h3 className="text-lg font-semibold text-write mb-4">Select Examples</h3>
 
-                    <Select placeholder="Choose a fruit">
-                        <SelectTrigger>
-                            <SelectValue />
-                            <SelectTriggerIndicator />
-                        </SelectTrigger>
-
-                        <SelectContent>
-                            <SelectContentView>
-                                <SelectGroup>
-                                    <SelectLabel>Citrus Fruits</SelectLabel>
-                                    <SelectItem value="orange"><SelectItemText>Orange</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                    <SelectItem value="lemon"><SelectItemText>Lemon</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                    <SelectItem value="lime"><SelectItemText>Lime</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                </SelectGroup>
-
-                                <SelectSeparator />
-
-                                <SelectGroup>
-                                    <SelectLabel>Tropical Fruits</SelectLabel>
-                                    <SelectItem value="mango"><SelectItemText>Mango</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                    <SelectItem value="pineapple"><SelectItemText>Pineapple</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                    <SelectItem value="papaya"><SelectItemText>Papaya</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                </SelectGroup>
-
-                                <SelectSeparator />
-
-                                <SelectGroup>
-                                    <SelectLabel>Berries</SelectLabel>
-                                    <SelectItem value="strawberry"><SelectItemText>Strawberry</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                    <SelectItem value="blueberry"><SelectItemText>Blueberry</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                    <SelectItem value="raspberry"><SelectItemText>Raspberry</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                </SelectGroup>
-
-                                <SelectSeparator />
-
-                                <SelectGroup>
-                                    <SelectLabel>Stone Fruits</SelectLabel>
-                                    <SelectItem value="peach"><SelectItemText>Peach</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                    <SelectItem value="plum"><SelectItemText>Plum</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                    <SelectItem value="apricot"><SelectItemText>Apricot</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                </SelectGroup>
-
-                                <SelectSeparator />
-
-                                <SelectGroup>
-                                    <SelectLabel>Grapes & Melons</SelectLabel>
-                                    <SelectItem value="grape"><SelectItemText>Grape</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                    <SelectItem value="watermelon"><SelectItemText>Watermelon</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                    <SelectItem value="cantaloupe"><SelectItemText>Cantaloupe</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                </SelectGroup>
-
-                                <SelectSeparator />
-
-                                <SelectGroup>
-                                    <SelectLabel>Tree Fruits</SelectLabel>
-                                    <SelectItem value="apple"><SelectItemText>Apple</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                    <SelectItem value="pear"><SelectItemText>Pear</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                    <SelectItem value="cherry"><SelectItemText>Cherry</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                </SelectGroup>
-
-                                <SelectSeparator />
-
-                                <SelectGroup>
-                                    <SelectLabel>Exotic Fruits</SelectLabel>
-                                    <SelectItem value="kiwi"><SelectItemText>Kiwi</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                    <SelectItem value="dragon-fruit"><SelectItemText>Dragon Fruit</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                    <SelectItem value="passion-fruit"><SelectItemText>Passion Fruit</SelectItemText> <SelectItemIndicator /></SelectItem>
-                                </SelectGroup>
-                            </SelectContentView>
-                        </SelectContent>
-                    </Select>
+                    <Test />
                 </div>
             </section>
         </main>

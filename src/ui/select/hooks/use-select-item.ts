@@ -7,9 +7,9 @@ export interface SelectItemContext {
     value?: string;
     index: number;
     
-    isHighlighted: boolean;
-    isDisabled?: boolean;
-    isSelected: boolean;
+    highlighted: boolean;
+    disabled?: boolean;
+    selected: boolean;
 }
 
 export const SelectItemContext = createContext<SelectItemContext | null>(null);

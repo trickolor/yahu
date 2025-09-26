@@ -9,12 +9,10 @@ export interface SelectLabelProps extends HTMLAttributes<HTMLElement> {
 
 export function SelectLabel({ children, className, asChild, id, ...props }: SelectLabelProps) {
     return (
-        <span data-ui="select-label"
-            role="label"
+        <span data-ui="select-label" role="label"
 
             className={cn(
                 "block w-fit text-write px-1.5 py-1 text-xs leading-none font-medium tracking-wide",
-                "[dir='rtl']:text-right",
                 className
             )}
 
