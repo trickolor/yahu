@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState, type HTMLAttributes, type KeyboardEvent, type ReactNode, type SyntheticEvent } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type HTMLAttributes, type KeyboardEvent, type ReactNode, type RefObject, type SyntheticEvent } from "react";
 import { cn } from "../../cn";
 import { createPortal } from "react-dom";
 
@@ -31,7 +31,57 @@ export function useControllableState<T>({
 
 // ---------------------------------------------------------------------------------------------------- //
 
+const SelectActions = {
+    None: -1,
+    Open: 0,
+    OpenFirst: 1,
+    OpenCurrent: 2,
+    OpenLast: 3,
+    OpenTypeahead: 4,
+    Select: 5,
+    Previous: 6,
+    Next: 7,
+    First: 8,
+    Last: 9,
+    PageUp: 10,
+    PageDown: 11,
+    Typeahead: 12,
+    Close: 13,
+    CloseSelect: 14,
+} as const;
 
+type SelectAction = typeof SelectActions[keyof typeof SelectActions];
+
+export const getSelectAction = (key: string, isOpen: boolean, hasAltKey = false): SelectAction => {
+    if (!isOpen) switch (key) {
+        case 'Enter': case ' ': case 'ArrowDown': return SelectActions.Open;
+        case 'ArrowUp':
+            return hasAltKey ? SelectActions.Open : SelectActions.OpenFirst;
+        case 'Home': return SelectActions.OpenFirst;
+        case 'End': return SelectActions.OpenLast;
+    }
+
+    if (/^[a-zA-Z0-9 ]$/.test(key)) return SelectActions.OpenTypeahead;
+
+    else switch (key) {
+        case 'ArrowUp': return hasAltKey ? SelectActions.CloseSelect : SelectActions.Previous;
+        case 'ArrowDown': return SelectActions.Next;
+
+        case 'Enter': case ' ': return SelectActions.Select;
+        case 'Tab': return SelectActions.CloseSelect;
+        case 'Escape': return SelectActions.Close;
+
+        case 'PageDown': return SelectActions.PageDown;
+        case 'PageUp': return SelectActions.PageUp;
+
+        case 'Home': return SelectActions.First;
+        case 'End': return SelectActions.Last;
+    }
+
+    if (/^[a-zA-Z0-9 ]$/.test(key)) return SelectActions.Typeahead;
+
+    return SelectActions.None;
+}
 
 // ---------------------------------------------------------------------------------------------------- //
 
@@ -42,8 +92,11 @@ interface SelectContextState {
     open: boolean;
     setOpen: (open: boolean) => void;
 
-    textValue: string;
-    setTextValue: (textValue: string) => void;
+    textValue: string | null;
+    setTextValue: (textValue: string | null) => void;
+
+    cursor: number;
+    setCursor: (cursor: number) => void;
 }
 
 const SelectContext = createContext<SelectContextState | null>(null);
@@ -64,6 +117,7 @@ interface SelectProps extends HTMLAttributes<HTMLElement> {
     defaultOpen?: boolean;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
+
 
     dir?: "ltr" | "rtl";
 
@@ -94,20 +148,37 @@ function Select({
         value: open,
     });
 
-    const [textValue, setTextValue] = useState('');
+    const [textValue, setTextValue] = useState<string | null>(null);
+    const [cursor, setCursor] = useState(-1);
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handler = (event: MouseEvent) => {
+            if (ref.current?.contains(event.target as Node)) return;
+            if (openState) setOpen(false);
+        }
+
+        document.addEventListener('click', handler);
+        return () => document.removeEventListener('click', handler);
+    }, [openState, setOpen, ref])
 
     const context: SelectContextState = {
         value: valueState,
         setValue,
+        
         open: openState,
         setOpen,
+
         textValue,
         setTextValue,
+        
+        cursor,
+        setCursor,
     }
 
     return (
         <SelectContext.Provider value={context}>
-            <div data-ui="select" {...props} className={cn("relative w-fit", className)}>
+            <div data-ui="select" ref={ref} {...props} className={cn("relative w-fit", className)}>
                 {children}
             </div>
         </SelectContext.Provider>
@@ -127,8 +198,8 @@ function SelectTrigger({ className, children, ...props }: SelectTriggerProps) {
         <button data-ui="select-trigger" type="button" onClick={clickHandler} {...props}
 
             data-state={open ? "open" : "closed"}
-            data-disabled
-            data-placeholder
+            // data-disabled
+            // data-placeholder
 
             className={cn(
                 "w-fit min-w-xs min-h-9 inline-flex items-center justify-between gap-2 px-3 py-2 rounded text-write border border-bound bg-weak-surface transition-colors",
@@ -150,15 +221,11 @@ interface SelectValueProps extends HTMLAttributes<HTMLElement> {
 function SelectValue({ className, children, placeholder, ...props }: SelectValueProps) {
     const { textValue } = useSelectContext();
 
-    useEffect(() => {
-        const displayed = children ?? (textValue.length ? textValue : null) ?? placeholder;
-        setTextValue(displayed);
-    }, [children, textValue, placeholder]);
-
+    const displayed = children ?? textValue ?? placeholder ?? '';
 
     return (
         <span data-ui="select-value" {...props} className={cn("text-sm font-medium text-write overflow-hidden truncate", className)}>
-            {textValue}
+            {displayed}
         </span>
     );
 }
@@ -184,7 +251,7 @@ function SelectTriggerIndicator({ className, ...props }: SelectTriggerIndicatorP
                     clipRule="evenodd"
                 />
             </svg>
-        )
+        );
     }
 
     return (
@@ -217,19 +284,21 @@ export function SelectContent({
     children, className, ...props
 }: SelectContentProps) {
     const { open } = useSelectContext();
+    const ref = useRef<HTMLDivElement>(null);
 
     if (!open) return null;
 
     return (
-        <div data-ui="select-content" {...props}
-
+        <div data-ui="select-content"
             data-state={open ? "open" : "closed"}
-
+            ref={ref}
 
             className={cn(
                 "absolute left-0 top-full z-10 mt-1 min-w-xs p-1.5 rounded-md shadow-lg border border-muted-bound bg-muted-surface",
                 className
             )}
+
+            {...props}
         >
             {children}
         </div>
@@ -250,6 +319,21 @@ export function SelectViewport({ children, className, ...props }: SelectViewport
 
 // ---------------------------------------------------------------------------------------------------- //
 
+interface SelectItemContextState {
+    textElementRef: RefObject<HTMLElement | null>;
+    selected: boolean;
+}
+
+const SelectItemContext = createContext<SelectItemContextState | null>(null);
+
+function useSelectItemContext(): SelectItemContextState {
+    const context = useContext(SelectItemContext);
+    if (!context) throw new Error("useSelectItemContext must be used within a <SelectItem> component");
+    return context;
+}
+
+// ---------------------------------------------------------------------------------------------------- //
+
 interface SelectItemProps extends HTMLAttributes<HTMLElement> {
     value?: string;
     disabled?: boolean;
@@ -257,37 +341,55 @@ interface SelectItemProps extends HTMLAttributes<HTMLElement> {
 }
 
 export function SelectItem({ children, className, value, disabled, textValue, ...props }: SelectItemProps) {
-    const { open, setOpen, setValue } = useSelectContext();
+    const { setOpen, setValue, value: currentValue, setTextValue } = useSelectContext();
+
+    const ref = useRef<HTMLDivElement>(null);
+    const textElementRef = useRef<HTMLElement>(null);
+    const selected = value === currentValue;
+
+    const context: SelectItemContextState = { textElementRef, selected }
 
     const clickHandler = () => {
         if (disabled) return;
         if (value) setValue(value);
-
         setOpen(false);
+
+        setTextValue(
+            textValue ??
+            textElementRef?.current?.textContent ??
+            ref?.current?.textContent ??
+            value ??
+            ''
+        );
     }
 
     return (
-        <div data-ui="select-item"
+        <SelectItemContext.Provider value={context}>
+            <div data-ui="select-item"
+                role="option"
+                ref={ref}
+                onClick={clickHandler}
 
-            onClick={clickHandler}
+                data-state={selected ? 'checked' : 'unchecked'}
+                data-highlighted={false}
+                data-disabled={disabled}
 
-            data-state
-            data-highlighted
-            data-disabled
+                {...props}
 
-            {...props}
+                className={cn(
+                    "flex items-center justify-between w-full text-sm text-write py-2.5 px-1.5 rounded transition-colors cursor-pointer relative",
+                    "focus:bg-surface focus:outline-none focus:ring-2 focus:ring-outer-bound focus:ring-offset-2 focus:ring-offset-transparent",
+                    "hover:bg-surface",
 
-            className={cn("flex items-center justify-between w-full text-sm text-write py-2.5 px-1.5 rounded transition-colors cursor-pointer relative",
-                "hover:bg-surface focus:bg-surface focus:outline-none",
+                    "data-[disabled='true']:opacity-50 data-[disabled='true']:cursor-not-allowed data-[disabled='true']:hover:bg-transparent",
+                    "data-[state='checked']:font-medium",
 
-                "[data-disabled='true']:opacity-50 [data-disabled='true']:cursor-not-allowed [data-disabled='true']:hover:bg-transparent",
-                "[data-highlighted='true']:bg-surface [data-highlighted='true']:ring-2 [data-highlighted='true']:ring-blue-500/20",
-                "[data-state='checked']:font-medium [data-state='checked']:bg-blue-50",
-                className
-            )}
-        >
-            {children}
-        </div>
+                    className
+                )}
+            >
+                {children}
+            </div>
+        </SelectItemContext.Provider>
     );
 }
 
@@ -296,9 +398,10 @@ export function SelectItem({ children, className, value, disabled, textValue, ..
 interface SelectItemTextProps extends HTMLAttributes<HTMLElement> { children?: string }
 
 export function SelectItemText({ className, children, ...props }: SelectItemTextProps) {
+    const { textElementRef } = useSelectItemContext();
 
     return (
-        <span data-ui="select-item-text" className={cn("flex-1 truncate", className)} {...props}>
+        <span ref={textElementRef} data-ui="select-item-text" className={cn("flex-1 truncate", className)} {...props}>
             {children}
         </span>
     );
@@ -323,8 +426,12 @@ export function SelectItemIndicator({ className, ...props }: SelectItemIndicator
                     clipRule="evenodd"
                 />
             </svg>
-        )
+        );
     }
+
+    const { selected } = useSelectItemContext();
+    if (!selected) return null;
+
     return (
         <span data-ui="select-item-indicator" className={cn("w-fit [&>svg]:size-4 text-write shrink-0", className)} {...props}>
             <Icon />
@@ -334,13 +441,43 @@ export function SelectItemIndicator({ className, ...props }: SelectItemIndicator
 
 // ---------------------------------------------------------------------------------------------------- //
 
+interface SelectGroupContextState {
+    groupId: string;
+    labelElementRef: RefObject<HTMLElement | null>;
+}
+
+const SelectGroupContext = createContext<SelectGroupContextState | null>(null);
+
+function useSelectGroupContext(): SelectGroupContextState {
+    const context = useContext(SelectGroupContext);
+    if (!context) throw new Error("useSelectGroupContext must be used within a <SelectGroup> component");
+    return context;
+}
+
+// ---------------------------------------------------------------------------------------------------- //
+
 interface SelectGroupProps extends HTMLAttributes<HTMLElement> { }
 
 export function SelectGroup({ children, className, ...props }: SelectGroupProps) {
+    const fallbackId = useId();
+    const groupId = props.id ?? fallbackId;
+    const labelElementRef = useRef<HTMLElement>(null);
+    const labeledBy = labelElementRef?.current?.id ?? `${groupId}-label`;
+
+    const context: SelectGroupContextState = { groupId, labelElementRef }
+
     return (
-        <div data-ui="select-group" className={cn("w-full space-y-px py-1 px-1.5", className)} role="group" {...props}>
-            {children}
-        </div>
+        <SelectGroupContext.Provider value={context}>
+            <div data-ui="select-group"
+                className={cn("w-full space-y-px py-1 px-1.5", className)}
+                aria-labelledby={labeledBy}
+                id={groupId}
+                role="group"
+                {...props}
+            >
+                {children}
+            </div>
+        </SelectGroupContext.Provider>
     );
 }
 
@@ -349,8 +486,16 @@ export function SelectGroup({ children, className, ...props }: SelectGroupProps)
 interface SelectLabelProps extends HTMLAttributes<HTMLElement> { }
 
 export function SelectLabel({ children, className, ...props }: SelectLabelProps) {
+    const { groupId, labelElementRef } = useSelectGroupContext();
+    const labelId = props.id ?? `${groupId}-label`;
+
     return (
-        <span data-ui="select-label" className={cn("text-sm font-medium text-write", className)} {...props}>
+        <span data-ui="select-label"
+            className={cn("text-sm font-medium text-write", className)}
+            ref={labelElementRef}
+            id={labelId}
+            {...props}
+        >
             {children}
         </span>
     );
@@ -360,9 +505,16 @@ export function SelectLabel({ children, className, ...props }: SelectLabelProps)
 
 interface SelectSeparatorProps extends HTMLAttributes<HTMLElement> { }
 
-export function SelectSeparator({ className, ...props }: SelectSeparatorProps) {
+export function SelectSeparator({ className, children, ...props }: SelectSeparatorProps) {
     return (
-        <hr data-ui="select-separator" className={cn("w-full h-px bg-muted-bound", className)} {...props} />
+        <hr data-ui="select-separator"
+            className={cn("w-full h-px text-muted-bound", className)}
+            aria-orientation="horizontal"
+            role="separator"
+            {...props}
+        >
+            {children}
+        </hr>
     );
 }
 
@@ -418,7 +570,7 @@ export function SelectScrollDownButton({ className, ...props }: ScrollDownButton
                     clipRule="evenodd"
                 />
             </svg>
-        )
+        );
     }
 
     return (
@@ -457,8 +609,8 @@ export const Test = () => {
 
                     <SelectGroup>
                         <SelectLabel>Group 2</SelectLabel>
-                        <SelectItem value="D"><SelectItemText>Carrot</SelectItemText> <SelectItemIndicator /></SelectItem>
-                        <SelectItem value="E"><SelectItemText>Potato</SelectItemText> <SelectItemIndicator /></SelectItem>
+                        <SelectItem disabled value="D"><SelectItemText>Carrot</SelectItemText> <SelectItemIndicator /></SelectItem>
+                        <SelectItem textValue="Inner Potato Text Value" value="E"><SelectItemText>Potato</SelectItemText> <SelectItemIndicator /></SelectItem>
                         <SelectItem value="F"><SelectItemText>Tomato</SelectItemText> <SelectItemIndicator /></SelectItem>
                     </SelectGroup>
 
