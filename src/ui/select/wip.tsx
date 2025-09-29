@@ -26,7 +26,7 @@ interface ControllableStateProps<T> {
 
 type ControllableStateReturn<T> = [T, (next: T) => void];
 
-export function useControllableState<T>({
+function useControllableState<T>({
     defaultValue,
     onChange,
     value,
@@ -47,61 +47,47 @@ export function useControllableState<T>({
 
 const SelectActions = {
     None: -1,
-    Open: 0,
-    OpenFirst: 1,
-    OpenCurrent: 2,
-    OpenLast: 3,
-    OpenTypeahead: 4,
-    Select: 5,
-    Previous: 6,
-    Next: 7,
-    First: 8,
-    Last: 9,
-    PageUp: 10,
-    PageDown: 11,
-    Typeahead: 12,
-    Close: 13,
-    CloseSelect: 14,
+    Close: 0,
+    Open: 1,
+    Select: 2,
+    First: 3,
+    Last: 4,
+    Previous: 5,
+    Next: 6,
+    PageUp: 7,
+    PageDown: 8,
+    Type: 9,
+    FocusMove: 10,
 } as const;
 
 type SelectAction = typeof SelectActions[keyof typeof SelectActions];
 
-export const getSelectAction = (key: string, isOpen: boolean, hasAltKey = false): SelectAction => {
-    if (!isOpen) switch (key) {
-        case 'Enter': case ' ': case 'ArrowDown': return SelectActions.Open;
-        case 'ArrowUp':
-            return hasAltKey ? SelectActions.Open : SelectActions.OpenFirst;
-        case 'Home': return SelectActions.OpenFirst;
-        case 'End': return SelectActions.OpenLast;
-    }
+const getSelectAction = (event: KeyboardEvent<HTMLButtonElement>, open: boolean): SelectAction => {
+    const { key, altKey, ctrlKey, metaKey } = event;
 
-    if (/^[a-zA-Z0-9 ]$/.test(key)) return SelectActions.OpenTypeahead;
+    const openKeys = ['ArrowDown', 'ArrowUp', 'Enter', ' '];
+    if (!open && openKeys.includes(key)) return SelectActions.Open;
 
-    else switch (key) {
-        case 'ArrowUp': return hasAltKey ? SelectActions.CloseSelect : SelectActions.Previous;
-        case 'ArrowDown': return SelectActions.Next;
+    if (key === 'Home') return SelectActions.First;
+    if (key === 'End') return SelectActions.Last;
 
-        case 'Enter': case ' ': return SelectActions.Select;
-        case 'Tab': return SelectActions.CloseSelect;
-        case 'Escape': return SelectActions.Close;
+    if (
+        key === 'Backspace' ||
+        key === 'Clear' ||
+        key.length === 1 && key !== ' ' && !altKey && !ctrlKey && !metaKey
+    ) return SelectActions.Type;
 
-        case 'PageDown': return SelectActions.PageDown;
+    if (open) switch (key) {
+        case 'ArrowUp': return altKey ? SelectActions.Select : SelectActions.Previous;
+        case 'ArrowDown': return altKey ? SelectActions.None : SelectActions.Next;
         case 'PageUp': return SelectActions.PageUp;
-
-        case 'Home': return SelectActions.First;
-        case 'End': return SelectActions.Last;
+        case 'PageDown': return SelectActions.PageDown;
+        case 'Escape': return SelectActions.Close;
+        case 'Enter': case ' ': return SelectActions.Select;
+        case 'Tab': return SelectActions.FocusMove;
     }
-
-    if (/^[a-zA-Z0-9 ]$/.test(key)) return SelectActions.Typeahead;
 
     return SelectActions.None;
-}
-
-// ---------------------------------------------------------------------------------------------------- //
-
-function findLastIndex<T>(array: T[], predicate: (item: T) => boolean): number {
-    for (let i = array.length - 1; i >= 0; i--) if (predicate(array[i])) return i;
-    return -1;
 }
 
 // ---------------------------------------------------------------------------------------------------- //
@@ -136,6 +122,7 @@ interface SelectContextState {
     typeaheadTimeout: number | null;
     setTypeaheadTimeout: (timeout: number | null) => void;
 
+    viewportRef: RefObject<HTMLDivElement | null>;
     activeDescendant: string | null;
 }
 
@@ -192,6 +179,8 @@ function Select({
     const [items, setItems] = useState<SelectItemEntry[]>([]);
     const [typeaheadValue, setTypeaheadValue] = useState('');
     const [cursor, setCursor] = useState(-1);
+
+    const viewportRef = useRef<HTMLDivElement>(null);
     const ref = useRef<HTMLDivElement>(null);
 
     const activeDescendant = cursor >= 0 && cursor < items.length ? items[cursor].id : null;
@@ -234,6 +223,35 @@ function Select({
         }
     }, [openState, typeaheadTimeout]);
 
+    // Handle cursor positioning when select opens
+    useEffect(() => {
+        if (!openState) return;
+        
+        // Find the currently selected item and position cursor there
+        const currentIndex = items.findIndex(item => item.value === valueState);
+        if (currentIndex >= 0) {
+            setCursor(currentIndex);
+            // Scroll to the selected item when opening
+            setTimeout(() => {
+                if (!(currentIndex >= 0 && currentIndex < items.length)) return;
+                const { element } = items[currentIndex];
+                const viewport = viewportRef.current;
+                if (element && viewport) {
+                    const elementRect = element.getBoundingClientRect();
+                    const viewportRect = viewport.getBoundingClientRect();
+                    const elementTop = elementRect.top - viewportRect.top + viewport.scrollTop;
+                    const elementHeight = elementRect.height;
+                    const viewportHeight = viewport.clientHeight;
+                    const scrollTop = elementTop - (viewportHeight / 2) + (elementHeight / 2);
+                    viewport.scrollTo({ top: scrollTop, behavior: 'smooth' });
+                }
+            }, 0);
+        } else {
+            // If no item is selected, position cursor at first item
+            setCursor(items.length > 0 ? 0 : -1);
+        }
+    }, [openState, items, valueState, viewportRef]);
+
     const context: SelectContextState = {
         value: valueState,
         setValue,
@@ -257,6 +275,7 @@ function Select({
         setTypeaheadTimeout,
 
         activeDescendant,
+        viewportRef,
     }
 
     return (
@@ -274,26 +293,43 @@ interface SelectTriggerProps extends HTMLAttributes<HTMLElement> { }
 
 function SelectTrigger({ className, children, ...props }: SelectTriggerProps) {
     const {
-        open, setOpen, items, cursor, setCursor, setValue, setTextValue, value,
+        open, setOpen, items, cursor, setCursor, setValue, setTextValue,
         typeaheadValue, setTypeaheadValue, typeaheadTimeout, setTypeaheadTimeout,
-        activeDescendant
+        activeDescendant, viewportRef,
     } = useSelectContext();
 
     const clickHandler = () => setOpen(!open);
 
-    const performTypeahead = useCallback((char: string) => {
-        const newTypeaheadValue = typeaheadValue + char.toLowerCase();
-        setTypeaheadValue(newTypeaheadValue);
+    const typeahead = useCallback((character: string) => {
         if (typeaheadTimeout) clearTimeout(typeaheadTimeout);
 
-        const matchingIndex = items.findIndex(item =>
-            !item.disabled && item.textValue.toLowerCase().startsWith(newTypeaheadValue)
-        );
+        const newTypeaheadValue = typeaheadValue + character;
+        setTypeaheadValue(newTypeaheadValue);
 
-        if (matchingIndex >= 0) {
-            setCursor(matchingIndex);
-            const item = items[matchingIndex];
-            if (item.element) item.element.scrollIntoView({ block: 'nearest' });
+        const enabledItems = items.filter(item => !item.disabled);
+
+        if (character === typeaheadValue && typeaheadValue.length === 1) {
+            const currentIndex = cursor >= 0 ? cursor : -1;
+            const matchingItems = enabledItems.filter(item =>
+                item.textValue.toLowerCase().startsWith(character.toLowerCase())
+            );
+
+            if (matchingItems.length > 0) {
+                const currentMatchIndex = matchingItems.findIndex(item => items.indexOf(item) === currentIndex);
+                const nextMatchIndex = (currentMatchIndex + 1) % matchingItems.length;
+                const nextMatch = matchingItems[nextMatchIndex];
+                const nextCursor = items.indexOf(nextMatch);
+                setCursor(nextCursor);
+            }
+        }
+
+        else {
+            const matchingItem = enabledItems.find(item => item.textValue.toLowerCase().startsWith(newTypeaheadValue.toLowerCase()));
+
+            if (matchingItem) {
+                const matchingIndex = items.indexOf(matchingItem);
+                setCursor(matchingIndex);
+            }
         }
 
         const timeout = window.setTimeout(() => {
@@ -302,153 +338,125 @@ function SelectTrigger({ className, children, ...props }: SelectTriggerProps) {
         }, 1000);
 
         setTypeaheadTimeout(timeout);
-    }, [typeaheadValue, typeaheadTimeout, items, setCursor, setTypeaheadValue, setTypeaheadTimeout]);
+    }, [
+        open,
+        setOpen,
+        typeaheadTimeout,
+        setTypeaheadTimeout,
+        typeaheadValue,
+        setTypeaheadValue,
+        items,
+        cursor,
+        setCursor,
+    ]);
 
     const keyDownHandler = (event: KeyboardEvent<HTMLButtonElement>) => {
-        const action = getSelectAction(event.key, open, event.altKey);
+        const action = getSelectAction(event, open);
         if (action !== SelectActions.None) event.preventDefault();
+
+        const scroll = (index: number) => {
+            if (!(index >= 0 && index < items.length)) return;
+
+            const { element } = items[index];
+            const viewport = viewportRef.current;
+
+            if (element && viewport) {
+                const elementRect = element.getBoundingClientRect();
+                const viewportRect = viewport.getBoundingClientRect();
+
+                const elementTop = elementRect.top - viewportRect.top + viewport.scrollTop;
+                const elementHeight = elementRect.height;
+                const viewportHeight = viewport.clientHeight;
+
+                const scrollTop = elementTop - (viewportHeight / 2) + (elementHeight / 2);
+
+                viewport.scrollTo({
+                    top: scrollTop,
+                    behavior: 'smooth'
+                });
+            }
+        };
 
         switch (action) {
             case SelectActions.Open:
-                setOpen(true);
-                const selectedIndex = items.findIndex(item => item.value === value);
-                setCursor(selectedIndex >= 0 ? selectedIndex : -1);
-                break;
-
-            case SelectActions.OpenFirst:
-                setOpen(true);
-                const firstEnabledIndex = items.findIndex(item => !item.disabled);
-                setCursor(firstEnabledIndex >= 0 ? firstEnabledIndex : -1);
-                break;
-
-            case SelectActions.OpenLast:
-                setOpen(true);
-                const lastEnabledIndex = findLastIndex(items, (item: SelectItemEntry) => !item.disabled);
-                setCursor(lastEnabledIndex >= 0 ? lastEnabledIndex : -1);
-                break;
-
-            case SelectActions.OpenCurrent:
-                setOpen(true);
-                const currentIndex = items.findIndex(item => item.value === value);
-                setCursor(currentIndex >= 0 ? currentIndex : -1);
-                break;
-
-            case SelectActions.OpenTypeahead:
-                setOpen(true);
-                performTypeahead(event.key);
-                break;
-
-            case SelectActions.Select:
-            case SelectActions.CloseSelect:
-                if (cursor >= 0 && cursor < items.length) {
-                    const selectedItem = items[cursor];
-                    if (!selectedItem.disabled) {
-                        setValue(selectedItem.value);
-                        setTextValue(selectedItem.textValue);
-                    }
+                if (!open) {
+                    setOpen(true);
+                    // Cursor positioning is handled by useEffect when openState changes
                 }
+                break;
 
-                setOpen(false);
-                setCursor(-1);
+            case SelectActions.First:
+                if (!open) setOpen(true);
+                setCursor(0);
+
+                scroll(0);
+                break;
+
+            case SelectActions.Last:
+                if (!open) setOpen(true);
+                const lastIndex = items.length - 1;
+                setCursor(lastIndex);
+
+                scroll(lastIndex);
                 break;
 
             case SelectActions.Previous:
                 if (cursor > 0) {
-                    for (let i = cursor - 1; i >= 0; i--) if (!items[i].disabled) {
-                        setCursor(i);
-                        items[i].element?.scrollIntoView({ block: 'nearest' });
-                        break;
-                    }
+                    const newCursor = cursor - 1;
+                    setCursor(newCursor);
+                    scroll(newCursor);
                 }
-
-                else if (cursor === -1 && items.length > 0) {
-                    const lastEnabledIndex = findLastIndex(items, (item: SelectItemEntry) => !item.disabled);
-
-                    if (lastEnabledIndex >= 0) {
-                        setCursor(lastEnabledIndex);
-                        items[lastEnabledIndex].element?.scrollIntoView({ block: 'nearest' });
-                    }
-                }
-
                 break;
 
             case SelectActions.Next:
-                if (cursor < items.length - 1) for (let i = cursor + 1; i < items.length; i++) {
-                    if (!items[i].disabled) {
-                        setCursor(i);
-                        items[i].element?.scrollIntoView({ block: 'nearest' });
-                        break;
-                    }
+                if (cursor < items.length - 1) {
+                    const newCursor = cursor + 1;
+                    setCursor(newCursor);
+                    scroll(newCursor);
                 }
-
-                else if (cursor === -1 && items.length > 0) {
-                    const firstEnabledIndex = items.findIndex(item => !item.disabled);
-
-                    if (firstEnabledIndex >= 0) {
-                        setCursor(firstEnabledIndex);
-                        items[firstEnabledIndex].element?.scrollIntoView({ block: 'nearest' });
-                    }
-                }
-
-                break;
-
-            case SelectActions.First:
-                if (items.length > 0) {
-                    const firstEnabledIndex = items.findIndex(item => !item.disabled);
-
-                    if (firstEnabledIndex >= 0) {
-                        setCursor(firstEnabledIndex);
-                        items[firstEnabledIndex].element?.scrollIntoView({ block: 'nearest' });
-                    }
-                }
-
-                break;
-
-            case SelectActions.Last:
-                if (items.length > 0) {
-                    const lastEnabledIndex = findLastIndex(items, (item: SelectItemEntry) => !item.disabled);
-
-                    if (lastEnabledIndex >= 0) {
-                        setCursor(lastEnabledIndex);
-                        items[lastEnabledIndex].element?.scrollIntoView({ block: 'nearest' });
-                    }
-                }
-
                 break;
 
             case SelectActions.PageUp:
-                if (items.length > 0 && cursor >= 0) {
-                    const targetIndex = Math.max(0, cursor - 10);
+                const pageUpCursor = Math.max(0, cursor - 10);
+                setCursor(pageUpCursor);
 
-                    for (let i = targetIndex; i >= 0; i--) if (!items[i].disabled) {
-                        setCursor(i);
-                        items[i].element?.scrollIntoView({ block: 'nearest' });
-                        break;
-                    }
-                }
-
+                scroll(pageUpCursor);
                 break;
 
             case SelectActions.PageDown:
-                if (items.length > 0 && cursor >= 0) {
-                    const targetIndex = Math.min(items.length - 1, cursor + 10);
+                const pageDownCursor = Math.min(items.length - 1, cursor + 10);
+                setCursor(pageDownCursor);
 
-                    for (let i = targetIndex; i < items.length; i++) if (!items[i].disabled) {
-                        setCursor(i);
-                        items[i].element?.scrollIntoView({ block: 'nearest' });
-                        break;
-                    }
+                scroll(pageDownCursor);
+                break;
+
+            case SelectActions.Type:
+                if (!open) setOpen(true);
+                typeahead(event.key);
+                // The typeahead function handles cursor changes internally
+                break;
+
+            case SelectActions.Select:
+                if (cursor >= 0 && cursor < items.length) {
+                    setValue(items[cursor].value);
+                    setTextValue(items[cursor].textValue);
+                    if (open) setOpen(false);
                 }
 
                 break;
 
-            case SelectActions.Typeahead:
-                performTypeahead(event.key);
-                break;
+            case SelectActions.FocusMove:
+                if (cursor >= 0 && cursor < items.length) {
+                    setValue(items[cursor].value);
+                    setTextValue(items[cursor].textValue);
+                    if (open) setOpen(false);
 
-            case SelectActions.Close:
-                setOpen(false);
-                setCursor(-1);
+                    const focusables = (Array.from(document.querySelectorAll('*')) as HTMLElement[])
+                        .filter(i => i.tabIndex >= 0 && ('disabled' in i ? !i.disabled : true) && i.offsetParent !== null)
+
+                    const nextFocusable = focusables[focusables.indexOf(event.target as HTMLButtonElement) + 1]
+                    if (nextFocusable) nextFocusable.focus();
+                }
                 break;
 
             default: break;
@@ -534,7 +542,7 @@ function SelectTriggerIndicator({ className, ...props }: SelectTriggerIndicatorP
 
 interface SelectPortalProps { container?: HTMLElement, children?: ReactNode }
 
-export function SelectPortal({ container, children }: SelectPortalProps) {
+function SelectPortal({ container, children }: SelectPortalProps) {
     return createPortal(children, container || document.body);
 }
 
@@ -542,7 +550,7 @@ export function SelectPortal({ container, children }: SelectPortalProps) {
 
 interface SelectContentProps extends HTMLAttributes<HTMLElement> { }
 
-export function SelectContent({
+function SelectContent({
     children, className, ...props
 }: SelectContentProps) {
     const { open } = useSelectContext();
@@ -568,9 +576,11 @@ export function SelectContent({
 
 interface SelectViewportProps extends HTMLAttributes<HTMLElement> { }
 
-export function SelectViewport({ children, className, ...props }: SelectViewportProps) {
+function SelectViewport({ children, className, ...props }: SelectViewportProps) {
+    const { viewportRef } = useSelectContext();
+
     return (
-        <div tabIndex={-1} data-ui="select-viewport" {...props} className={cn("[scrollbar-width:none] w-full max-h-96 overflow-y-auto", className)}>
+        <div ref={viewportRef} tabIndex={-1} data-ui="select-viewport" {...props} className={cn("[scrollbar-width:none] w-full max-h-96 overflow-y-auto", className)}>
             {children}
         </div>
     );
@@ -599,7 +609,7 @@ interface SelectItemProps extends HTMLAttributes<HTMLElement> {
     textValue?: string;
 }
 
-export function SelectItem({ children, className, value, disabled, textValue, ...props }: SelectItemProps) {
+function SelectItem({ children, className, value, disabled, textValue, ...props }: SelectItemProps) {
     const {
         setOpen, setValue, value: currentValue, setTextValue,
         registerItem, unregisterItem, cursor, items, setCursor
@@ -616,7 +626,7 @@ export function SelectItem({ children, className, value, disabled, textValue, ..
     const context: SelectItemContextState = { textElementRef, selected }
 
     useEffect(() => {
-        if (!value) return;
+        if (!value || disabled) return;
 
         const resolvedTextValue = textValue ??
             textElementRef?.current?.textContent ??
@@ -659,16 +669,16 @@ export function SelectItem({ children, className, value, disabled, textValue, ..
     return (
         <SelectItemContext.Provider value={context}>
             <div data-ui="select-item"
-                
+
                 aria-selected={selected}
                 aria-disabled={disabled}
                 role="option"
                 id={itemId}
                 ref={ref}
-                
+
                 onMouseEnter={mouseEnterHandler}
                 onClick={clickHandler}
-                
+
                 data-state={selected ? 'checked' : 'unchecked'}
                 data-highlighted={highlighted}
                 data-disabled={disabled}
@@ -693,7 +703,7 @@ export function SelectItem({ children, className, value, disabled, textValue, ..
 
 interface SelectItemTextProps extends HTMLAttributes<HTMLElement> { children?: string }
 
-export function SelectItemText({ className, children, ...props }: SelectItemTextProps) {
+function SelectItemText({ className, children, ...props }: SelectItemTextProps) {
     const { textElementRef } = useSelectItemContext();
 
     return (
@@ -707,7 +717,7 @@ export function SelectItemText({ className, children, ...props }: SelectItemText
 
 interface SelectItemIndicatorProps extends HTMLAttributes<HTMLElement> { }
 
-export function SelectItemIndicator({ className, ...props }: SelectItemIndicatorProps) {
+function SelectItemIndicator({ className, ...props }: SelectItemIndicatorProps) {
     const Icon = () => {
         return (
             <svg data-ui="select-item-indicator-icon"
@@ -754,7 +764,7 @@ function useSelectGroupContext(): SelectGroupContextState {
 
 interface SelectGroupProps extends HTMLAttributes<HTMLElement> { }
 
-export function SelectGroup({ children, className, ...props }: SelectGroupProps) {
+function SelectGroup({ children, className, ...props }: SelectGroupProps) {
     const fallbackId = useId();
     const groupId = props.id ?? fallbackId;
     const labelElementRef = useRef<HTMLElement>(null);
@@ -781,7 +791,7 @@ export function SelectGroup({ children, className, ...props }: SelectGroupProps)
 
 interface SelectLabelProps extends HTMLAttributes<HTMLElement> { }
 
-export function SelectLabel({ children, className, ...props }: SelectLabelProps) {
+function SelectLabel({ children, className, ...props }: SelectLabelProps) {
     const { groupId, labelElementRef } = useSelectGroupContext();
     const labelId = props.id ?? `${groupId}-label`;
 
@@ -801,7 +811,7 @@ export function SelectLabel({ children, className, ...props }: SelectLabelProps)
 
 interface SelectSeparatorProps extends HTMLAttributes<HTMLElement> { }
 
-export function SelectSeparator({ className, children, ...props }: SelectSeparatorProps) {
+function SelectSeparator({ className, children, ...props }: SelectSeparatorProps) {
     return (
         <hr data-ui="select-separator"
             className={cn("w-full h-px text-muted-bound", className)}
@@ -818,7 +828,7 @@ export function SelectSeparator({ className, children, ...props }: SelectSeparat
 
 interface ScrollUpButtonProps extends HTMLAttributes<HTMLElement> { }
 
-export function SelectScrollUpButton({ className, ...props }: ScrollUpButtonProps) {
+function SelectScrollUpButton({ className, ...props }: ScrollUpButtonProps) {
     const Icon = () => {
         return (
             <svg data-ui="select-scroll-up-icon"
@@ -850,7 +860,7 @@ export function SelectScrollUpButton({ className, ...props }: ScrollUpButtonProp
 
 interface ScrollDownButtonProps extends HTMLAttributes<HTMLElement> { }
 
-export function SelectScrollDownButton({ className, ...props }: ScrollDownButtonProps) {
+function SelectScrollDownButton({ className, ...props }: ScrollDownButtonProps) {
     const Icon = () => {
         return (
             <svg data-ui="select-scroll-down-icon"
@@ -882,7 +892,7 @@ export function SelectScrollDownButton({ className, ...props }: ScrollDownButton
 
 
 
-export const Test = () => {
+export function Test() {
     return (
         <Select>
             <SelectTrigger>
