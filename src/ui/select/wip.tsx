@@ -1,6 +1,20 @@
-import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type HTMLAttributes, type KeyboardEvent, type ReactNode, type RefObject, type SyntheticEvent } from "react";
-import { cn } from "../../cn";
+import {
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useId,
+    useRef,
+    useState,
+    type HTMLAttributes,
+    type KeyboardEvent,
+    type ReactNode,
+    type RefObject,
+} from "react";
+
 import { createPortal } from "react-dom";
+
+import { cn } from "../../cn";
 
 // ---------------------------------------------------------------------------------------------------- //
 
@@ -85,6 +99,21 @@ export const getSelectAction = (key: string, isOpen: boolean, hasAltKey = false)
 
 // ---------------------------------------------------------------------------------------------------- //
 
+function findLastIndex<T>(array: T[], predicate: (item: T) => boolean): number {
+    for (let i = array.length - 1; i >= 0; i--) if (predicate(array[i])) return i;
+    return -1;
+}
+
+// ---------------------------------------------------------------------------------------------------- //
+
+interface SelectItemEntry {
+    id: string;
+    value: string;
+    textValue: string;
+    disabled: boolean;
+    element: HTMLElement | null;
+}
+
 interface SelectContextState {
     value: string;
     setValue: (value: string) => void;
@@ -97,6 +126,17 @@ interface SelectContextState {
 
     cursor: number;
     setCursor: (cursor: number) => void;
+
+    items: SelectItemEntry[];
+    registerItem: (item: SelectItemEntry) => void;
+    unregisterItem: (id: string) => void;
+
+    typeaheadValue: string;
+    setTypeaheadValue: (value: string) => void;
+    typeaheadTimeout: number | null;
+    setTypeaheadTimeout: (timeout: number | null) => void;
+
+    activeDescendant: string | null;
 }
 
 const SelectContext = createContext<SelectContextState | null>(null);
@@ -117,7 +157,6 @@ interface SelectProps extends HTMLAttributes<HTMLElement> {
     defaultOpen?: boolean;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
-
 
     dir?: "ltr" | "rtl";
 
@@ -148,9 +187,32 @@ function Select({
         value: open,
     });
 
+    const [typeaheadTimeout, setTypeaheadTimeout] = useState<number | null>(null);
     const [textValue, setTextValue] = useState<string | null>(null);
+    const [items, setItems] = useState<SelectItemEntry[]>([]);
+    const [typeaheadValue, setTypeaheadValue] = useState('');
     const [cursor, setCursor] = useState(-1);
     const ref = useRef<HTMLDivElement>(null);
+
+    const activeDescendant = cursor >= 0 && cursor < items.length ? items[cursor].id : null;
+
+    const registerItem = useCallback((item: SelectItemEntry) => {
+        setItems(prev => {
+            const filtered = prev.filter(existingItem => existingItem.id !== item.id);
+
+            const newItems = [...filtered, item].sort((a, b) => {
+                if (!a.element || !b.element) return 0;
+                const position = a.element.compareDocumentPosition(b.element);
+                return position & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+            });
+
+            return newItems;
+        });
+    }, []);
+
+    const unregisterItem = useCallback((id: string) => {
+        setItems(prev => prev.filter(item => item.id !== id));
+    }, []);
 
     useEffect(() => {
         const handler = (event: MouseEvent) => {
@@ -162,18 +224,39 @@ function Select({
         return () => document.removeEventListener('click', handler);
     }, [openState, setOpen, ref])
 
+    useEffect(() => {
+        if (openState) return;
+        setTypeaheadValue('');
+
+        if (typeaheadTimeout) {
+            clearTimeout(typeaheadTimeout);
+            setTypeaheadTimeout(null);
+        }
+    }, [openState, typeaheadTimeout]);
+
     const context: SelectContextState = {
         value: valueState,
         setValue,
-        
+
         open: openState,
         setOpen,
 
         textValue,
         setTextValue,
-        
+
         cursor,
         setCursor,
+
+        items,
+        registerItem,
+        unregisterItem,
+
+        typeaheadValue,
+        setTypeaheadValue,
+        typeaheadTimeout,
+        setTypeaheadTimeout,
+
+        activeDescendant,
     }
 
     return (
@@ -190,21 +273,205 @@ function Select({
 interface SelectTriggerProps extends HTMLAttributes<HTMLElement> { }
 
 function SelectTrigger({ className, children, ...props }: SelectTriggerProps) {
-    const { open, setOpen } = useSelectContext();
+    const {
+        open, setOpen, items, cursor, setCursor, setValue, setTextValue, value,
+        typeaheadValue, setTypeaheadValue, typeaheadTimeout, setTypeaheadTimeout,
+        activeDescendant
+    } = useSelectContext();
 
     const clickHandler = () => setOpen(!open);
 
+    const performTypeahead = useCallback((char: string) => {
+        const newTypeaheadValue = typeaheadValue + char.toLowerCase();
+        setTypeaheadValue(newTypeaheadValue);
+        if (typeaheadTimeout) clearTimeout(typeaheadTimeout);
+
+        const matchingIndex = items.findIndex(item =>
+            !item.disabled && item.textValue.toLowerCase().startsWith(newTypeaheadValue)
+        );
+
+        if (matchingIndex >= 0) {
+            setCursor(matchingIndex);
+            const item = items[matchingIndex];
+            if (item.element) item.element.scrollIntoView({ block: 'nearest' });
+        }
+
+        const timeout = window.setTimeout(() => {
+            setTypeaheadValue('');
+            setTypeaheadTimeout(null);
+        }, 1000);
+
+        setTypeaheadTimeout(timeout);
+    }, [typeaheadValue, typeaheadTimeout, items, setCursor, setTypeaheadValue, setTypeaheadTimeout]);
+
+    const keyDownHandler = (event: KeyboardEvent<HTMLButtonElement>) => {
+        const action = getSelectAction(event.key, open, event.altKey);
+        if (action !== SelectActions.None) event.preventDefault();
+
+        switch (action) {
+            case SelectActions.Open:
+                setOpen(true);
+                const selectedIndex = items.findIndex(item => item.value === value);
+                setCursor(selectedIndex >= 0 ? selectedIndex : -1);
+                break;
+
+            case SelectActions.OpenFirst:
+                setOpen(true);
+                const firstEnabledIndex = items.findIndex(item => !item.disabled);
+                setCursor(firstEnabledIndex >= 0 ? firstEnabledIndex : -1);
+                break;
+
+            case SelectActions.OpenLast:
+                setOpen(true);
+                const lastEnabledIndex = findLastIndex(items, (item: SelectItemEntry) => !item.disabled);
+                setCursor(lastEnabledIndex >= 0 ? lastEnabledIndex : -1);
+                break;
+
+            case SelectActions.OpenCurrent:
+                setOpen(true);
+                const currentIndex = items.findIndex(item => item.value === value);
+                setCursor(currentIndex >= 0 ? currentIndex : -1);
+                break;
+
+            case SelectActions.OpenTypeahead:
+                setOpen(true);
+                performTypeahead(event.key);
+                break;
+
+            case SelectActions.Select:
+            case SelectActions.CloseSelect:
+                if (cursor >= 0 && cursor < items.length) {
+                    const selectedItem = items[cursor];
+                    if (!selectedItem.disabled) {
+                        setValue(selectedItem.value);
+                        setTextValue(selectedItem.textValue);
+                    }
+                }
+
+                setOpen(false);
+                setCursor(-1);
+                break;
+
+            case SelectActions.Previous:
+                if (cursor > 0) {
+                    for (let i = cursor - 1; i >= 0; i--) if (!items[i].disabled) {
+                        setCursor(i);
+                        items[i].element?.scrollIntoView({ block: 'nearest' });
+                        break;
+                    }
+                }
+
+                else if (cursor === -1 && items.length > 0) {
+                    const lastEnabledIndex = findLastIndex(items, (item: SelectItemEntry) => !item.disabled);
+
+                    if (lastEnabledIndex >= 0) {
+                        setCursor(lastEnabledIndex);
+                        items[lastEnabledIndex].element?.scrollIntoView({ block: 'nearest' });
+                    }
+                }
+
+                break;
+
+            case SelectActions.Next:
+                if (cursor < items.length - 1) for (let i = cursor + 1; i < items.length; i++) {
+                    if (!items[i].disabled) {
+                        setCursor(i);
+                        items[i].element?.scrollIntoView({ block: 'nearest' });
+                        break;
+                    }
+                }
+
+                else if (cursor === -1 && items.length > 0) {
+                    const firstEnabledIndex = items.findIndex(item => !item.disabled);
+
+                    if (firstEnabledIndex >= 0) {
+                        setCursor(firstEnabledIndex);
+                        items[firstEnabledIndex].element?.scrollIntoView({ block: 'nearest' });
+                    }
+                }
+
+                break;
+
+            case SelectActions.First:
+                if (items.length > 0) {
+                    const firstEnabledIndex = items.findIndex(item => !item.disabled);
+
+                    if (firstEnabledIndex >= 0) {
+                        setCursor(firstEnabledIndex);
+                        items[firstEnabledIndex].element?.scrollIntoView({ block: 'nearest' });
+                    }
+                }
+
+                break;
+
+            case SelectActions.Last:
+                if (items.length > 0) {
+                    const lastEnabledIndex = findLastIndex(items, (item: SelectItemEntry) => !item.disabled);
+
+                    if (lastEnabledIndex >= 0) {
+                        setCursor(lastEnabledIndex);
+                        items[lastEnabledIndex].element?.scrollIntoView({ block: 'nearest' });
+                    }
+                }
+
+                break;
+
+            case SelectActions.PageUp:
+                if (items.length > 0 && cursor >= 0) {
+                    const targetIndex = Math.max(0, cursor - 10);
+
+                    for (let i = targetIndex; i >= 0; i--) if (!items[i].disabled) {
+                        setCursor(i);
+                        items[i].element?.scrollIntoView({ block: 'nearest' });
+                        break;
+                    }
+                }
+
+                break;
+
+            case SelectActions.PageDown:
+                if (items.length > 0 && cursor >= 0) {
+                    const targetIndex = Math.min(items.length - 1, cursor + 10);
+
+                    for (let i = targetIndex; i < items.length; i++) if (!items[i].disabled) {
+                        setCursor(i);
+                        items[i].element?.scrollIntoView({ block: 'nearest' });
+                        break;
+                    }
+                }
+
+                break;
+
+            case SelectActions.Typeahead:
+                performTypeahead(event.key);
+                break;
+
+            case SelectActions.Close:
+                setOpen(false);
+                setCursor(-1);
+                break;
+
+            default: break;
+        }
+    }
+
     return (
-        <button data-ui="select-trigger" type="button" onClick={clickHandler} {...props}
-
+        <button
+            data-ui="select-trigger"
+            type="button"
+            onClick={clickHandler}
+            onKeyDown={keyDownHandler}
+            aria-expanded={open}
+            aria-haspopup="listbox"
+            aria-activedescendant={activeDescendant || undefined}
+            role="combobox"
+            {...props}
             data-state={open ? "open" : "closed"}
-            // data-disabled
-            // data-placeholder
-
             className={cn(
                 "w-fit min-w-xs min-h-9 inline-flex items-center justify-between gap-2 px-3 py-2 rounded text-write border border-bound bg-weak-surface transition-colors",
                 "focus:bg-surface focus:outline-none focus:ring-2 focus:ring-bound focus:ring-offset-1",
                 "hover:bg-surface",
+                className
             )}
         >
             {children}
@@ -273,31 +540,23 @@ export function SelectPortal({ container, children }: SelectPortalProps) {
 
 // ---------------------------------------------------------------------------------------------------- //
 
-interface SelectContentProps extends HTMLAttributes<HTMLElement> {
-    onCloseAutoFocus?: (event: SyntheticEvent) => void;
-    onEscapeKeyDown?: (event: KeyboardEvent) => void;
-    onOutsidePointerDown?: (event: PointerEvent) => void;
-}
+interface SelectContentProps extends HTMLAttributes<HTMLElement> { }
 
 export function SelectContent({
-    onCloseAutoFocus, onEscapeKeyDown, onOutsidePointerDown,
     children, className, ...props
 }: SelectContentProps) {
     const { open } = useSelectContext();
-    const ref = useRef<HTMLDivElement>(null);
 
     if (!open) return null;
 
     return (
         <div data-ui="select-content"
             data-state={open ? "open" : "closed"}
-            ref={ref}
-
+            role="listbox"
             className={cn(
                 "absolute left-0 top-full z-10 mt-1 min-w-xs p-1.5 rounded-md shadow-lg border border-muted-bound bg-muted-surface",
                 className
             )}
-
             {...props}
         >
             {children}
@@ -341,51 +600,88 @@ interface SelectItemProps extends HTMLAttributes<HTMLElement> {
 }
 
 export function SelectItem({ children, className, value, disabled, textValue, ...props }: SelectItemProps) {
-    const { setOpen, setValue, value: currentValue, setTextValue } = useSelectContext();
+    const {
+        setOpen, setValue, value: currentValue, setTextValue,
+        registerItem, unregisterItem, cursor, items, setCursor
+    } = useSelectContext();
 
     const ref = useRef<HTMLDivElement>(null);
     const textElementRef = useRef<HTMLElement>(null);
+    const fallbackId = useId();
+    const itemId = props.id ?? fallbackId;
     const selected = value === currentValue;
+    const itemIndex = items.findIndex(item => item.id === itemId);
+    const highlighted = itemIndex >= 0 && cursor === itemIndex;
 
     const context: SelectItemContextState = { textElementRef, selected }
+
+    useEffect(() => {
+        if (!value) return;
+
+        const resolvedTextValue = textValue ??
+            textElementRef?.current?.textContent ??
+            ref?.current?.textContent ??
+            value ??
+            '';
+
+        const item: SelectItemEntry = {
+            id: itemId,
+            value,
+            textValue: resolvedTextValue,
+            disabled: disabled ?? false,
+            element: ref.current,
+        };
+
+        registerItem(item);
+        return () => unregisterItem(itemId);
+
+    }, [itemId, value, textValue, disabled, registerItem, unregisterItem]);
 
     const clickHandler = () => {
         if (disabled) return;
         if (value) setValue(value);
         setOpen(false);
 
-        setTextValue(
-            textValue ??
+        const resolvedTextValue = textValue ??
             textElementRef?.current?.textContent ??
             ref?.current?.textContent ??
             value ??
-            ''
-        );
+            '';
+
+        setTextValue(resolvedTextValue);
+    }
+
+    const mouseEnterHandler = () => {
+        if (disabled) return;
+        if (itemIndex >= 0) setCursor(itemIndex);
     }
 
     return (
         <SelectItemContext.Provider value={context}>
             <div data-ui="select-item"
+                
+                aria-selected={selected}
+                aria-disabled={disabled}
                 role="option"
+                id={itemId}
                 ref={ref}
+                
+                onMouseEnter={mouseEnterHandler}
                 onClick={clickHandler}
-
+                
                 data-state={selected ? 'checked' : 'unchecked'}
-                data-highlighted={false}
+                data-highlighted={highlighted}
                 data-disabled={disabled}
-
-                {...props}
 
                 className={cn(
                     "flex items-center justify-between w-full text-sm text-write py-2.5 px-1.5 rounded transition-colors cursor-pointer relative",
-                    "focus:bg-surface focus:outline-none focus:ring-2 focus:ring-outer-bound focus:ring-offset-2 focus:ring-offset-transparent",
-                    "hover:bg-surface",
-
                     "data-[disabled='true']:opacity-50 data-[disabled='true']:cursor-not-allowed data-[disabled='true']:hover:bg-transparent",
+                    "data-[highlighted='true']:bg-surface data-[highlighted='true']:ring-2 data-[highlighted='true']:ring-[red]",
                     "data-[state='checked']:font-medium",
-
                     className
                 )}
+
+                {...props}
             >
                 {children}
             </div>
