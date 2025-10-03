@@ -4,6 +4,7 @@ import {
     useContext,
     useEffect,
     useId,
+    useLayoutEffect,
     useRef,
     useState,
     type HTMLAttributes,
@@ -122,8 +123,10 @@ interface SelectContextState {
     typeaheadTimeout: number | null;
     setTypeaheadTimeout: (timeout: number | null) => void;
 
-    viewportRef: RefObject<HTMLDivElement | null>;
     activeDescendant: string | null;
+
+    viewportRef: RefObject<HTMLDivElement | null>;
+    rootRef: RefObject<HTMLDivElement | null>;
 }
 
 const SelectContext = createContext<SelectContextState | null>(null);
@@ -181,7 +184,7 @@ function Select({
     const [cursor, setCursor] = useState(-1);
 
     const viewportRef = useRef<HTMLDivElement>(null);
-    const ref = useRef<HTMLDivElement>(null);
+    const rootRef = useRef<HTMLDivElement>(null);
 
     const activeDescendant = cursor >= 0 && cursor < items.length ? items[cursor].id : null;
 
@@ -205,13 +208,13 @@ function Select({
 
     useEffect(() => {
         const handler = (event: MouseEvent) => {
-            if (ref.current?.contains(event.target as Node)) return;
+            if (rootRef.current?.contains(event.target as Node)) return;
             if (openState) setOpen(false);
         }
 
         document.addEventListener('click', handler);
         return () => document.removeEventListener('click', handler);
-    }, [openState, setOpen, ref])
+    }, [openState, setOpen, rootRef])
 
     useEffect(() => {
         if (openState) return;
@@ -223,33 +226,29 @@ function Select({
         }
     }, [openState, typeaheadTimeout]);
 
-    // Handle cursor positioning when select opens
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!openState) return;
-        
-        // Find the currently selected item and position cursor there
+
         const currentIndex = items.findIndex(item => item.value === valueState);
+
         if (currentIndex >= 0) {
             setCursor(currentIndex);
-            // Scroll to the selected item when opening
-            setTimeout(() => {
-                if (!(currentIndex >= 0 && currentIndex < items.length)) return;
-                const { element } = items[currentIndex];
-                const viewport = viewportRef.current;
-                if (element && viewport) {
-                    const elementRect = element.getBoundingClientRect();
-                    const viewportRect = viewport.getBoundingClientRect();
-                    const elementTop = elementRect.top - viewportRect.top + viewport.scrollTop;
-                    const elementHeight = elementRect.height;
-                    const viewportHeight = viewport.clientHeight;
-                    const scrollTop = elementTop - (viewportHeight / 2) + (elementHeight / 2);
-                    viewport.scrollTo({ top: scrollTop, behavior: 'smooth' });
-                }
-            }, 0);
-        } else {
-            // If no item is selected, position cursor at first item
-            setCursor(items.length > 0 ? 0 : -1);
-        }
+
+            if (!(currentIndex >= 0 && currentIndex < items.length)) return;
+            const { element } = items[currentIndex];
+            const viewport = viewportRef.current;
+
+            if (element && viewport) {
+                const elementRect = element.getBoundingClientRect();
+                const viewportRect = viewport.getBoundingClientRect();
+                const elementTop = elementRect.top - viewportRect.top + viewport.scrollTop;
+                const elementHeight = elementRect.height;
+                const viewportHeight = viewport.clientHeight;
+                const scrollTop = elementTop - (viewportHeight / 2) + (elementHeight / 2);
+                viewport.scrollTo({ top: scrollTop, behavior: 'instant' });
+            }
+        } else setCursor(items.length > 0 ? 0 : -1);
+
     }, [openState, items, valueState, viewportRef]);
 
     const context: SelectContextState = {
@@ -275,12 +274,14 @@ function Select({
         setTypeaheadTimeout,
 
         activeDescendant,
+
+        rootRef,
         viewportRef,
     }
 
     return (
         <SelectContext.Provider value={context}>
-            <div data-ui="select" ref={ref} {...props} className={cn("relative w-fit", className)}>
+            <div data-ui="select" ref={rootRef} {...props} className={cn("relative w-fit pointer-events-auto", className)}>
                 {children}
             </div>
         </SelectContext.Provider>
@@ -289,14 +290,58 @@ function Select({
 
 // ---------------------------------------------------------------------------------------------------- //
 
-interface SelectTriggerProps extends HTMLAttributes<HTMLElement> { }
+interface SelectTriggerProps extends HTMLAttributes<HTMLElement> {
+    lockScreen?: boolean;
+}
 
-function SelectTrigger({ className, children, ...props }: SelectTriggerProps) {
+function SelectTrigger({ className, children, lockScreen, ...props }: SelectTriggerProps) {
     const {
         open, setOpen, items, cursor, setCursor, setValue, setTextValue,
         typeaheadValue, setTypeaheadValue, typeaheadTimeout, setTypeaheadTimeout,
         activeDescendant, viewportRef,
     } = useSelectContext();
+
+    const overflowRef = useRef<string | null>(null);
+    const pointerEventsRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        if (!lockScreen) return;
+
+        if (open) {
+            if (overflowRef.current === null)
+                overflowRef.current = document.body.style.overflow;
+            
+            if (pointerEventsRef.current === null)
+                pointerEventsRef.current = document.body.style.pointerEvents;
+
+            document.body.style.overflow = "hidden";
+            document.body.style.pointerEvents = "none";
+        } else {
+            if (overflowRef.current !== null) {
+                document.body.style.overflow = overflowRef.current;
+                overflowRef.current = null;
+            }
+            
+            if (pointerEventsRef.current !== null) {
+                document.body.style.pointerEvents = pointerEventsRef.current;
+                pointerEventsRef.current = null;
+            }
+        }
+
+        return () => {
+            if (!lockScreen) return;
+
+            if (overflowRef.current !== null) {
+                document.body.style.overflow = overflowRef.current;
+                overflowRef.current = null;
+            }
+            
+            if (pointerEventsRef.current !== null) {
+                document.body.style.pointerEvents = pointerEventsRef.current;
+                pointerEventsRef.current = null;
+            }
+        }
+    }, [open, lockScreen]);
 
     const clickHandler = () => setOpen(!open);
 
@@ -379,10 +424,7 @@ function SelectTrigger({ className, children, ...props }: SelectTriggerProps) {
 
         switch (action) {
             case SelectActions.Open:
-                if (!open) {
-                    setOpen(true);
-                    // Cursor positioning is handled by useEffect when openState changes
-                }
+                if (!open) setOpen(true);
                 break;
 
             case SelectActions.First:
@@ -433,7 +475,6 @@ function SelectTrigger({ className, children, ...props }: SelectTriggerProps) {
             case SelectActions.Type:
                 if (!open) setOpen(true);
                 typeahead(event.key);
-                // The typeahead function handles cursor changes internally
                 break;
 
             case SelectActions.Select:
@@ -548,21 +589,66 @@ function SelectPortal({ container, children }: SelectPortalProps) {
 
 // ---------------------------------------------------------------------------------------------------- //
 
-interface SelectContentProps extends HTMLAttributes<HTMLElement> { }
+interface SelectContentProps extends HTMLAttributes<HTMLElement> {
+    position?: "top" | "bottom" | "auto";
+}
+
 
 function SelectContent({
-    children, className, ...props
+    children, className, position = "auto", ...props
 }: SelectContentProps) {
-    const { open } = useSelectContext();
+
+    const { open, rootRef } = useSelectContext();
+    const contentRef = useRef<HTMLDivElement>(null);
+    const [placement, setPlacement] = useState<"top" | "bottom">("bottom");
+
+    const calculatePlacement = useCallback(() => {
+        const root = rootRef.current;
+        if (!root || !contentRef.current) return;
+
+        const rootRect = root.getBoundingClientRect();
+        const content = contentRef.current;
+        const contentRect = content.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+
+        const spaceBelow = viewportHeight - rootRect.bottom;
+        const spaceAbove = rootRect.top;
+
+        if (spaceBelow >= contentRect.height || spaceBelow >= spaceAbove) setPlacement("bottom");
+        else setPlacement("top");
+    }, [rootRef]);
+
+    useLayoutEffect(() => {
+        if (!open || position === "top" || position === "bottom") {
+            setPlacement(position === "top" ? "top" : "bottom");
+            return;
+        }
+
+        calculatePlacement();
+    }, [open, position, calculatePlacement]);
+
+    useEffect(() => {
+        if (!open || position === "top" || position === "bottom") return;
+
+        const handleScroll = () => {
+            calculatePlacement();
+        };
+
+        window.addEventListener('scroll', handleScroll, true);
+        return () => window.removeEventListener('scroll', handleScroll, true);
+    }, [open, position, calculatePlacement]);
 
     if (!open) return null;
 
     return (
-        <div data-ui="select-content"
+        <div
+            ref={contentRef}
+            data-ui="select-content"
             data-state={open ? "open" : "closed"}
             role="listbox"
             className={cn(
-                "absolute left-0 top-full z-10 mt-1 min-w-xs p-1.5 rounded-md shadow-lg border border-muted-bound bg-muted-surface",
+                "absolute left-0 z-10 min-w-xs p-1.5 rounded shadow border border-muted-bound bg-muted-surface",
+                placement === "top" ? "bottom-full mb-1" : "top-full mt-1",
                 className
             )}
             {...props}
