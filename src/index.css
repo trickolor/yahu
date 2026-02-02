@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "tailwindcss-animate";
 
 @custom-variant neutral (&:where([data-theme="neutral"], [data-theme="neutral"] *));
 @custom-variant slate (&:where([data-theme="slate"], [data-theme="slate"] *));
@@ -8,103 +9,29 @@
 
 @custom-variant dark (&:where([data-mode="dark"], [data-mode="dark"] *));
 
-@utility normalized-field {
-    &[type='file'] {
-        @apply p-0;
+@keyframes test-animation {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
     }
 
-    &[type='color'] {
-        @apply h-9 p-1;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
+}
 
-    &[type='range'] {
-        @apply h-9 p-0;
-    }
-
-    &::-webkit-calendar-picker-indicator {
-        @apply cursor-pointer absolute right-3;
-    }
-
-    &::-webkit-color-swatch {
-        @apply rounded border-bound/50 h-full;
-    }
+.test-animation {
+    animation: test-animation 0.3s ease-in-out;
 }
 
 @layer base {
     :root {
         color-scheme: light dark;
 
-        --success: light-dark(oklch(0.64 0.12 145), oklch(0.74 0.12 145));
-        --warning: light-dark(oklch(0.72 0.14 75), oklch(0.82 0.12 75));
-        --failure: light-dark(oklch(0.62 0.20 25), oklch(0.72 0.18 25));
-
-        --accent-red-surface: light-dark(oklch(0.64 0.20 25), oklch(0.78 0.18 25));
-        --accent-red-bound: light-dark(oklch(0.56 0.18 25), oklch(0.70 0.16 25));
-        --accent-red-write: light-dark(oklch(0.98 0.01 25), oklch(0.16 0.02 25));
-
-        --accent-orange-surface: light-dark(oklch(0.66 0.18 40), oklch(0.80 0.16 40));
-        --accent-orange-bound: light-dark(oklch(0.58 0.16 40), oklch(0.72 0.14 40));
-        --accent-orange-write: light-dark(oklch(0.98 0.01 40), oklch(0.16 0.02 40));
-
-        --accent-amber-surface: light-dark(oklch(0.72 0.14 75), oklch(0.84 0.12 75));
-        --accent-amber-bound: light-dark(oklch(0.64 0.12 75), oklch(0.76 0.11 75));
-        --accent-amber-write: light-dark(oklch(0.18 0.02 75), oklch(0.20 0.02 75));
-
-        --accent-yellow-surface: light-dark(oklch(0.74 0.12 95), oklch(0.86 0.11 95));
-        --accent-yellow-bound: light-dark(oklch(0.66 0.10 95), oklch(0.78 0.09 95));
-        --accent-yellow-write: light-dark(oklch(0.18 0.02 95), oklch(0.20 0.02 95));
-
-        --accent-lime-surface: light-dark(oklch(0.70 0.12 125), oklch(0.82 0.11 125));
-        --accent-lime-bound: light-dark(oklch(0.62 0.10 125), oklch(0.74 0.09 125));
-        --accent-lime-write: light-dark(oklch(0.18 0.02 125), oklch(0.20 0.02 125));
-
-        --accent-green-surface: light-dark(oklch(0.64 0.14 145), oklch(0.78 0.13 145));
-        --accent-green-bound: light-dark(oklch(0.56 0.12 145), oklch(0.70 0.11 145));
-        --accent-green-write: light-dark(oklch(0.98 0.01 145), oklch(0.16 0.02 145));
-
-        --accent-emerald-surface: light-dark(oklch(0.64 0.14 152), oklch(0.78 0.13 152));
-        --accent-emerald-bound: light-dark(oklch(0.56 0.12 152), oklch(0.70 0.11 152));
-        --accent-emerald-write: light-dark(oklch(0.98 0.01 152), oklch(0.16 0.02 152));
-
-        --accent-teal-surface: light-dark(oklch(0.64 0.12 180), oklch(0.78 0.11 180));
-        --accent-teal-bound: light-dark(oklch(0.56 0.10 180), oklch(0.70 0.09 180));
-        --accent-teal-write: light-dark(oklch(0.98 0.01 180), oklch(0.16 0.02 180));
-
-        --accent-cyan-surface: light-dark(oklch(0.64 0.12 200), oklch(0.78 0.11 200));
-        --accent-cyan-bound: light-dark(oklch(0.56 0.10 200), oklch(0.70 0.09 200));
-        --accent-cyan-write: light-dark(oklch(0.98 0.01 200), oklch(0.16 0.02 200));
-
-        --accent-sky-surface: light-dark(oklch(0.64 0.12 210), oklch(0.78 0.11 210));
-        --accent-sky-bound: light-dark(oklch(0.56 0.10 210), oklch(0.70 0.09 210));
-        --accent-sky-write: light-dark(oklch(0.98 0.01 210), oklch(0.16 0.02 210));
-
-        --accent-blue-surface: light-dark(oklch(0.64 0.12 230), oklch(0.78 0.11 230));
-        --accent-blue-bound: light-dark(oklch(0.56 0.10 230), oklch(0.70 0.09 230));
-        --accent-blue-write: light-dark(oklch(0.98 0.01 230), oklch(0.16 0.02 230));
-
-        --accent-indigo-surface: light-dark(oklch(0.64 0.10 257), oklch(0.78 0.09 257));
-        --accent-indigo-bound: light-dark(oklch(0.56 0.08 257), oklch(0.70 0.07 257));
-        --accent-indigo-write: light-dark(oklch(0.98 0.01 257), oklch(0.16 0.02 257));
-
-        --accent-violet-surface: light-dark(oklch(0.64 0.10 275), oklch(0.78 0.09 275));
-        --accent-violet-bound: light-dark(oklch(0.56 0.08 275), oklch(0.70 0.07 275));
-        --accent-violet-write: light-dark(oklch(0.98 0.01 275), oklch(0.16 0.02 275));
-
-        --accent-purple-surface: light-dark(oklch(0.64 0.12 300), oklch(0.78 0.11 300));
-        --accent-purple-bound: light-dark(oklch(0.56 0.10 300), oklch(0.70 0.09 300));
-        --accent-purple-write: light-dark(oklch(0.98 0.01 300), oklch(0.16 0.02 300));
-
-        --accent-fuchsia-surface: light-dark(oklch(0.64 0.16 320), oklch(0.78 0.15 320));
-        --accent-fuchsia-bound: light-dark(oklch(0.56 0.14 320), oklch(0.70 0.13 320));
-        --accent-fuchsia-write: light-dark(oklch(0.98 0.01 320), oklch(0.16 0.02 320));
-
-        --accent-pink-surface: light-dark(oklch(0.64 0.16 340), oklch(0.78 0.15 340));
-        --accent-pink-bound: light-dark(oklch(0.56 0.14 340), oklch(0.70 0.13 340));
-        --accent-pink-write: light-dark(oklch(0.98 0.01 340), oklch(0.16 0.02 340));
-
-        --accent-rose-surface: light-dark(oklch(0.64 0.18 12), oklch(0.78 0.16 12));
-        --accent-rose-bound: light-dark(oklch(0.56 0.16 12), oklch(0.70 0.14 12));
-        --accent-rose-write: light-dark(oklch(0.98 0.01 12), oklch(0.16 0.02 12));
+        --success: light-dark(oklch(0.55 0.16 145), oklch(0.78 0.15 145));
+        --warn: light-dark(oklch(0.60 0.18 75), oklch(0.85 0.15 75));
+        --danger: light-dark(oklch(0.55 0.22 25), oklch(0.75 0.20 25));
     }
 
     @media (prefers-color-scheme: dark) {
@@ -129,93 +56,102 @@
 
     :root,
     [data-theme="gray"] {
-        --bound: light-dark(oklch(0.86 0.011 264.364), oklch(0.28 0.016 264.364));
-        --muted-bound: light-dark(oklch(0.94 0.009 264.364), oklch(0.17 0.015 264.364));
-        --outer-bound: light-dark(oklch(0.78 0.013 264.364), oklch(0.36 0.018 264.364));
+        /* Borders with better definition */
+        --bound: light-dark(oklch(0.80 0.012 264.364), oklch(0.35 0.018 264.364));
+        --muted-bound: light-dark(oklch(0.88 0.010 264.364), oklch(0.25 0.016 264.364));
+        --outer-bound: light-dark(oklch(0.70 0.015 264.364), oklch(0.45 0.020 264.364));
 
-        --muted-surface: light-dark(oklch(0.98 0.006 264.364), oklch(0.13 0.012 264.364));
-        --muted-write: light-dark(oklch(0.65 0.008 264.364), oklch(0.52 0.010 264.364));
+        /* Muted variants with better contrast */
+        --muted-surface: light-dark(oklch(0.95 0.006 264.364), oklch(0.22 0.014 264.364));
+        --muted-write: light-dark(oklch(0.55 0.012 264.364), oklch(0.50 0.012 264.364));
 
-        --surface: light-dark(oklch(0.97 0.007 264.364), oklch(0.15 0.013 264.364));
-        --write: light-dark(oklch(0.22 0.010 264.364), oklch(0.94 0.010 264.364));
+        /* Primary text/background with strong contrast */
+        --surface: light-dark(oklch(0.99 0.004 264.364), oklch(0.14 0.014 264.364));
+        --write: light-dark(oklch(0.18 0.015 264.364), oklch(0.96 0.008 264.364));
 
-        --primary-surface: light-dark(oklch(0.22 0.012 264.364), oklch(0.88 0.010 264.364));
-        --primary-write: light-dark(oklch(0.97 0.007 264.364), oklch(0.15 0.013 264.364));
+        /* Inverted primary (buttons, emphasis) */
+        --primary-surface: light-dark(oklch(0.22 0.020 264.364), oklch(0.92 0.010 264.364));
+        --primary-write: light-dark(oklch(0.98 0.006 264.364), oklch(0.14 0.014 264.364));
 
-        --secondary-surface: light-dark(oklch(0.90 0.010 264.364), oklch(0.28 0.014 264.364));
-        --secondary-write: light-dark(oklch(0.15 0.007 264.364), oklch(0.94 0.010 264.364));
+        /* Secondary variants with clear distinction */
+        --secondary-surface: light-dark(oklch(0.90 0.012 264.364), oklch(0.30 0.018 264.364));
+        --secondary-write: light-dark(oklch(0.18 0.012 264.364), oklch(0.94 0.010 264.364));
     }
 
     [data-theme="neutral"] {
-        --bound: light-dark(oklch(0.86 0 0), oklch(0.28 0 0));
-        --muted-bound: light-dark(oklch(0.94 0 0), oklch(0.17 0 0));
-        --outer-bound: light-dark(oklch(0.78 0 0), oklch(0.36 0 0));
+        /* Pure grayscale - highest contrast potential */
+        --bound: light-dark(oklch(0.80 0 0), oklch(0.35 0 0));
+        --muted-bound: light-dark(oklch(0.88 0 0), oklch(0.25 0 0));
+        --outer-bound: light-dark(oklch(0.70 0 0), oklch(0.45 0 0));
 
-        --muted-surface: light-dark(oklch(0.98 0 0), oklch(0.13 0 0));
-        --muted-write: light-dark(oklch(0.65 0 0), oklch(0.52 0 0));
+        --muted-surface: light-dark(oklch(0.95 0 0), oklch(0.22 0 0));
+        --muted-write: light-dark(oklch(0.55 0 0), oklch(0.50 0 0));
 
-        --surface: light-dark(oklch(0.97 0 0), oklch(0.15 0 0));
-        --write: light-dark(oklch(0.22 0 0), oklch(0.94 0 0));
+        --surface: light-dark(oklch(0.99 0 0), oklch(0.14 0 0));
+        --write: light-dark(oklch(0.18 0 0), oklch(0.96 0 0));
 
-        --primary-surface: light-dark(oklch(0.22 0 0), oklch(0.88 0 0));
-        --primary-write: light-dark(oklch(0.97 0 0), oklch(0.15 0 0));
+        --primary-surface: light-dark(oklch(0.22 0 0), oklch(0.92 0 0));
+        --primary-write: light-dark(oklch(0.98 0 0), oklch(0.14 0 0));
 
-        --secondary-surface: light-dark(oklch(0.90 0 0), oklch(0.28 0 0));
-        --secondary-write: light-dark(oklch(0.15 0 0), oklch(0.94 0 0));
+        --secondary-surface: light-dark(oklch(0.90 0 0), oklch(0.30 0 0));
+        --secondary-write: light-dark(oklch(0.18 0 0), oklch(0.94 0 0));
     }
 
     [data-theme="slate"] {
-        --bound: light-dark(oklch(0.86 0.020 257.417), oklch(0.28 0.026 257.417));
-        --muted-bound: light-dark(oklch(0.94 0.015 257.417), oklch(0.17 0.022 257.417));
-        --outer-bound: light-dark(oklch(0.78 0.025 257.417), oklch(0.36 0.028 257.417));
+        /* Cool blue-gray with enhanced contrast */
+        --bound: light-dark(oklch(0.80 0.022 257.417), oklch(0.35 0.030 257.417));
+        --muted-bound: light-dark(oklch(0.88 0.018 257.417), oklch(0.25 0.026 257.417));
+        --outer-bound: light-dark(oklch(0.70 0.028 257.417), oklch(0.45 0.032 257.417));
 
-        --muted-surface: light-dark(oklch(0.98 0.010 257.417), oklch(0.13 0.018 257.417));
-        --muted-write: light-dark(oklch(0.65 0.018 257.417), oklch(0.52 0.024 257.417));
+        --muted-surface: light-dark(oklch(0.95 0.012 257.417), oklch(0.22 0.024 257.417));
+        --muted-write: light-dark(oklch(0.55 0.024 257.417), oklch(0.50 0.028 257.417));
 
-        --surface: light-dark(oklch(0.97 0.012 257.417), oklch(0.15 0.020 257.417));
-        --write: light-dark(oklch(0.22 0.022 257.417), oklch(0.94 0.014 257.417));
+        --surface: light-dark(oklch(0.99 0.008 257.417), oklch(0.14 0.022 257.417));
+        --write: light-dark(oklch(0.18 0.028 257.417), oklch(0.96 0.016 257.417));
 
-        --primary-surface: light-dark(oklch(0.22 0.024 257.417), oklch(0.88 0.016 257.417));
-        --primary-write: light-dark(oklch(0.97 0.012 257.417), oklch(0.15 0.020 257.417));
+        --primary-surface: light-dark(oklch(0.22 0.032 257.417), oklch(0.92 0.018 257.417));
+        --primary-write: light-dark(oklch(0.98 0.010 257.417), oklch(0.14 0.022 257.417));
 
-        --secondary-surface: light-dark(oklch(0.90 0.016 257.417), oklch(0.28 0.022 257.417));
-        --secondary-write: light-dark(oklch(0.15 0.012 257.417), oklch(0.94 0.014 257.417));
+        --secondary-surface: light-dark(oklch(0.90 0.020 257.417), oklch(0.30 0.026 257.417));
+        --secondary-write: light-dark(oklch(0.18 0.016 257.417), oklch(0.94 0.016 257.417));
     }
 
     [data-theme="stone"] {
-        --bound: light-dark(oklch(0.86 0.008 58.071), oklch(0.28 0.014 58.071));
-        --muted-bound: light-dark(oklch(0.94 0.006 58.071), oklch(0.17 0.013 58.071));
-        --outer-bound: light-dark(oklch(0.78 0.010 58.071), oklch(0.36 0.016 58.071));
+        /* Warm neutral with better definition */
+        --bound: light-dark(oklch(0.80 0.010 58.071), oklch(0.35 0.016 58.071));
+        --muted-bound: light-dark(oklch(0.88 0.008 58.071), oklch(0.25 0.014 58.071));
+        --outer-bound: light-dark(oklch(0.70 0.012 58.071), oklch(0.45 0.018 58.071));
 
-        --muted-surface: light-dark(oklch(0.98 0.004 58.071), oklch(0.13 0.010 58.071));
-        --muted-write: light-dark(oklch(0.65 0.008 58.071), oklch(0.52 0.012 58.071));
+        --muted-surface: light-dark(oklch(0.95 0.006 58.071), oklch(0.22 0.012 58.071));
+        --muted-write: light-dark(oklch(0.55 0.012 58.071), oklch(0.50 0.014 58.071));
 
-        --surface: light-dark(oklch(0.97 0.005 58.071), oklch(0.15 0.011 58.071));
-        --write: light-dark(oklch(0.22 0.010 58.071), oklch(0.94 0.010 58.071));
+        --surface: light-dark(oklch(0.99 0.004 58.071), oklch(0.14 0.012 58.071));
+        --write: light-dark(oklch(0.18 0.014 58.071), oklch(0.96 0.010 58.071));
 
-        --primary-surface: light-dark(oklch(0.22 0.012 58.071), oklch(0.88 0.010 58.071));
-        --primary-write: light-dark(oklch(0.97 0.005 58.071), oklch(0.15 0.011 58.071));
+        --primary-surface: light-dark(oklch(0.22 0.018 58.071), oklch(0.92 0.012 58.071));
+        --primary-write: light-dark(oklch(0.98 0.006 58.071), oklch(0.14 0.012 58.071));
 
-        --secondary-surface: light-dark(oklch(0.90 0.007 58.071), oklch(0.28 0.012 58.071));
-        --secondary-write: light-dark(oklch(0.15 0.005 58.071), oklch(0.94 0.010 58.071));
+        --secondary-surface: light-dark(oklch(0.90 0.010 58.071), oklch(0.30 0.014 58.071));
+        --secondary-write: light-dark(oklch(0.18 0.008 58.071), oklch(0.94 0.010 58.071));
     }
 
     [data-theme="zinc"] {
-        --bound: light-dark(oklch(0.86 0.009 285.938), oklch(0.28 0.015 285.938));
-        --muted-bound: light-dark(oklch(0.94 0.007 285.938), oklch(0.17 0.013 285.938));
-        --outer-bound: light-dark(oklch(0.78 0.011 285.938), oklch(0.36 0.017 285.938));
+        /* Cool gray with enhanced visibility */
+        --bound: light-dark(oklch(0.80 0.011 285.938), oklch(0.35 0.017 285.938));
+        --muted-bound: light-dark(oklch(0.88 0.009 285.938), oklch(0.25 0.015 285.938));
+        --outer-bound: light-dark(oklch(0.70 0.013 285.938), oklch(0.45 0.019 285.938));
 
-        --muted-surface: light-dark(oklch(0.98 0.004 285.938), oklch(0.13 0.010 285.938));
-        --muted-write: light-dark(oklch(0.65 0.009 285.938), oklch(0.52 0.013 285.938));
+        --muted-surface: light-dark(oklch(0.95 0.006 285.938), oklch(0.22 0.012 285.938));
+        --muted-write: light-dark(oklch(0.55 0.013 285.938), oklch(0.50 0.015 285.938));
 
-        --surface: light-dark(oklch(0.97 0.005 285.938), oklch(0.15 0.011 285.938));
-        --write: light-dark(oklch(0.22 0.012 285.938), oklch(0.94 0.010 285.938));
+        --surface: light-dark(oklch(0.99 0.004 285.938), oklch(0.14 0.012 285.938));
+        --write: light-dark(oklch(0.18 0.016 285.938), oklch(0.96 0.010 285.938));
 
-        --primary-surface: light-dark(oklch(0.22 0.014 285.938), oklch(0.88 0.011 285.938));
-        --primary-write: light-dark(oklch(0.97 0.005 285.938), oklch(0.15 0.011 285.938));
+        --primary-surface: light-dark(oklch(0.22 0.020 285.938), oklch(0.92 0.012 285.938));
+        --primary-write: light-dark(oklch(0.98 0.006 285.938), oklch(0.14 0.012 285.938));
 
-        --secondary-surface: light-dark(oklch(0.90 0.008 285.938), oklch(0.28 0.013 285.938));
-        --secondary-write: light-dark(oklch(0.15 0.005 285.938), oklch(0.94 0.010 285.938));
+        --secondary-surface: light-dark(oklch(0.90 0.010 285.938), oklch(0.30 0.016 285.938));
+        --secondary-write: light-dark(oklch(0.18 0.008 285.938), oklch(0.94 0.010 285.938));
     }
 }
 
@@ -236,76 +172,8 @@
     --color-secondary-surface: var(--secondary-surface);
 
     --color-success: var(--success);
-    --color-warning: var(--warning);
-    --color-failure: var(--failure);
+    --color-warn: var(--warn);
+    --color-danger: var(--danger);
 
     --color-outer-bound: var(--outer-bound);
-
-    --color-accent-red-surface: var(--accent-red-surface);
-    --color-accent-red-bound: var(--accent-red-bound);
-    --color-accent-red-write: var(--accent-red-write);
-
-    --color-accent-orange-surface: var(--accent-orange-surface);
-    --color-accent-orange-bound: var(--accent-orange-bound);
-    --color-accent-orange-write: var(--accent-orange-write);
-
-    --color-accent-amber-surface: var(--accent-amber-surface);
-    --color-accent-amber-bound: var(--accent-amber-bound);
-    --color-accent-amber-write: var(--accent-amber-write);
-
-    --color-accent-yellow-surface: var(--accent-yellow-surface);
-    --color-accent-yellow-bound: var(--accent-yellow-bound);
-    --color-accent-yellow-write: var(--accent-yellow-write);
-
-    --color-accent-lime-surface: var(--accent-lime-surface);
-    --color-accent-lime-bound: var(--accent-lime-bound);
-    --color-accent-lime-write: var(--accent-lime-write);
-
-    --color-accent-green-surface: var(--accent-green-surface);
-    --color-accent-green-bound: var(--accent-green-bound);
-    --color-accent-green-write: var(--accent-green-write);
-
-    --color-accent-emerald-surface: var(--accent-emerald-surface);
-    --color-accent-emerald-bound: var(--accent-emerald-bound);
-    --color-accent-emerald-write: var(--accent-emerald-write);
-
-    --color-accent-teal-surface: var(--accent-teal-surface);
-    --color-accent-teal-bound: var(--accent-teal-bound);
-    --color-accent-teal-write: var(--accent-teal-write);
-
-    --color-accent-cyan-surface: var(--accent-cyan-surface);
-    --color-accent-cyan-bound: var(--accent-cyan-bound);
-    --color-accent-cyan-write: var(--accent-cyan-write);
-
-    --color-accent-sky-surface: var(--accent-sky-surface);
-    --color-accent-sky-bound: var(--accent-sky-bound);
-    --color-accent-sky-write: var(--accent-sky-write);
-
-    --color-accent-blue-surface: var(--accent-blue-surface);
-    --color-accent-blue-bound: var(--accent-blue-bound);
-    --color-accent-blue-write: var(--accent-blue-write);
-
-    --color-accent-indigo-surface: var(--accent-indigo-surface);
-    --color-accent-indigo-bound: var(--accent-indigo-bound);
-    --color-accent-indigo-write: var(--accent-indigo-write);
-
-    --color-accent-violet-surface: var(--accent-violet-surface);
-    --color-accent-violet-bound: var(--accent-violet-bound);
-    --color-accent-violet-write: var(--accent-violet-write);
-
-    --color-accent-purple-surface: var(--accent-purple-surface);
-    --color-accent-purple-bound: var(--accent-purple-bound);
-    --color-accent-purple-write: var(--accent-purple-write);
-
-    --color-accent-fuchsia-surface: var(--accent-fuchsia-surface);
-    --color-accent-fuchsia-bound: var(--accent-fuchsia-bound);
-    --color-accent-fuchsia-write: var(--accent-fuchsia-write);
-
-    --color-accent-pink-surface: var(--accent-pink-surface);
-    --color-accent-pink-bound: var(--accent-pink-bound);
-    --color-accent-pink-write: var(--accent-pink-write);
-
-    --color-accent-rose-surface: var(--accent-rose-surface);
-    --color-accent-rose-bound: var(--accent-rose-bound);
-    --color-accent-rose-write: var(--accent-rose-write);
 }

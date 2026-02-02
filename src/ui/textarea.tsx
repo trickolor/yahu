@@ -10,11 +10,11 @@ export const Textarea = ({
                 "flex w-full px-3 py-2 text-sm text-write resize-y ring-offset-2 transition-all rounded border border-bound bg-surface",
                 "focus-visible:outline-none focus-visible:ring-outer-bound focus-visible:ring-2",
                 "disabled:cursor-not-allowed disabled:opacity-70 disabled:pointer-events-none",
-                "aria-invalid:ring-failure aria-invalid:border-failure",
+                "aria-invalid:ring-danger aria-invalid:border-danger",
                 "placeholder:text-muted-write",
                 className
             )}
             {...props}
         />
     );
-};
+}

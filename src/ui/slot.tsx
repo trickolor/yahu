@@ -1,75 +1,212 @@
 import {
-    useMemo,
-
-    isValidElement,
+    Children,
     cloneElement,
     forwardRef,
-
+    isValidElement,
+    type ReactNode,
     type ReactElement,
-    type RefCallback,
+    type HTMLAttributes,
     type Ref,
-    type JSX
-
+    type RefCallback,
+    type CSSProperties,
 } from "react";
 
-import { cn } from "../cn";
+import { cn } from "@/cn";
 
-type AnyFn = (...args: any[]) => any;
+// ---------------------------------------------------------------------------------------------------- //
 
-const mergeRefs = <T,>(...refs: Array<Ref<T>>): RefCallback<T> =>
-    (node: T) => {
-        refs.forEach(ref => {
-            if (typeof ref === 'function') ref(node);
-            else if (ref && typeof ref === 'object') (ref as any).current = node;
-        });
-    };
+type PossibleRef<T> = Ref<T> | undefined;
 
-const composeEventHandlers =
-    (theirHandler?: AnyFn, ourHandler?: AnyFn): AnyFn | undefined =>
-        (event: any) => {
-            theirHandler?.(event);
-            if (!event?.defaultPrevented) ourHandler?.(event);
-        };
-
-const mergeProps = <P extends Record<string, any>, C extends Record<string, any>>(
-    slotProps: P,
-    childProps: C,
-    mergedRef: Ref<any>
-): P & C => {
-    const result: Record<string, any> = { ...childProps, ...slotProps };
-
-    if ((childProps as any)?.className || (slotProps as any)?.className) {
-        result.className = cn((childProps as any)?.className, (slotProps as any)?.className);
+function setRef<T>(ref: PossibleRef<T>, value: T): void {
+    if (typeof ref === "function") ref(value);
+    else if (ref !== null && ref !== undefined) {
+        const mutableRef = ref as { current: T }
+        mutableRef.current = value;
     }
-
-    for (const key of Object.keys(slotProps)) {
-        if (key.startsWith('on') && typeof (slotProps as any)[key] === 'function') {
-            result[key] = composeEventHandlers(
-                (childProps as any)[key],
-                (slotProps as any)[key]
-            );
-        }
-    }
-
-    result.ref = mergedRef;
-    return result as P & C;
 }
 
-export interface SlotProps {
-    children: ReactElement<any, keyof JSX.IntrinsicElements | React.JSXElementConstructor<any>>;
-    [key: string]: any;
+function composeRefs<T>(...refs: PossibleRef<T>[]): RefCallback<T> {
+    return (node: T) => refs.forEach((ref) => setRef(ref, node));
 }
 
-export const Slot = forwardRef<any, SlotProps>(({ children, ...slotProps }, ref) => {
-    if (!isValidElement(children))
-        throw new Error('<Slot> expects exactly one valid React element as child');
+// ---------------------------------------------------------------------------------------------------- //
 
-    const mergedRef = useMemo(
-        () => mergeRefs((children as any).ref, ref),
-        [children, ref]
+type AnyRecord = Record<string, unknown>;
+
+type EventHandlerLike = (...args: unknown[]) => void;
+
+function isEventHandler(key: string): boolean {
+    return (
+        key.length > 2 &&
+        key.startsWith("on") &&
+        key.charCodeAt(2) >= 65 &&
+        key.charCodeAt(2) <= 90
     );
+}
 
-    return cloneElement(children, mergeProps(slotProps, (children as any).props, mergedRef));
-});
+function isFunction(value: unknown): value is EventHandlerLike {
+    return typeof value === "function";
+}
 
-Slot.displayName = 'Slot';
+function isString(value: unknown): value is string {
+    return typeof value === "string";
+}
+
+function isStyleObject(value: unknown): value is CSSProperties {
+    return (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value)
+    );
+}
+
+function mergeProps(slotProps: AnyRecord, childProps: AnyRecord): AnyRecord {
+    const merged: AnyRecord = { ...slotProps }
+
+    Object.keys(childProps).forEach((key) => {
+        const slotValue = slotProps[key];
+        const childValue = childProps[key];
+
+        if (isEventHandler(key)) {
+            const slotHandler = isFunction(slotValue) ? slotValue : undefined;
+            const childHandler = isFunction(childValue) ? childValue : undefined;
+
+            merged[key] = slotHandler && childHandler
+                ? (...args: unknown[]) => {
+                    childHandler(...args);
+                    slotHandler(...args);
+                }
+                : childHandler || slotHandler;
+        }
+
+        else if (key === "style") {
+            const slotStyle = isStyleObject(slotValue) ? slotValue : undefined;
+            const childStyle = isStyleObject(childValue) ? childValue : undefined;
+
+            merged[key] = { ...slotStyle, ...childStyle }
+        }
+
+        else if (key === "className") {
+            const slotClass = isString(slotValue) ? slotValue : undefined;
+            const childClass = isString(childValue) ? childValue : undefined;
+            merged[key] = cn([slotClass, childClass].filter(Boolean).join(" ")) || undefined;
+        }
+
+        else merged[key] = childValue !== undefined ? childValue : slotValue;
+    });
+
+    return merged;
+}
+
+function getElementRef(element: ReactElement): PossibleRef<unknown> {
+    const props = element.props as { ref?: Ref<unknown> }
+    const elementWithRef = element as { ref?: Ref<unknown> }
+    return props.ref ?? elementWithRef.ref;
+}
+
+// ---------------------------------------------------------------------------------------------------- //
+
+interface SlottableProps {
+    children: ReactNode;
+}
+
+function Slottable({ children }: SlottableProps) {
+    return children;
+}
+
+function isSlottable(child: ReactNode): child is ReactElement<SlottableProps> {
+    return isValidElement(child) && child.type === Slottable;
+}
+
+// ---------------------------------------------------------------------------------------------------- //
+
+interface SlotCloneProps {
+    children: ReactNode;
+}
+
+const SlotClone = forwardRef<unknown, SlotCloneProps & HTMLAttributes<HTMLElement>>(
+    function SlotClone({ children, ...slotProps }, forwardedRef) {
+        if (!isValidElement(children)) {
+            if (children === null || children === undefined) return null;
+            console.warn("Slot: Expected a single React element child, received:", typeof children);
+            return <>{children}</>;
+        }
+
+        const childProps = children.props as AnyRecord;
+        const childRef = getElementRef(children);
+
+        const mergedProps = mergeProps(slotProps, childProps);
+
+        const composedRef = forwardedRef
+            ? composeRefs(forwardedRef, childRef)
+            : childRef;
+
+        return cloneElement(
+            children,
+            { ...mergedProps, ref: composedRef } as Partial<typeof children.props> & { ref?: unknown }
+        );
+    }
+);
+
+// ---------------------------------------------------------------------------------------------------- //
+
+interface SlotProps extends HTMLAttributes<HTMLElement> {
+    children?: ReactNode;
+}
+
+const Slot = forwardRef<HTMLElement, SlotProps>(
+    function Slot({ children, ...slotProps }, forwardedRef) {
+        const childArray = Children.toArray(children);
+        const slottableChild = childArray.find(isSlottable);
+
+        if (slottableChild) {
+            const slottableContent = slottableChild.props.children;
+
+            if (isValidElement(slottableContent)) {
+                const slottableContentProps = slottableContent.props as AnyRecord;
+                const slottableContentRef = getElementRef(slottableContent);
+
+                const mergedProps = mergeProps(slotProps, slottableContentProps);
+                const composedRef = forwardedRef
+                    ? composeRefs(forwardedRef, slottableContentRef)
+                    : slottableContentRef;
+
+                const otherChildren = childArray.filter((child) => child !== slottableChild);
+
+                const childrenForClone: ReactNode = otherChildren.length > 0
+                    ? otherChildren
+                    : (slottableContentProps.children as ReactNode);
+
+                return cloneElement(
+                    slottableContent,
+
+                    {
+                        ...mergedProps,
+                        children: childrenForClone,
+                        ref: composedRef,
+                    } as Partial<typeof slottableContent.props> & { ref?: unknown; children?: ReactNode }
+                );
+            }
+
+            return <>{children}</>;
+        }
+
+        return (
+            <SlotClone {...slotProps} ref={forwardedRef}>
+                {children}
+            </SlotClone>
+        );
+    });
+
+// ---------------------------------------------------------------------------------------------------- //
+
+export {
+    Slot,
+    Slottable,
+    composeRefs,
+    mergeProps,
+    type SlotProps,
+    type SlottableProps,
+}
+
+// ---------------------------------------------------------------------------------------------------- //

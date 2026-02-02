@@ -1,0 +1,11 @@
+- Check the proper usage of ring utility within focusabled components (focus-visible handling)
+- Add interactions callbacks for Select component and inner select/input value to track the component value state in form handling context and event propagation properly
+- Proper tab focus styling for accordion items (currently it is browser native)
+- Proper tab focus styling for collapsible trigger component (also browser native curretly)
+- Fix the design layout for dialog parts
+- Ensure the alert-dialog and dialog components have proper keyboard interactions
+- Adjust proper animations for alert-dialog and dialog opening/closing
+- Ensure horizontal variant for the accordion component
+- Fix focus-visible on select trigger
+- Format ToggleGroup code - check for any issues too
+- Apply proper logic and code pattern architecture to Dropdown, ContextMenu and Select as in Menubar (if/where applicable - to check)
