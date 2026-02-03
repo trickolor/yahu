@@ -15,7 +15,7 @@ import { SearchField, SearchFieldInput, SearchFieldIndicator, SearchFieldClear, 
 import { OTPField, OTPFieldInput, OTPFieldGroup, OTPFieldSeparator } from "./ui/otp-field";
 import { MaskedInput } from "./ui/masked-input";
 import { Select, SelectTrigger, SelectValue, SelectTriggerIndicator, SelectPortal, SelectContent, SelectViewport, SelectItem, SelectItemText, SelectItemIndicator, SelectGroup, SelectLabel, SelectSeparator, SelectScrollUpButton, SelectScrollDownButton } from "./ui/select";
-import { MultiSelect, MultiSelectTrigger, MultiSelectValue, MultiSelectChip, MultiSelectTriggerIndicator, MultiSelectClear, MultiSelectPortal, MultiSelectContent, MultiSelectViewport, MultiSelectItem, MultiSelectItemText, MultiSelectItemIndicator, MultiSelectGroup, MultiSelectLabel, MultiSelectSeparator, MultiSelectScrollUpButton, MultiSelectScrollDownButton } from "./ui/multi-select";
+import { MultiSelect, MultiSelectTrigger, MultiSelectValue, MultiSelectChip, MultiSelectTriggerIndicator, MultiSelectClear, MultiSelectAll, MultiSelectPortal, MultiSelectContent, MultiSelectViewport, MultiSelectItem, MultiSelectItemText, MultiSelectItemIndicator, MultiSelectGroup, MultiSelectLabel, MultiSelectSeparator, MultiSelectScrollUpButton, MultiSelectScrollDownButton } from "./ui/multi-select";
 
 function App() {
     const [quantity, setQuantity] = useState(1);
@@ -1753,6 +1753,44 @@ function App() {
                                         </MultiSelectItem>
                                         <MultiSelectItem value="svelte">
                                             <MultiSelectItemText>Svelte</MultiSelectItemText>
+                                            <MultiSelectItemIndicator />
+                                        </MultiSelectItem>
+                                    </MultiSelectViewport>
+                                </MultiSelectContent>
+                            </MultiSelectPortal>
+                        </MultiSelect>
+                    </div>
+
+                    <div className="space-y-3">
+                        <h3 className="text-sm font-medium text-muted-write">With Select All & Clear Buttons</h3>
+                        <MultiSelect defaultValue={["node", "deno"]}>
+                            <MultiSelectTrigger>
+                                <MultiSelectValue placeholder="Select runtimes..." />
+                                <MultiSelectAll />
+                                <MultiSelectClear />
+                                <MultiSelectTriggerIndicator />
+                            </MultiSelectTrigger>
+                            <MultiSelectPortal>
+                                <MultiSelectContent>
+                                    <MultiSelectViewport>
+                                        <MultiSelectItem value="node">
+                                            <MultiSelectItemText>Node.js</MultiSelectItemText>
+                                            <MultiSelectItemIndicator />
+                                        </MultiSelectItem>
+                                        <MultiSelectItem value="deno">
+                                            <MultiSelectItemText>Deno</MultiSelectItemText>
+                                            <MultiSelectItemIndicator />
+                                        </MultiSelectItem>
+                                        <MultiSelectItem value="bun">
+                                            <MultiSelectItemText>Bun</MultiSelectItemText>
+                                            <MultiSelectItemIndicator />
+                                        </MultiSelectItem>
+                                        <MultiSelectItem value="browser">
+                                            <MultiSelectItemText>Browser</MultiSelectItemText>
+                                            <MultiSelectItemIndicator />
+                                        </MultiSelectItem>
+                                        <MultiSelectItem value="cloudflare" disabled>
+                                            <MultiSelectItemText>Cloudflare Workers</MultiSelectItemText>
                                             <MultiSelectItemIndicator />
                                         </MultiSelectItem>
                                     </MultiSelectViewport>

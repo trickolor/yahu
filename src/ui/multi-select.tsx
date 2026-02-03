@@ -339,9 +339,13 @@ interface MultiSelectTriggerProps extends HTMLAttributes<HTMLElement> {
 }
 
 function MultiSelectTrigger({ className, children, asChild, ...props }: MultiSelectTriggerProps) {
-    const { open, setOpen, state, dispatch, toggleValue, setValue, activeDescendant, triggerRef, scrollRequestRef, triggerScroll, disabled } = useMultiSelectContext();
+    const { open, setOpen, state, dispatch, toggleValue, setValue, value, activeDescendant, triggerRef, scrollRequestRef, triggerScroll, disabled } = useMultiSelectContext();
 
-    const clickHandler = useCallback(() => {
+    const clickHandler = useCallback((e: React.MouseEvent) => {
+        // Don't toggle if clicking on an interactive child element
+        const target = e.target as HTMLElement;
+        if (target.closest('button')) return;
+
         if (disabled) return;
         if (!open) dispatch({ type: 'SET_PENDING_CURSOR_ACTION', payload: 'default' });
         setOpen(!open);
@@ -403,6 +407,25 @@ function MultiSelectTrigger({ className, children, asChild, ...props }: MultiSel
 
     const keyDownHandler = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
         if (disabled) return;
+
+        // Only handle keyboard events when focus is on the trigger itself
+        // Action buttons handle their own keyboard events
+        const trigger = triggerRef.current;
+        if (event.target !== trigger) return;
+
+        // Handle Tab: if dropdown is open, toggle current item and close, then let Tab proceed naturally
+        if (event.key === 'Tab') {
+            if (open) {
+                if (state.cursor >= 0 && state.cursor < state.items.length) {
+                    const item = state.items[state.cursor];
+                    if (!item.disabled) toggleValue(item.value);
+                }
+                setOpen(false);
+            }
+            // Let default Tab behavior proceed to action buttons or next element
+            return;
+        }
+
         const action = getMultiSelectAction(event, open);
         if (action !== MultiSelectActions.None) event.preventDefault();
 
@@ -489,6 +512,13 @@ function MultiSelectTrigger({ className, children, asChild, ...props }: MultiSel
             }
 
             case MultiSelectActions.Type:
+                // Backspace when closed removes the last chip
+                if (event.key === 'Backspace' && !open && value.length > 0) {
+                    const lastValue = value[value.length - 1];
+                    setValue(value.filter(v => v !== lastValue));
+                    return;
+                }
+
                 if (!open) {
                     dispatch({ type: 'SET_PENDING_CURSOR_ACTION', payload: 'default' });
                     setOpen(true);
@@ -519,7 +549,7 @@ function MultiSelectTrigger({ className, children, asChild, ...props }: MultiSel
 
             default: break;
         }
-    }, [disabled, open, dispatch, setOpen, scrollRequestRef, triggerScroll, state.items, state.cursor, typeahead, toggleValue, setValue]);
+    }, [disabled, open, dispatch, setOpen, scrollRequestRef, triggerScroll, state.items, state.cursor, typeahead, toggleValue, setValue, triggerRef, value]);
 
     const Component = asChild ? Slot : 'div';
 
@@ -545,6 +575,7 @@ function MultiSelectTrigger({ className, children, asChild, ...props }: MultiSel
                 'w-fit min-w-64 min-h-9 inline-flex items-center justify-between gap-2 px-3 py-1.5 rounded text-write border border-bound bg-surface transition-all cursor-default',
                 'focus-visible:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outer-bound focus-visible:ring-offset-muted-bound focus-visible:ring-offset-1',
                 'data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed data-[disabled]:pointer-events-none',
+                '[&>button:first-of-type]:ml-auto',
                 className
             )}
 
@@ -673,24 +704,15 @@ function MultiSelectChip({ className, value, children, onRemove, disabled, asChi
     const removeClickHandler = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
         if (!disabled && onRemove && value) onRemove(value);
-    }, [disabled, onRemove]);
-
-    const keyDownHandler = useCallback((e: React.KeyboardEvent) => {
-        if (e.key === 'Backspace' || e.key === 'Delete') {
-            e.stopPropagation();
-            if (!disabled && onRemove && value) onRemove(value);
-        }
-    }, [disabled, onRemove]);
+    }, [disabled, onRemove, value]);
 
     return (
         <Component
             data-ui="multi-select-chip"
             data-disabled={disabled || undefined}
 
-            onKeyDown={keyDownHandler}
-
             className={cn(
-                'inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-muted-surface text-write',
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded text-sm/tight font-medium bg-muted-surface text-write',
                 'data-[disabled]:opacity-50',
                 className
             )}
@@ -699,28 +721,50 @@ function MultiSelectChip({ className, value, children, onRemove, disabled, asChi
         >
             {children}
 
-            {onRemove && (
+            {
+                onRemove &&
+
                 <button
                     data-ui="multi-select-chip-remove"
-                    type="button"
-                    className="inline-flex items-center justify-center size-3.5 rounded-sm hover:bg-muted-bound/50 focus:outline-none disabled:pointer-events-none"
-                    onClick={removeClickHandler}
+
                     disabled={disabled}
+                    type="button"
+                    tabIndex={-1}
+
                     aria-label="Remove"
+                    onClick={removeClickHandler}
+
+                    className={cn(
+                        'inline-flex items-center justify-center size-fit shrink-0 rounded',
+                        '[&_svg:not([class*="size-"])]:size-3.5',
+                        'disabled:pointer-events-none',
+                        'hover:bg-muted-bound/50',
+                        'focus:outline-none',
+                    )}
+
                 >
                     <svg
+                        data-ui="multi-select-chip-remove-icon"
                         xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
                         fill="currentColor"
-                        className="size-3"
+                        viewBox="0 0 24 24"
+                        aria-hidden
                     >
                         <path
-                            d="M6.70711 5.29289C6.31658 4.90237 5.68342 4.90237 5.29289 5.29289C4.90237 5.68342 4.90237 6.31658 5.29289 6.70711L10.5858 12L5.29289 17.2929C4.90237 17.6834 4.90237 18.3166 5.29289 18.7071C5.68342 19.0976 6.31658 19.0976 6.70711 18.7071L12 13.4142L17.2929 18.7071C17.6834 19.0976 18.3166 19.0976 18.7071 18.7071C19.0976 18.3166 19.0976 17.6834 18.7071 17.2929L13.4142 12L18.7071 6.70711C19.0976 6.31658 19.0976 5.68342 18.7071 5.29289C18.3166 4.90237 17.6834 4.90237 17.2929 5.29289L12 10.5858L6.70711 5.29289Z"
+                            d="M18.7071 5.29289C19.0976 5.68342 19.0976 6.31658 18.7071 6.70711L6.70711 18.7071C6.31658 19.0976 5.68342 19.0976 5.29289 18.7071C4.90237 18.3166 4.90237 17.6834 5.29289 17.2929L17.2929 5.29289C17.6834 4.90237 18.3166 4.90237 18.7071 5.29289Z"
                             fill="currentColor"
+                            fillRule="evenodd"
+                            clipRule="evenodd"
+                        />
+                        <path
+                            d="M5.29289 5.29289C5.68342 4.90237 6.31658 4.90237 6.70711 5.29289L18.7071 17.2929C19.0976 17.6834 19.0976 18.3166 18.7071 18.7071C18.3166 19.0976 17.6834 19.0976 17.2929 18.7071L5.29289 6.70711C4.90237 6.31658 4.90237 5.68342 5.29289 5.29289Z"
+                            fill="currentColor"
+                            fillRule="evenodd"
+                            clipRule="evenodd"
                         />
                     </svg>
                 </button>
-            )}
+            }
         </Component>
     );
 }
@@ -777,12 +821,27 @@ interface MultiSelectClearProps extends HTMLAttributes<HTMLElement> {
 }
 
 function MultiSelectClear({ className, asChild, children, ...props }: MultiSelectClearProps) {
-    const { setValue, value, disabled } = useMultiSelectContext();
+    const { setValue, value, disabled, triggerRef } = useMultiSelectContext();
+
+    const clearAndFocusTrigger = useCallback(() => {
+        if (disabled) return;
+        setValue([]);
+        // Focus trigger after clear since this button will disappear
+        triggerRef.current?.focus();
+    }, [disabled, setValue, triggerRef]);
 
     const clickHandler = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!disabled) setValue([]);
-    }, [disabled, setValue]);
+        clearAndFocusTrigger();
+    }, [clearAndFocusTrigger]);
+
+    const keyDownHandler = useCallback((e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            clearAndFocusTrigger();
+        }
+    }, [clearAndFocusTrigger]);
 
     if (value.length === 0) return null;
 
@@ -791,33 +850,127 @@ function MultiSelectClear({ className, asChild, children, ...props }: MultiSelec
     return (
         <Component
             data-ui="multi-select-clear"
-            type="button"
+
             disabled={disabled}
-            onClick={clickHandler}
+            type="button"
+
             aria-label="Clear all selections"
 
+            onClick={clickHandler}
+            onKeyDown={keyDownHandler}
+
             className={cn(
-                'w-fit [&>svg]:size-4 text-muted-write hover:text-write shrink-0 transition-colors',
+                'w-fit [&>svg]:size-4 text-write shrink-0 transition-colors cursor-pointer rounded',
                 'disabled:opacity-50 disabled:pointer-events-none',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-outer-bound focus-visible:ring-offset-1 focus-visible:ring-offset-surface',
                 className
             )}
 
             {...props}
         >
-            {asChild ? children : (
-                <svg
-                    data-ui="multi-select-clear-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    aria-hidden
-                    fill="currentColor"
-                >
-                    <path
-                        d="M6.70711 5.29289C6.31658 4.90237 5.68342 4.90237 5.29289 5.29289C4.90237 5.68342 4.90237 6.31658 5.29289 6.70711L10.5858 12L5.29289 17.2929C4.90237 17.6834 4.90237 18.3166 5.29289 18.7071C5.68342 19.0976 6.31658 19.0976 6.70711 18.7071L12 13.4142L17.2929 18.7071C17.6834 19.0976 18.3166 19.0976 18.7071 18.7071C19.0976 18.3166 19.0976 17.6834 18.7071 17.2929L13.4142 12L18.7071 6.70711C19.0976 6.31658 19.0976 5.68342 18.7071 5.29289C18.3166 4.90237 17.6834 4.90237 17.2929 5.29289L12 10.5858L6.70711 5.29289Z"
+            {
+                asChild
+
+                    ? children
+
+                    : <svg
+                        data-ui="multi-select-clear-icon"
+                        xmlns="http://www.w3.org/2000/svg"
                         fill="currentColor"
-                    />
-                </svg>
+                        viewBox="0 0 24 24"
+                        aria-hidden
+                    >
+                        <path
+                            d="M18.7071 5.29289C19.0976 5.68342 19.0976 6.31658 18.7071 6.70711L6.70711 18.7071C6.31658 19.0976 5.68342 19.0976 5.29289 18.7071C4.90237 18.3166 4.90237 17.6834 5.29289 17.2929L17.2929 5.29289C17.6834 4.90237 18.3166 4.90237 18.7071 5.29289Z"
+                            fill="currentColor"
+                            fillRule="evenodd"
+                            clipRule="evenodd"
+                        />
+                        <path
+                            d="M5.29289 5.29289C5.68342 4.90237 6.31658 4.90237 6.70711 5.29289L18.7071 17.2929C19.0976 17.6834 19.0976 18.3166 18.7071 18.7071C18.3166 19.0976 17.6834 19.0976 17.2929 18.7071L5.29289 6.70711C4.90237 6.31658 4.90237 5.68342 5.29289 5.29289Z"
+                            fill="currentColor"
+                            fillRule="evenodd"
+                            clipRule="evenodd"
+                        />
+                    </svg>
+            }
+        </Component>
+    );
+}
+
+// ---------------------------------------------------------------------------------------------------- //
+
+interface MultiSelectAllProps extends HTMLAttributes<HTMLElement> {
+    asChild?: boolean;
+}
+
+function MultiSelectAll({ className, asChild, children, ...props }: MultiSelectAllProps) {
+    const { setValue, value, state, disabled, open } = useMultiSelectContext();
+
+    const enabledItemValues = useMemo(() => {
+        return state.items.filter(item => !item.disabled).map(item => item.value);
+    }, [state.items]);
+
+    const allSelected = enabledItemValues.length > 0 &&
+        enabledItemValues.every(v => value.includes(v));
+
+    const clickHandler = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!disabled && enabledItemValues.length > 0) setValue(enabledItemValues);
+    }, [disabled, setValue, enabledItemValues]);
+
+    if (!open || allSelected) return null;
+
+    const Component = asChild ? Slot : 'button';
+
+    return (
+        <Component
+            data-ui="multi-select-all"
+
+            disabled={disabled}
+            type="button"
+
+            aria-label="Select all"
+
+            onClick={clickHandler}
+
+            className={cn(
+                'w-fit [&>svg]:size-4 text-write shrink-0 transition-colors cursor-pointer rounded',
+                'disabled:opacity-50 disabled:pointer-events-none',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-outer-bound focus-visible:ring-offset-1 focus-visible:ring-offset-surface',
+                className
             )}
+
+            {...props}
+        >
+            {
+                asChild
+
+                    ? children
+
+                    : <svg
+                        data-ui="multi-select-all-icon"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden
+                    >
+                        <path
+                            d="M18.7071 5.29289C19.0976 5.68342 19.0976 6.31658 18.7071 6.70711L7.70711 17.7071C7.31658 18.0976 6.68342 18.0976 6.29289 17.7071L1.29289 12.7071C0.902369 12.3166 0.902369 11.6834 1.29289 11.2929C1.68342 10.9024 2.31658 10.9024 2.70711 11.2929L7 15.5858L17.2929 5.29289C17.6834 4.90237 18.3166 4.90237 18.7071 5.29289Z"
+                            fill="currentColor"
+                            fillRule="evenodd"
+                            clipRule="evenodd"
+                        />
+
+                        <path
+                            d="M22.7071 9.29289C23.0976 9.68342 23.0976 10.3166 22.7071 10.7071L15.2071 18.2071C14.8166 18.5976 14.1834 18.5976 13.7929 18.2071L12.2929 16.7071C11.9024 16.3166 11.9024 15.6834 12.2929 15.2929C12.6834 14.9024 13.3166 14.9024 13.7071 15.2929L14.5 16.0858L21.2929 9.29289C21.6834 8.90237 22.3166 8.90237 22.7071 9.29289Z"
+                            fill="currentColor"
+                            fillRule="evenodd"
+                            clipRule="evenodd"
+                        />
+
+                    </svg>
+            }
         </Component>
     );
 }
@@ -1624,6 +1777,7 @@ export {
     MultiSelectChip,
     MultiSelectTriggerIndicator,
     MultiSelectClear,
+    MultiSelectAll,
     MultiSelectPortal,
     MultiSelectContent,
     MultiSelectViewport,
@@ -1641,6 +1795,7 @@ export {
     type MultiSelectChipProps,
     type MultiSelectTriggerIndicatorProps,
     type MultiSelectClearProps,
+    type MultiSelectAllProps,
     type MultiSelectPortalProps,
     type MultiSelectContentProps,
     type MultiSelectViewportProps,
