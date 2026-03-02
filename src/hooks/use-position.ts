@@ -62,17 +62,10 @@ const DEFAULT_ALIGN_OFFSET = 0;
 const DEFAULT_AVOID_COLLISIONS = true;
 const DEFAULT_COLLISION_PADDING = 8;
 const DEFAULT_CONSTRAIN_SIZE = true;
-const DEFAULT_MIN_CONSTRAINED_HEIGHT = 100;
-const DEFAULT_MIN_CONSTRAINED_WIDTH = 100;
 const DEFAULT_STICKY: Sticky = "partial";
 const DEFAULT_COLLISION_BOUNDARY: Boundary = [];
 
-const OPPOSITE_SIDE: Record<Side, Side> = {
-    top: "bottom",
-    bottom: "top",
-    left: "right",
-    right: "left",
-}
+const ALL_SIDES: Side[] = ["top", "right", "bottom", "left"];
 
 // ---------------------------------------------------------------------------------------------------- //
 
@@ -95,8 +88,6 @@ interface UsePositionOptions {
     sticky?: Sticky;
     hideWhenDetached?: boolean;
 
-    minConstrainedHeight?: number;
-    minConstrainedWidth?: number;
     constrainSize?: boolean;
 }
 
@@ -147,6 +138,29 @@ const getAvailableSpace = ({
 // ---------------------------------------------------------------------------------------------------- //
 
 const isVerticalSide = (side: Side): boolean => ['top', 'bottom'].includes(side);
+
+// ---------------------------------------------------------------------------------------------------- //
+
+const measureNaturalContentSize = (content: HTMLElement): Size => {
+    const previousStyles = {
+        maxHeight: content.style.maxHeight,
+        maxWidth: content.style.maxWidth,
+    };
+
+    // Temporarily remove size constraints so side selection uses the natural content size.
+    content.style.maxHeight = "none";
+    content.style.maxWidth = "none";
+
+    const measuredSize = {
+        width: content.scrollWidth,
+        height: content.scrollHeight,
+    };
+
+    content.style.maxHeight = previousStyles.maxHeight;
+    content.style.maxWidth = previousStyles.maxWidth;
+
+    return measuredSize;
+}
 
 // ---------------------------------------------------------------------------------------------------- //
 
@@ -230,32 +244,137 @@ const setAlignment = ({
 // ---------------------------------------------------------------------------------------------------- //
 
 interface OptimalSideGetterParams {
+    relativeToRect: DOMRect;
     contentSize: Size;
-    availableSpace: ExplicitPadding;
+    collisionRect: FullPosition;
+    padding: ExplicitPadding;
     preferredSide: Side;
+    sideOffset: number;
+    alignOffset: number;
+    align: Align;
+    sticky: Sticky;
 
     avoidCollisions: boolean;
 }
 
-const getOptimalSide = ({
+interface SideOverflow {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+}
+
+const getOverflowForPosition = ({
+    position,
     contentSize,
-    availableSpace,
+    collisionRect,
+    padding,
+}: {
+    position: Position;
+    contentSize: Size;
+    collisionRect: FullPosition;
+    padding: ExplicitPadding;
+}): SideOverflow => {
+    const minTop = collisionRect.top + padding.top;
+    const maxRight = collisionRect.right - padding.right;
+    const maxBottom = collisionRect.bottom - padding.bottom;
+    const minLeft = collisionRect.left + padding.left;
+
+    const contentTop = position.top;
+    const contentRight = position.left + contentSize.width;
+    const contentBottom = position.top + contentSize.height;
+    const contentLeft = position.left;
+
+    return {
+        top: Math.max(minTop - contentTop, 0),
+        right: Math.max(contentRight - maxRight, 0),
+        bottom: Math.max(contentBottom - maxBottom, 0),
+        left: Math.max(minLeft - contentLeft, 0),
+    };
+}
+
+const getMainAxisOverflow = (overflow: SideOverflow, side: Side): number => {
+    switch (side) {
+        case "top": return overflow.top;
+        case "right": return overflow.right;
+        case "bottom": return overflow.bottom;
+        case "left": return overflow.left;
+    }
+}
+
+const getTotalOverflow = (overflow: SideOverflow): number => (
+    overflow.top + overflow.right + overflow.bottom + overflow.left
+);
+
+const getOptimalSide = ({
+    relativeToRect,
+    contentSize,
     preferredSide,
+    collisionRect,
+    padding,
+    sideOffset,
+    alignOffset,
+    align,
+    sticky,
     avoidCollisions,
 }: OptimalSideGetterParams): Side => {
     if (!avoidCollisions) return preferredSide;
 
-    const vertical = isVerticalSide(preferredSide);
-    const dimension = vertical ? contentSize.height : contentSize.width;
-    const preferredSpace = availableSpace[preferredSide];
-    const oppositeSpace = availableSpace[OPPOSITE_SIDE[preferredSide]];
+    const sideMetrics = ALL_SIDES.map((candidateSide) => {
+        const basePosition = getBasePosition({
+            relativeToRect,
+            contentSize,
+            sideOffset,
+            side: candidateSide,
+        });
 
-    if (dimension <= preferredSpace) return preferredSide;
-    if (dimension <= oppositeSpace) return OPPOSITE_SIDE[preferredSide];
+        const alignedPosition = setAlignment({
+            contentSize,
+            relativeToRect,
+            position: basePosition,
+            side: candidateSide,
+            alignOffset,
+            align,
+        });
 
-    return preferredSpace >= oppositeSpace
-        ? preferredSide
-        : OPPOSITE_SIDE[preferredSide];
+        const constrainedPosition = setViewportConstraint({
+            contentSize,
+            padding,
+            position: alignedPosition,
+            relativeToRect,
+            collisionRect,
+            sticky,
+            side: candidateSide,
+        });
+
+        const overflow = getOverflowForPosition({
+            position: constrainedPosition,
+            contentSize,
+            collisionRect,
+            padding,
+        });
+
+        const mainOverflow = getMainAxisOverflow(overflow, candidateSide);
+        const totalOverflow = getTotalOverflow(overflow);
+
+        return {
+            side: candidateSide,
+            mainOverflow,
+            totalOverflow,
+            isPreferred: candidateSide === preferredSide,
+        };
+    });
+
+    sideMetrics.sort((a, b) => {
+        if (a.mainOverflow !== b.mainOverflow) return a.mainOverflow - b.mainOverflow;
+        if (a.totalOverflow !== b.totalOverflow) return a.totalOverflow - b.totalOverflow;
+        if (a.isPreferred !== b.isPreferred) return a.isPreferred ? -1 : 1;
+
+        // Keep deterministic fallback order.
+        return ALL_SIDES.indexOf(a.side) - ALL_SIDES.indexOf(b.side);
+    });
+
+    return sideMetrics[0].side;
 }
 
 // ---------------------------------------------------------------------------------------------------- //
@@ -318,26 +437,23 @@ interface MaxDimensionsGetterParams {
     availableSpace: ExplicitPadding;
     constrainSize: boolean;
     side: Side;
-
-    minHeight: number;
-    minWidth: number;
 }
 
 const getMaxDimensions = ({
     availableSpace,
     constrainSize,
     side,
-    minHeight,
-    minWidth,
 }: MaxDimensionsGetterParams): Partial<MaxSize> => {
     if (!constrainSize) return {}
 
     const vertical = isVerticalSide(side);
     const space = availableSpace[side];
 
+    // Use available space as max dimension - never exceed it
+    // This ensures content always fits within boundaries and scrolls if needed
     return vertical
-        ? { maxHeight: Math.max(space, minHeight) }
-        : { maxWidth: Math.max(space, minWidth) }
+        ? { maxHeight: Math.max(space, 0) }
+        : { maxWidth: Math.max(space, 0) }
 }
 
 // ---------------------------------------------------------------------------------------------------- //
@@ -358,9 +474,6 @@ interface PositionGetterParams {
     avoidCollisions: boolean;
     constrainSize: boolean;
     sticky: Sticky;
-
-    minConstrainedHeight: number;
-    minConstrainedWidth: number;
 }
 
 const getPosition = ({
@@ -375,22 +488,19 @@ const getPosition = ({
     collisionRect,
     constrainSize,
     sticky,
-    minConstrainedHeight,
-    minConstrainedWidth,
 }: PositionGetterParams): PositionResult => {
 
-    const availableSpace = getAvailableSpace({
-        relativeToRect,
-        sideOffset,
-        padding,
-        collisionRect,
-    });
-
     const actualSide = getOptimalSide({
+        relativeToRect,
         preferredSide: side,
         avoidCollisions,
-        availableSpace,
         contentSize,
+        collisionRect,
+        padding,
+        sideOffset,
+        alignOffset,
+        align,
+        sticky,
     });
 
     const basePosition = getBasePosition({
@@ -426,19 +536,23 @@ const getPosition = ({
         collisionRect,
     });
 
-    const finalPosition = (
+    // When positioning on top side, if content's natural height exceeds available space,
+    // reposition to viewport top to maximize visible area (content will scroll via maxHeight constraint)
+    const shouldRepositionToViewportTop =
         actualSide === "top" &&
         constrainSize &&
-        contentSize.height > recalculatedSpace.top)
+        contentSize.height > recalculatedSpace.top;
+
+    const finalPosition = shouldRepositionToViewportTop
         ? { ...constrainedPosition, top: collisionRect.top + padding.top }
         : constrainedPosition;
 
+    // Calculate max dimensions based on available space
+    // maxHeight will be set to exactly the available space, ensuring proper scrolling without overlay
     const maxDimensions = getMaxDimensions({
         side: actualSide,
         availableSpace: recalculatedSpace,
         constrainSize,
-        minHeight: minConstrainedHeight,
-        minWidth: minConstrainedWidth
     });
 
     const isReferenceHidden =
@@ -477,9 +591,6 @@ function usePosition({
 
     sticky = DEFAULT_STICKY,
     hideWhenDetached = false,
-
-    minConstrainedHeight = DEFAULT_MIN_CONSTRAINED_HEIGHT,
-    minConstrainedWidth = DEFAULT_MIN_CONSTRAINED_WIDTH,
 }: UsePositionOptions): UsePositionReturn {
     const [maxDimensions, setMaxDimensions] = useState<Partial<MaxSize>>({});
     const [position, setPosition] = useState<Position | null>(null);
@@ -536,7 +647,7 @@ function usePosition({
         }), viewportRect);
 
         const contentSize = recalculateNaturalSize || !naturalSizeRef.current
-            ? { width: content.scrollWidth, height: content.scrollHeight }
+            ? measureNaturalContentSize(content)
             : naturalSizeRef.current;
 
         if (recalculateNaturalSize) naturalSizeRef.current = contentSize;
@@ -558,9 +669,6 @@ function usePosition({
             padding,
             collisionRect,
             sticky,
-
-            minConstrainedHeight,
-            minConstrainedWidth,
         });
 
         // For mouse event positioning, reference is never hidden
@@ -590,14 +698,13 @@ function usePosition({
         constrainSize,
 
         sticky,
-
-        minConstrainedHeight,
-        minConstrainedWidth,
     ]);
 
     useLayoutEffect(() => {
         if (!isTargetRendered) return;
+        // Reset cached measurements and dimensions to ensure fresh calculation
         naturalSizeRef.current = null;
+        setMaxDimensions({}); // Clear maxHeight to allow unconstrained measurement
         updatePosition(true);
     }, [isTargetRendered, updatePosition]);
 

@@ -53,13 +53,14 @@ const MultiSelectActions = {
 type MultiSelectAction = typeof MultiSelectActions[keyof typeof MultiSelectActions];
 
 const getMultiSelectAction = (event: KeyboardEvent<HTMLDivElement>, open: boolean): MultiSelectAction => {
-    const { key, altKey, ctrlKey, metaKey } = event;
+    const { key, altKey, ctrlKey, metaKey, shiftKey } = event;
 
     const openKeys = ['ArrowDown', 'ArrowUp', 'Enter', ' '];
     if (!open && openKeys.includes(key)) return MultiSelectActions.Open;
 
     if (key === 'Home') return MultiSelectActions.First;
     if (key === 'End') return MultiSelectActions.Last;
+    if (open && key === 'a' && (ctrlKey || metaKey) && shiftKey) return MultiSelectActions.DeselectAll;
     if (open && key === 'a' && (ctrlKey || metaKey)) return MultiSelectActions.SelectAll;
 
     if (
@@ -413,16 +414,9 @@ function MultiSelectTrigger({ className, children, asChild, ...props }: MultiSel
         const trigger = triggerRef.current;
         if (event.target !== trigger) return;
 
-        // Handle Tab: if dropdown is open, toggle current item and close, then let Tab proceed naturally
+        // Tab just closes the dropdown without toggling - let default behavior proceed
         if (event.key === 'Tab') {
-            if (open) {
-                if (state.cursor >= 0 && state.cursor < state.items.length) {
-                    const item = state.items[state.cursor];
-                    if (!item.disabled) toggleValue(item.value);
-                }
-                setOpen(false);
-            }
-            // Let default Tab behavior proceed to action buttons or next element
+            if (open) setOpen(false);
             return;
         }
 
@@ -542,6 +536,10 @@ function MultiSelectTrigger({ className, children, asChild, ...props }: MultiSel
 
                 break;
             }
+
+            case MultiSelectActions.DeselectAll:
+                setValue([]);
+                break;
 
             case MultiSelectActions.Close:
                 if (open) setOpen(false);
@@ -823,25 +821,13 @@ interface MultiSelectClearProps extends HTMLAttributes<HTMLElement> {
 function MultiSelectClear({ className, asChild, children, ...props }: MultiSelectClearProps) {
     const { setValue, value, disabled, triggerRef } = useMultiSelectContext();
 
-    const clearAndFocusTrigger = useCallback(() => {
+    const clickHandler = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
         if (disabled) return;
         setValue([]);
         // Focus trigger after clear since this button will disappear
         triggerRef.current?.focus();
     }, [disabled, setValue, triggerRef]);
-
-    const clickHandler = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-        clearAndFocusTrigger();
-    }, [clearAndFocusTrigger]);
-
-    const keyDownHandler = useCallback((e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            e.stopPropagation();
-            clearAndFocusTrigger();
-        }
-    }, [clearAndFocusTrigger]);
 
     if (value.length === 0) return null;
 
@@ -853,16 +839,16 @@ function MultiSelectClear({ className, asChild, children, ...props }: MultiSelec
 
             disabled={disabled}
             type="button"
+            tabIndex={-1}
 
             aria-label="Clear all selections"
 
             onClick={clickHandler}
-            onKeyDown={keyDownHandler}
 
             className={cn(
                 'w-fit [&>svg]:size-4 text-write shrink-0 transition-colors cursor-pointer rounded',
                 'disabled:opacity-50 disabled:pointer-events-none',
-                'focus:outline-none focus-visible:ring-2 focus-visible:ring-outer-bound focus-visible:ring-offset-1 focus-visible:ring-offset-surface',
+                'focus:outline-none',
                 className
             )}
 
@@ -929,6 +915,7 @@ function MultiSelectAll({ className, asChild, children, ...props }: MultiSelectA
 
             disabled={disabled}
             type="button"
+            tabIndex={-1}
 
             aria-label="Select all"
 
@@ -937,7 +924,7 @@ function MultiSelectAll({ className, asChild, children, ...props }: MultiSelectA
             className={cn(
                 'w-fit [&>svg]:size-4 text-write shrink-0 transition-colors cursor-pointer rounded',
                 'disabled:opacity-50 disabled:pointer-events-none',
-                'focus:outline-none focus-visible:ring-2 focus-visible:ring-outer-bound focus-visible:ring-offset-1 focus-visible:ring-offset-surface',
+                'focus:outline-none',
                 className
             )}
 
