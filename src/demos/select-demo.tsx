@@ -1,5 +1,22 @@
 import { useState } from "react";
-import { Select, SelectTrigger, SelectValue, SelectTriggerIndicator, SelectPortal, SelectContent, SelectViewport, SelectItem, SelectItemText, SelectItemIndicator, SelectGroup, SelectLabel, SelectSeparator, SelectScrollUpButton, SelectScrollDownButton } from "../ui/select";
+import {
+    Select,
+    SelectTrigger,
+    SelectValue,
+    SelectTriggerIndicator,
+    SelectPortal,
+    SelectPositioner,
+    SelectContent,
+    SelectViewport,
+    SelectItem,
+    SelectItemText,
+    SelectItemIndicator,
+    SelectGroup,
+    SelectLabel,
+    SelectSeparator,
+    SelectScrollUpButton,
+    SelectScrollDownButton,
+} from "@/ui/select";
 
 interface SelectDemoProps {
     quantity: number;
@@ -25,28 +42,30 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectContent>
-                                    <SelectScrollUpButton />
-                                    <SelectViewport>
-                                        <SelectItem value="apple">
-                                            <SelectItemText>Apple</SelectItemText>
-                                            <SelectItemIndicator />
-                                        </SelectItem>
-                                        <SelectItem value="banana">
-                                            <SelectItemText>Banana</SelectItemText>
-                                            <SelectItemIndicator />
-                                        </SelectItem>
-                                        <SelectItem value="orange">
-                                            <SelectItemText>Orange</SelectItemText>
-                                            <SelectItemIndicator />
-                                        </SelectItem>
-                                        <SelectItem value="grape">
-                                            <SelectItemText>Grape</SelectItemText>
-                                            <SelectItemIndicator />
-                                        </SelectItem>
-                                    </SelectViewport>
-                                    <SelectScrollDownButton />
-                                </SelectContent>
+                                <SelectPositioner>
+                                    <SelectContent>
+                                        <SelectScrollUpButton />
+                                        <SelectViewport>
+                                            <SelectItem value="apple">
+                                                <SelectItemText>Apple</SelectItemText>
+                                                <SelectItemIndicator />
+                                            </SelectItem>
+                                            <SelectItem value="banana">
+                                                <SelectItemText>Banana</SelectItemText>
+                                                <SelectItemIndicator />
+                                            </SelectItem>
+                                            <SelectItem value="orange">
+                                                <SelectItemText>Orange</SelectItemText>
+                                                <SelectItemIndicator />
+                                            </SelectItem>
+                                            <SelectItem value="grape">
+                                                <SelectItemText>Grape</SelectItemText>
+                                                <SelectItemIndicator />
+                                            </SelectItem>
+                                        </SelectViewport>
+                                        <SelectScrollDownButton />
+                                    </SelectContent>
+                                </SelectPositioner>
                             </SelectPortal>
                         </Select>
 
@@ -56,22 +75,24 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectContent>
-                                    <SelectViewport>
-                                        <SelectItem value="option1">
-                                            <SelectItemText>Option 1</SelectItemText>
-                                            <SelectItemIndicator />
-                                        </SelectItem>
-                                        <SelectItem value="option2">
-                                            <SelectItemText>Option 2</SelectItemText>
-                                            <SelectItemIndicator />
-                                        </SelectItem>
-                                        <SelectItem value="option3">
-                                            <SelectItemText>Option 3</SelectItemText>
-                                            <SelectItemIndicator />
-                                        </SelectItem>
-                                    </SelectViewport>
-                                </SelectContent>
+                                <SelectPositioner>
+                                    <SelectContent>
+                                        <SelectViewport>
+                                            <SelectItem value="option1">
+                                                <SelectItemText>Option 1</SelectItemText>
+                                                <SelectItemIndicator />
+                                            </SelectItem>
+                                            <SelectItem value="option2">
+                                                <SelectItemText>Option 2</SelectItemText>
+                                                <SelectItemIndicator />
+                                            </SelectItem>
+                                            <SelectItem value="option3">
+                                                <SelectItemText>Option 3</SelectItemText>
+                                                <SelectItemIndicator />
+                                            </SelectItem>
+                                        </SelectViewport>
+                                    </SelectContent>
+                                </SelectPositioner>
                             </SelectPortal>
                         </Select>
                     </div>
@@ -86,13 +107,15 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectContent side="top">
-                                    <SelectViewport>
-                                        <SelectItem value="top"><SelectItemText>Top Side</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="option2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="option3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                    </SelectViewport>
-                                </SelectContent>
+                                <SelectPositioner side="top">
+                                    <SelectContent>
+                                        <SelectViewport>
+                                            <SelectItem value="top"><SelectItemText>Top Side</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="option2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="option3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                        </SelectViewport>
+                                    </SelectContent>
+                                </SelectPositioner>
                             </SelectPortal>
                         </Select>
 
@@ -102,13 +125,15 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectContent side="bottom">
-                                    <SelectViewport>
-                                        <SelectItem value="bottom"><SelectItemText>Bottom Side</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="option2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="option3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                    </SelectViewport>
-                                </SelectContent>
+                                <SelectPositioner side="bottom">
+                                    <SelectContent>
+                                        <SelectViewport>
+                                            <SelectItem value="bottom"><SelectItemText>Bottom Side</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="option2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="option3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                        </SelectViewport>
+                                    </SelectContent>
+                                </SelectPositioner>
                             </SelectPortal>
                         </Select>
 
@@ -118,13 +143,15 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectContent side="left">
-                                    <SelectViewport>
-                                        <SelectItem value="left"><SelectItemText>Left Side</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="option2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="option3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                    </SelectViewport>
-                                </SelectContent>
+                                <SelectPositioner side="left">
+                                    <SelectContent>
+                                        <SelectViewport>
+                                            <SelectItem value="left"><SelectItemText>Left Side</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="option2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="option3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                        </SelectViewport>
+                                    </SelectContent>
+                                </SelectPositioner>
                             </SelectPortal>
                         </Select>
 
@@ -134,13 +161,15 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectContent side="right">
-                                    <SelectViewport>
-                                        <SelectItem value="right"><SelectItemText>Right Side</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="option2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="option3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                    </SelectViewport>
-                                </SelectContent>
+                                <SelectPositioner side="right">
+                                    <SelectContent>
+                                        <SelectViewport>
+                                            <SelectItem value="right"><SelectItemText>Right Side</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="option2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="option3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                        </SelectViewport>
+                                    </SelectContent>
+                                </SelectPositioner>
                             </SelectPortal>
                         </Select>
                     </div>
@@ -155,13 +184,15 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectContent sideOffset={2}>
-                                    <SelectViewport>
-                                        <SelectItem value="offset2"><SelectItemText>Side Offset: 2px</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                    </SelectViewport>
-                                </SelectContent>
+                                <SelectPositioner sideOffset={2}>
+                                    <SelectContent>
+                                        <SelectViewport>
+                                            <SelectItem value="offset2"><SelectItemText>Side Offset: 2px</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                        </SelectViewport>
+                                    </SelectContent>
+                                </SelectPositioner>
                             </SelectPortal>
                         </Select>
 
@@ -171,13 +202,15 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectContent sideOffset={12}>
-                                    <SelectViewport>
-                                        <SelectItem value="offset12"><SelectItemText>Side Offset: 12px</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                    </SelectViewport>
-                                </SelectContent>
+                                <SelectPositioner sideOffset={12}>
+                                    <SelectContent>
+                                        <SelectViewport>
+                                            <SelectItem value="offset12"><SelectItemText>Side Offset: 12px</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                        </SelectViewport>
+                                    </SelectContent>
+                                </SelectPositioner>
                             </SelectPortal>
                         </Select>
 
@@ -187,13 +220,15 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectContent sideOffset={24}>
-                                    <SelectViewport>
-                                        <SelectItem value="offset24"><SelectItemText>Side Offset: 24px</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                    </SelectViewport>
-                                </SelectContent>
+                                <SelectPositioner sideOffset={24}>
+                                    <SelectContent>
+                                        <SelectViewport>
+                                            <SelectItem value="offset24"><SelectItemText>Side Offset: 24px</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                        </SelectViewport>
+                                    </SelectContent>
+                                </SelectPositioner>
                             </SelectPortal>
                         </Select>
                     </div>
@@ -208,13 +243,15 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectContent className="min-w-32" align="start">
-                                    <SelectViewport>
-                                        <SelectItem value="start"><SelectItemText>Align: Start</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                    </SelectViewport>
-                                </SelectContent>
+                                <SelectPositioner align="start">
+                                    <SelectContent className="min-w-32">
+                                        <SelectViewport>
+                                            <SelectItem value="start"><SelectItemText>Align: Start</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                        </SelectViewport>
+                                    </SelectContent>
+                                </SelectPositioner>
                             </SelectPortal>
                         </Select>
 
@@ -224,13 +261,15 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectContent className="min-w-32" align="center">
-                                    <SelectViewport>
-                                        <SelectItem value="center"><SelectItemText>Align: Center</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                    </SelectViewport>
-                                </SelectContent>
+                                <SelectPositioner align="center">
+                                    <SelectContent className="min-w-32">
+                                        <SelectViewport>
+                                            <SelectItem value="center"><SelectItemText>Align: Center</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                        </SelectViewport>
+                                    </SelectContent>
+                                </SelectPositioner>
                             </SelectPortal>
                         </Select>
 
@@ -240,13 +279,15 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectContent className="min-w-32" align="end">
-                                    <SelectViewport>
-                                        <SelectItem value="end"><SelectItemText>Align: End</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                    </SelectViewport>
-                                </SelectContent>
+                                <SelectPositioner align="end">
+                                    <SelectContent className="min-w-32">
+                                        <SelectViewport>
+                                            <SelectItem value="end"><SelectItemText>Align: End</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                        </SelectViewport>
+                                    </SelectContent>
+                                </SelectPositioner>
                             </SelectPortal>
                         </Select>
                     </div>
@@ -261,13 +302,15 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectContent alignOffset={-10}>
-                                    <SelectViewport>
-                                        <SelectItem value="offset-10"><SelectItemText>Align Offset: -10px</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                    </SelectViewport>
-                                </SelectContent>
+                                <SelectPositioner alignOffset={-10}>
+                                    <SelectContent>
+                                        <SelectViewport>
+                                            <SelectItem value="offset-10"><SelectItemText>Align Offset: -10px</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                        </SelectViewport>
+                                    </SelectContent>
+                                </SelectPositioner>
                             </SelectPortal>
                         </Select>
 
@@ -277,13 +320,15 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectContent alignOffset={0}>
-                                    <SelectViewport>
-                                        <SelectItem value="offset0"><SelectItemText>Align Offset: 0px</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                    </SelectViewport>
-                                </SelectContent>
+                                <SelectPositioner alignOffset={0}>
+                                    <SelectContent>
+                                        <SelectViewport>
+                                            <SelectItem value="offset0"><SelectItemText>Align Offset: 0px</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                        </SelectViewport>
+                                    </SelectContent>
+                                </SelectPositioner>
                             </SelectPortal>
                         </Select>
 
@@ -293,13 +338,15 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectContent alignOffset={10}>
-                                    <SelectViewport>
-                                        <SelectItem value="offset10"><SelectItemText>Align Offset: 10px</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                    </SelectViewport>
-                                </SelectContent>
+                                <SelectPositioner alignOffset={10}>
+                                    <SelectContent>
+                                        <SelectViewport>
+                                            <SelectItem value="offset10"><SelectItemText>Align Offset: 10px</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                        </SelectViewport>
+                                    </SelectContent>
+                                </SelectPositioner>
                             </SelectPortal>
                         </Select>
                     </div>
@@ -308,35 +355,39 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                 <div className="space-y-3">
                     <h3 className="text-sm font-medium text-muted-write">Positioning: Sticky Behavior</h3>
                     <div className="flex flex-wrap items-start gap-6">
-                        <Select defaultValue="partial">
+                        <Select defaultValue="no-sticky">
                             <SelectTrigger className="w-64">
-                                <SelectValue placeholder="sticky: partial" />
+                                <SelectValue placeholder="sticky: false" />
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectContent sticky="partial">
-                                    <SelectViewport>
-                                        <SelectItem value="partial"><SelectItemText>Sticky: Partial</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="desc"><SelectItemText>Detaches when trigger is out of bounds</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                    </SelectViewport>
-                                </SelectContent>
+                                <SelectPositioner sticky={false}>
+                                    <SelectContent>
+                                        <SelectViewport>
+                                            <SelectItem value="no-sticky"><SelectItemText>Sticky: Off</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="desc"><SelectItemText>Detaches when trigger is out of bounds</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                        </SelectViewport>
+                                    </SelectContent>
+                                </SelectPositioner>
                             </SelectPortal>
                         </Select>
 
-                        <Select defaultValue="always">
+                        <Select defaultValue="sticky">
                             <SelectTrigger className="w-64">
-                                <SelectValue placeholder="sticky: always" />
+                                <SelectValue placeholder="sticky: true" />
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectContent sticky="always">
-                                    <SelectViewport>
-                                        <SelectItem value="always"><SelectItemText>Sticky: Always</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="desc"><SelectItemText>Always stays in viewport</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                    </SelectViewport>
-                                </SelectContent>
+                                <SelectPositioner sticky={true}>
+                                    <SelectContent>
+                                        <SelectViewport>
+                                            <SelectItem value="sticky"><SelectItemText>Sticky: On</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="desc"><SelectItemText>Always stays in viewport</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                        </SelectViewport>
+                                    </SelectContent>
+                                </SelectPositioner>
                             </SelectPortal>
                         </Select>
                     </div>
@@ -350,18 +401,20 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                             <SelectTriggerIndicator />
                         </SelectTrigger>
                         <SelectPortal>
-                            <SelectContent>
-                                <SelectScrollUpButton />
-                                <SelectViewport className="max-h-64">
-                                    {Array.from({ length: 50 }, (_, i) => (
-                                        <SelectItem key={`item${i + 1}`} value={`item${i + 1}`}>
-                                            <SelectItemText>{`Item ${i + 1}`}</SelectItemText>
-                                            <SelectItemIndicator />
-                                        </SelectItem>
-                                    ))}
-                                </SelectViewport>
-                                <SelectScrollDownButton />
-                            </SelectContent>
+                            <SelectPositioner>
+                                <SelectContent>
+                                    <SelectScrollUpButton />
+                                    <SelectViewport className="max-h-64">
+                                        {Array.from({ length: 50 }, (_, i) => (
+                                            <SelectItem key={`item${i + 1}`} value={`item${i + 1}`}>
+                                                <SelectItemText>{`Item ${i + 1}`}</SelectItemText>
+                                                <SelectItemIndicator />
+                                            </SelectItem>
+                                        ))}
+                                    </SelectViewport>
+                                    <SelectScrollDownButton />
+                                </SelectContent>
+                            </SelectPositioner>
                         </SelectPortal>
                     </Select>
                 </div>
@@ -382,17 +435,19 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                     <SelectTriggerIndicator />
                                 </SelectTrigger>
                                 <SelectPortal>
-                                    <SelectContent
-                                        collisionBoundary={collisionBoundary}
+                                    <SelectPositioner
+                                        collisionBoundary={collisionBoundary ?? undefined}
                                         collisionPadding={4}
                                     >
-                                        <SelectViewport>
-                                            <SelectItem value="padding4"><SelectItemText>Padding: 4px</SelectItemText><SelectItemIndicator /></SelectItem>
-                                            <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                            <SelectItem value="opt4"><SelectItemText>Option 4</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        </SelectViewport>
-                                    </SelectContent>
+                                        <SelectContent>
+                                            <SelectViewport>
+                                                <SelectItem value="padding4"><SelectItemText>Padding: 4px</SelectItemText><SelectItemIndicator /></SelectItem>
+                                                <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                                <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                                <SelectItem value="opt4"><SelectItemText>Option 4</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            </SelectViewport>
+                                        </SelectContent>
+                                    </SelectPositioner>
                                 </SelectPortal>
                             </Select>
 
@@ -402,17 +457,19 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                     <SelectTriggerIndicator />
                                 </SelectTrigger>
                                 <SelectPortal>
-                                    <SelectContent
-                                        collisionBoundary={collisionBoundary}
+                                    <SelectPositioner
+                                        collisionBoundary={collisionBoundary ?? undefined}
                                         collisionPadding={16}
                                     >
-                                        <SelectViewport>
-                                            <SelectItem value="padding16"><SelectItemText>Padding: 16px</SelectItemText><SelectItemIndicator /></SelectItem>
-                                            <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                            <SelectItem value="opt4"><SelectItemText>Option 4</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        </SelectViewport>
-                                    </SelectContent>
+                                        <SelectContent>
+                                            <SelectViewport>
+                                                <SelectItem value="padding16"><SelectItemText>Padding: 16px</SelectItemText><SelectItemIndicator /></SelectItem>
+                                                <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                                <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                                <SelectItem value="opt4"><SelectItemText>Option 4</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            </SelectViewport>
+                                        </SelectContent>
+                                    </SelectPositioner>
                                 </SelectPortal>
                             </Select>
 
@@ -422,17 +479,19 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                     <SelectTriggerIndicator />
                                 </SelectTrigger>
                                 <SelectPortal>
-                                    <SelectContent
-                                        collisionBoundary={collisionBoundary}
+                                    <SelectPositioner
+                                        collisionBoundary={collisionBoundary ?? undefined}
                                         collisionPadding={32}
                                     >
-                                        <SelectViewport>
-                                            <SelectItem value="padding32"><SelectItemText>Padding: 32px</SelectItemText><SelectItemIndicator /></SelectItem>
-                                            <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                            <SelectItem value="opt4"><SelectItemText>Option 4</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        </SelectViewport>
-                                    </SelectContent>
+                                        <SelectContent>
+                                            <SelectViewport>
+                                                <SelectItem value="padding32"><SelectItemText>Padding: 32px</SelectItemText><SelectItemIndicator /></SelectItem>
+                                                <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                                <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                                <SelectItem value="opt4"><SelectItemText>Option 4</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            </SelectViewport>
+                                        </SelectContent>
+                                    </SelectPositioner>
                                 </SelectPortal>
                             </Select>
 
@@ -442,16 +501,18 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                     <SelectTriggerIndicator />
                                 </SelectTrigger>
                                 <SelectPortal>
-                                    <SelectContent
-                                        collisionBoundary={collisionBoundary}
+                                    <SelectPositioner
+                                        collisionBoundary={collisionBoundary ?? undefined}
                                         collisionPadding={{ top: 8, right: 16, bottom: 24, left: 32 }}
                                     >
-                                        <SelectViewport>
-                                            <SelectItem value="custom"><SelectItemText>Custom Padding</SelectItemText><SelectItemIndicator /></SelectItem>
-                                            <SelectItem value="desc"><SelectItemText>Top:8 Right:16 Bottom:24 Left:32</SelectItemText><SelectItemIndicator /></SelectItem>
-                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        </SelectViewport>
-                                    </SelectContent>
+                                        <SelectContent>
+                                            <SelectViewport>
+                                                <SelectItem value="custom"><SelectItemText>Custom Padding</SelectItemText><SelectItemIndicator /></SelectItem>
+                                                <SelectItem value="desc"><SelectItemText>Top:8 Right:16 Bottom:24 Left:32</SelectItemText><SelectItemIndicator /></SelectItem>
+                                                <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            </SelectViewport>
+                                        </SelectContent>
+                                    </SelectPositioner>
                                 </SelectPortal>
                             </Select>
                         </div>
@@ -474,18 +535,20 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                     <SelectTriggerIndicator />
                                 </SelectTrigger>
                                 <SelectPortal>
-                                    <SelectContent collisionBoundary={collisionBoundary2}>
-                                        <SelectScrollUpButton />
-                                        <SelectViewport className="max-h-64">
-                                            {Array.from({ length: 50 }, (_, i) => (
-                                                <SelectItem key={`boundary-item${i + 1}`} value={`item${i + 1}`}>
-                                                    <SelectItemText>{`Item ${i + 1}`}</SelectItemText>
-                                                    <SelectItemIndicator />
-                                                </SelectItem>
-                                            ))}
-                                        </SelectViewport>
-                                        <SelectScrollDownButton />
-                                    </SelectContent>
+                                    <SelectPositioner collisionBoundary={collisionBoundary2 ?? undefined}>
+                                        <SelectContent>
+                                            <SelectScrollUpButton />
+                                            <SelectViewport className="max-h-64">
+                                                {Array.from({ length: 50 }, (_, i) => (
+                                                    <SelectItem key={`boundary-item${i + 1}`} value={`item${i + 1}`}>
+                                                        <SelectItemText>{`Item ${i + 1}`}</SelectItemText>
+                                                        <SelectItemIndicator />
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectViewport>
+                                            <SelectScrollDownButton />
+                                        </SelectContent>
+                                    </SelectPositioner>
                                 </SelectPortal>
                             </Select>
 
@@ -495,18 +558,20 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                     <SelectTriggerIndicator />
                                 </SelectTrigger>
                                 <SelectPortal>
-                                    <SelectContent collisionBoundary={collisionBoundary2}>
-                                        <SelectScrollUpButton />
-                                        <SelectViewport className="max-h-64">
-                                            {Array.from({ length: 50 }, (_, i) => (
-                                                <SelectItem key={`boundary-mid-item${i + 1}`} value={`item${i + 1}`}>
-                                                    <SelectItemText>{`Item ${i + 1}`}</SelectItemText>
-                                                    <SelectItemIndicator />
-                                                </SelectItem>
-                                            ))}
-                                        </SelectViewport>
-                                        <SelectScrollDownButton />
-                                    </SelectContent>
+                                    <SelectPositioner collisionBoundary={collisionBoundary2 ?? undefined}>
+                                        <SelectContent>
+                                            <SelectScrollUpButton />
+                                            <SelectViewport className="max-h-64">
+                                                {Array.from({ length: 50 }, (_, i) => (
+                                                    <SelectItem key={`boundary-mid-item${i + 1}`} value={`item${i + 1}`}>
+                                                        <SelectItemText>{`Item ${i + 1}`}</SelectItemText>
+                                                        <SelectItemIndicator />
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectViewport>
+                                            <SelectScrollDownButton />
+                                        </SelectContent>
+                                    </SelectPositioner>
                                 </SelectPortal>
                             </Select>
 
@@ -516,18 +581,20 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                     <SelectTriggerIndicator />
                                 </SelectTrigger>
                                 <SelectPortal>
-                                    <SelectContent collisionBoundary={collisionBoundary2}>
-                                        <SelectScrollUpButton />
-                                        <SelectViewport className="max-h-64">
-                                            {Array.from({ length: 50 }, (_, i) => (
-                                                <SelectItem key={`boundary-bottom-item${i + 1}`} value={`item${i + 1}`}>
-                                                    <SelectItemText>{`Item ${i + 1}`}</SelectItemText>
-                                                    <SelectItemIndicator />
-                                                </SelectItem>
-                                            ))}
-                                        </SelectViewport>
-                                        <SelectScrollDownButton />
-                                    </SelectContent>
+                                    <SelectPositioner collisionBoundary={collisionBoundary2 ?? undefined}>
+                                        <SelectContent>
+                                            <SelectScrollUpButton />
+                                            <SelectViewport className="max-h-64">
+                                                {Array.from({ length: 50 }, (_, i) => (
+                                                    <SelectItem key={`boundary-bottom-item${i + 1}`} value={`item${i + 1}`}>
+                                                        <SelectItemText>{`Item ${i + 1}`}</SelectItemText>
+                                                        <SelectItemIndicator />
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectViewport>
+                                            <SelectScrollDownButton />
+                                        </SelectContent>
+                                    </SelectPositioner>
                                 </SelectPortal>
                             </Select>
                         </div>
@@ -535,32 +602,34 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                 </div>
 
                 <div className="space-y-3">
-                    <h3 className="text-sm font-medium text-muted-write">Hide When Detached</h3>
+                    <h3 className="text-sm font-medium text-muted-write">Anchor Hidden (data-anchor-hidden)</h3>
                     <div
                         ref={setCollisionBoundary3}
                         className="rounded-lg border border-bound p-4 h-64 overflow-auto"
                     >
                         <p className="text-xs text-muted-write mb-3">
-                            Scroll this container so the trigger goes out of view - the content will hide automatically.
+                            Scroll this container so the trigger goes out of view — the content hides via <code>[data-anchor-hidden]</code>.
                         </p>
 
                         <div className="h-150 flex flex-col justify-between">
                             <Select defaultValue="hide1">
                                 <SelectTrigger>
-                                    <SelectValue placeholder="hideWhenDetached: true" />
+                                    <SelectValue placeholder="Anchor hidden demo" />
                                     <SelectTriggerIndicator />
                                 </SelectTrigger>
                                 <SelectPortal>
-                                    <SelectContent
-                                        collisionBoundary={collisionBoundary3}
-                                        hideWhenDetached={true}
+                                    <SelectPositioner
+                                        collisionBoundary={collisionBoundary3 ?? undefined}
+                                        className="[&[data-anchor-hidden]]:invisible"
                                     >
-                                        <SelectViewport>
-                                            <SelectItem value="hide1"><SelectItemText>Hide When Detached</SelectItemText><SelectItemIndicator /></SelectItem>
-                                            <SelectItem value="opt2"><SelectItemText>Scroll container to test</SelectItemText><SelectItemIndicator /></SelectItem>
-                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        </SelectViewport>
-                                    </SelectContent>
+                                        <SelectContent>
+                                            <SelectViewport>
+                                                <SelectItem value="hide1"><SelectItemText>Hide When Detached</SelectItemText><SelectItemIndicator /></SelectItem>
+                                                <SelectItem value="opt2"><SelectItemText>Scroll container to test</SelectItemText><SelectItemIndicator /></SelectItem>
+                                                <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            </SelectViewport>
+                                        </SelectContent>
+                                    </SelectPositioner>
                                 </SelectPortal>
                             </Select>
 
@@ -570,16 +639,18 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                     <SelectTriggerIndicator />
                                 </SelectTrigger>
                                 <SelectPortal>
-                                    <SelectContent
-                                        collisionBoundary={collisionBoundary3}
-                                        hideWhenDetached={true}
+                                    <SelectPositioner
+                                        collisionBoundary={collisionBoundary3 ?? undefined}
+                                        className="[&[data-anchor-hidden]]:invisible"
                                     >
-                                        <SelectViewport>
-                                            <SelectItem value="hide2"><SelectItemText>Middle Trigger</SelectItemText><SelectItemIndicator /></SelectItem>
-                                            <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        </SelectViewport>
-                                    </SelectContent>
+                                        <SelectContent>
+                                            <SelectViewport>
+                                                <SelectItem value="hide2"><SelectItemText>Middle Trigger</SelectItemText><SelectItemIndicator /></SelectItem>
+                                                <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                                <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            </SelectViewport>
+                                        </SelectContent>
+                                    </SelectPositioner>
                                 </SelectPortal>
                             </Select>
 
@@ -589,16 +660,18 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                     <SelectTriggerIndicator />
                                 </SelectTrigger>
                                 <SelectPortal>
-                                    <SelectContent
-                                        collisionBoundary={collisionBoundary3}
-                                        hideWhenDetached={true}
+                                    <SelectPositioner
+                                        collisionBoundary={collisionBoundary3 ?? undefined}
+                                        className="[&[data-anchor-hidden]]:invisible"
                                     >
-                                        <SelectViewport>
-                                            <SelectItem value="hide3"><SelectItemText>Bottom Trigger</SelectItemText><SelectItemIndicator /></SelectItem>
-                                            <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
-                                            <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
-                                        </SelectViewport>
-                                    </SelectContent>
+                                        <SelectContent>
+                                            <SelectViewport>
+                                                <SelectItem value="hide3"><SelectItemText>Bottom Trigger</SelectItemText><SelectItemIndicator /></SelectItem>
+                                                <SelectItem value="opt2"><SelectItemText>Option 2</SelectItemText><SelectItemIndicator /></SelectItem>
+                                                <SelectItem value="opt3"><SelectItemText>Option 3</SelectItemText><SelectItemIndicator /></SelectItem>
+                                            </SelectViewport>
+                                        </SelectContent>
+                                    </SelectPositioner>
                                 </SelectPortal>
                             </Select>
                         </div>
@@ -613,41 +686,43 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                             <SelectTriggerIndicator />
                         </SelectTrigger>
                         <SelectPortal>
-                            <SelectContent>
-                                <SelectViewport>
-                                    <SelectGroup>
-                                        <SelectLabel>Frontend</SelectLabel>
-                                        <SelectItem value="react">
-                                            <SelectItemText>React</SelectItemText>
-                                            <SelectItemIndicator />
-                                        </SelectItem>
-                                        <SelectItem value="vue">
-                                            <SelectItemText>Vue</SelectItemText>
-                                            <SelectItemIndicator />
-                                        </SelectItem>
-                                        <SelectItem value="svelte">
-                                            <SelectItemText>Svelte</SelectItemText>
-                                            <SelectItemIndicator />
-                                        </SelectItem>
-                                    </SelectGroup>
-                                    <SelectSeparator />
-                                    <SelectGroup>
-                                        <SelectLabel>Backend</SelectLabel>
-                                        <SelectItem value="node">
-                                            <SelectItemText>Node.js</SelectItemText>
-                                            <SelectItemIndicator />
-                                        </SelectItem>
-                                        <SelectItem value="deno">
-                                            <SelectItemText>Deno</SelectItemText>
-                                            <SelectItemIndicator />
-                                        </SelectItem>
-                                        <SelectItem value="bun">
-                                            <SelectItemText>Bun</SelectItemText>
-                                            <SelectItemIndicator />
-                                        </SelectItem>
-                                    </SelectGroup>
-                                </SelectViewport>
-                            </SelectContent>
+                            <SelectPositioner>
+                                <SelectContent>
+                                    <SelectViewport>
+                                        <SelectGroup>
+                                            <SelectLabel>Frontend</SelectLabel>
+                                            <SelectItem value="react">
+                                                <SelectItemText>React</SelectItemText>
+                                                <SelectItemIndicator />
+                                            </SelectItem>
+                                            <SelectItem value="vue">
+                                                <SelectItemText>Vue</SelectItemText>
+                                                <SelectItemIndicator />
+                                            </SelectItem>
+                                            <SelectItem value="svelte">
+                                                <SelectItemText>Svelte</SelectItemText>
+                                                <SelectItemIndicator />
+                                            </SelectItem>
+                                        </SelectGroup>
+                                        <SelectSeparator />
+                                        <SelectGroup>
+                                            <SelectLabel>Backend</SelectLabel>
+                                            <SelectItem value="node">
+                                                <SelectItemText>Node.js</SelectItemText>
+                                                <SelectItemIndicator />
+                                            </SelectItem>
+                                            <SelectItem value="deno">
+                                                <SelectItemText>Deno</SelectItemText>
+                                                <SelectItemIndicator />
+                                            </SelectItem>
+                                            <SelectItem value="bun">
+                                                <SelectItemText>Bun</SelectItemText>
+                                                <SelectItemIndicator />
+                                            </SelectItem>
+                                        </SelectGroup>
+                                    </SelectViewport>
+                                </SelectContent>
+                            </SelectPositioner>
                         </SelectPortal>
                     </Select>
                 </div>
@@ -660,26 +735,28 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                             <SelectTriggerIndicator />
                         </SelectTrigger>
                         <SelectPortal>
-                            <SelectContent>
-                                <SelectViewport>
-                                    <SelectItem value="enabled1">
-                                        <SelectItemText>Enabled 1</SelectItemText>
-                                        <SelectItemIndicator />
-                                    </SelectItem>
-                                    <SelectItem value="disabled1" disabled>
-                                        <SelectItemText>Disabled Item</SelectItemText>
-                                        <SelectItemIndicator />
-                                    </SelectItem>
-                                    <SelectItem value="enabled2">
-                                        <SelectItemText>Enabled 2</SelectItemText>
-                                        <SelectItemIndicator />
-                                    </SelectItem>
-                                    <SelectItem value="disabled2" disabled>
-                                        <SelectItemText>Another Disabled</SelectItemText>
-                                        <SelectItemIndicator />
-                                    </SelectItem>
-                                </SelectViewport>
-                            </SelectContent>
+                            <SelectPositioner>
+                                <SelectContent>
+                                    <SelectViewport>
+                                        <SelectItem value="enabled1">
+                                            <SelectItemText>Enabled 1</SelectItemText>
+                                            <SelectItemIndicator />
+                                        </SelectItem>
+                                        <SelectItem value="disabled1" disabled>
+                                            <SelectItemText>Disabled Item</SelectItemText>
+                                            <SelectItemIndicator />
+                                        </SelectItem>
+                                        <SelectItem value="enabled2">
+                                            <SelectItemText>Enabled 2</SelectItemText>
+                                            <SelectItemIndicator />
+                                        </SelectItem>
+                                        <SelectItem value="disabled2" disabled>
+                                            <SelectItemText>Another Disabled</SelectItemText>
+                                            <SelectItemIndicator />
+                                        </SelectItem>
+                                    </SelectViewport>
+                                </SelectContent>
+                            </SelectPositioner>
                         </SelectPortal>
                     </Select>
                 </div>
@@ -695,18 +772,20 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                     <SelectTriggerIndicator />
                                 </SelectTrigger>
                                 <SelectPortal>
-                                    <SelectContent>
-                                        <SelectViewport>
-                                            <SelectItem value="option1">
-                                                <SelectItemText>Option 1</SelectItemText>
-                                                <SelectItemIndicator />
-                                            </SelectItem>
-                                            <SelectItem value="option2">
-                                                <SelectItemText>Option 2</SelectItemText>
-                                                <SelectItemIndicator />
-                                            </SelectItem>
-                                        </SelectViewport>
-                                    </SelectContent>
+                                    <SelectPositioner>
+                                        <SelectContent>
+                                            <SelectViewport>
+                                                <SelectItem value="option1">
+                                                    <SelectItemText>Option 1</SelectItemText>
+                                                    <SelectItemIndicator />
+                                                </SelectItem>
+                                                <SelectItem value="option2">
+                                                    <SelectItemText>Option 2</SelectItemText>
+                                                    <SelectItemIndicator />
+                                                </SelectItem>
+                                            </SelectViewport>
+                                        </SelectContent>
+                                    </SelectPositioner>
                                 </SelectPortal>
                             </Select>
                         </div>
@@ -719,18 +798,20 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                     <SelectTriggerIndicator />
                                 </SelectTrigger>
                                 <SelectPortal>
-                                    <SelectContent>
-                                        <SelectViewport>
-                                            <SelectItem value="invalid">
-                                                <SelectItemText>Invalid Option</SelectItemText>
-                                                <SelectItemIndicator />
-                                            </SelectItem>
-                                            <SelectItem value="valid">
-                                                <SelectItemText>Valid Option</SelectItemText>
-                                                <SelectItemIndicator />
-                                            </SelectItem>
-                                        </SelectViewport>
-                                    </SelectContent>
+                                    <SelectPositioner>
+                                        <SelectContent>
+                                            <SelectViewport>
+                                                <SelectItem value="invalid">
+                                                    <SelectItemText>Invalid Option</SelectItemText>
+                                                    <SelectItemIndicator />
+                                                </SelectItem>
+                                                <SelectItem value="valid">
+                                                    <SelectItemText>Valid Option</SelectItemText>
+                                                    <SelectItemIndicator />
+                                                </SelectItem>
+                                            </SelectViewport>
+                                        </SelectContent>
+                                    </SelectPositioner>
                                 </SelectPortal>
                             </Select>
                         </div>
@@ -743,18 +824,20 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                     <SelectTriggerIndicator />
                                 </SelectTrigger>
                                 <SelectPortal>
-                                    <SelectContent>
-                                        <SelectViewport>
-                                            <SelectItem value="option1">
-                                                <SelectItemText>Option 1</SelectItemText>
-                                                <SelectItemIndicator />
-                                            </SelectItem>
-                                            <SelectItem value="option2">
-                                                <SelectItemText>Option 2</SelectItemText>
-                                                <SelectItemIndicator />
-                                            </SelectItem>
-                                        </SelectViewport>
-                                    </SelectContent>
+                                    <SelectPositioner>
+                                        <SelectContent>
+                                            <SelectViewport>
+                                                <SelectItem value="option1">
+                                                    <SelectItemText>Option 1</SelectItemText>
+                                                    <SelectItemIndicator />
+                                                </SelectItem>
+                                                <SelectItem value="option2">
+                                                    <SelectItemText>Option 2</SelectItemText>
+                                                    <SelectItemIndicator />
+                                                </SelectItem>
+                                            </SelectViewport>
+                                        </SelectContent>
+                                    </SelectPositioner>
                                 </SelectPortal>
                             </Select>
                         </div>
@@ -769,18 +852,20 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                             <SelectTriggerIndicator />
                         </SelectTrigger>
                         <SelectPortal>
-                            <SelectContent>
-                                <SelectViewport>
-                                    <SelectItem value="single">
-                                        <SelectItemText>{`Single (Quantity: ${quantity})`}</SelectItemText>
-                                        <SelectItemIndicator />
-                                    </SelectItem>
-                                    <SelectItem value="multiple">
-                                        <SelectItemText>{`Multiple (Quantity: ${quantity})`}</SelectItemText>
-                                        <SelectItemIndicator />
-                                    </SelectItem>
-                                </SelectViewport>
-                            </SelectContent>
+                            <SelectPositioner>
+                                <SelectContent>
+                                    <SelectViewport>
+                                        <SelectItem value="single">
+                                            <SelectItemText>{`Single (Quantity: ${quantity})`}</SelectItemText>
+                                            <SelectItemIndicator />
+                                        </SelectItem>
+                                        <SelectItem value="multiple">
+                                            <SelectItemText>{`Multiple (Quantity: ${quantity})`}</SelectItemText>
+                                            <SelectItemIndicator />
+                                        </SelectItem>
+                                    </SelectViewport>
+                                </SelectContent>
+                            </SelectPositioner>
                         </SelectPortal>
                     </Select>
                 </div>

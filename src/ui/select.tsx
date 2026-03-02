@@ -21,13 +21,10 @@ import { createPortal } from "react-dom";
 import { useControllableState } from "@/hooks/use-controllable-state";
 
 import {
-    usePosition,
-    type Boundary,
-    type Padding,
-    type Sticky,
-    type Align,
+    Positioner,
     type Side,
-} from "@/hooks/use-position";
+    type Align,
+} from "@/ui/positioner";
 
 import { Slot } from "@/ui/slot";
 import { cn } from "@/cn";
@@ -170,6 +167,9 @@ interface SelectContextState {
 
     viewportRef: RefObject<HTMLDivElement | null>;
     triggerRef: RefObject<HTMLButtonElement | null>;
+    // positionerRef: the Positioner wrapper div (owns position styles)
+    positionerRef: RefObject<HTMLDivElement | null>;
+    // contentRef: the inner content div (listbox role, outside-click target)
     contentRef: RefObject<HTMLDivElement | null>;
 
     scrollRequestRef: RefObject<{
@@ -239,6 +239,7 @@ function Select({
 
     const viewportRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
+    const positionerRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
 
     const scrollRequestRef = useRef<{
@@ -307,6 +308,7 @@ function Select({
         activeDescendant,
         registerItemLabel,
         triggerRef,
+        positionerRef,
         contentRef,
         viewportRef,
         scrollRequestRef,
@@ -627,10 +629,206 @@ function SelectTriggerIndicator({ className, asChild, children, ...props }: Sele
 
 // ---------------------------------------------------------------------------------------------------- //
 
-interface SelectPortalProps { container?: HTMLElement, children?: ReactNode }
+interface SelectPortalProps { container?: HTMLElement; children?: ReactNode }
 
 function SelectPortal({ container, children }: SelectPortalProps) {
-    return createPortal(children, container || document.body);
+    return createPortal(children, container ?? document.body);
+}
+
+// ---------------------------------------------------------------------------------------------------- //
+
+// Computes the sideOffset needed to overlap the trigger so the selected item's
+// text aligns with the trigger's value text. Returns the fallback offset when
+// conditions for alignment are not met (touch input, insufficient space, trigger
+// too close to viewport edge).
+//
+// How the math works:
+//   The Positioner is placed at triggerRect.bottom + sideOffset (side=bottom).
+//   We want the selected item's top edge to land at triggerRect.top.
+//   So we need:  positionerTop + itemOffsetInPositioner = triggerRect.top
+//   Where positionerTop = triggerRect.bottom + newOffset
+//   => triggerRect.bottom + newOffset + itemOffsetInPositioner = triggerRect.top
+//   => newOffset = triggerRect.top - triggerRect.bottom - itemOffsetInPositioner
+//   => newOffset = -(triggerRect.height + itemOffsetInPositioner)
+//
+// itemOffsetInPositioner is measured from the positioner's current rendered top,
+// so we must read it AFTER the positioner has been positioned (useEffect, not
+// useLayoutEffect, and only when the positioner has a real result).
+function useAlignItemWithTrigger({
+    enabled,
+    triggerRef,
+    positionerRef,
+    fallbackSideOffset,
+}: {
+    enabled: boolean;
+    triggerRef: RefObject<HTMLButtonElement | null>;
+    positionerRef: RefObject<HTMLDivElement | null>;
+    fallbackSideOffset: number;
+}): number {
+    const [offset, setOffset] = useState(fallbackSideOffset);
+
+    // Keep stable refs so the compute function doesn't need to be recreated.
+    const fallbackRef = useRef(fallbackSideOffset);
+    fallbackRef.current = fallbackSideOffset;
+    const triggerRefRef = useRef(triggerRef);
+    triggerRefRef.current = triggerRef;
+    const positionerRefRef = useRef(positionerRef);
+    positionerRefRef.current = positionerRef;
+
+    const compute = useCallback(() => {
+        const fb = fallbackRef.current;
+
+        if (!enabled) {
+            setOffset(fb);
+            return;
+        }
+
+        const trigger = triggerRefRef.current.current;
+        const positioner = positionerRefRef.current.current;
+        if (!trigger || !positioner) {
+            setOffset(fb);
+            return;
+        }
+
+        // Skip if the positioner hasn't been placed yet (still at unmeasured position).
+        if (positioner.style.visibility === "hidden") {
+            setOffset(fb);
+            return;
+        }
+
+        const selected = positioner.querySelector<HTMLElement>('[data-state="checked"]');
+        if (!selected) {
+            setOffset(fb);
+            return;
+        }
+
+        const triggerRect = trigger.getBoundingClientRect();
+        const itemRect = selected.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+
+        // Fallback: trigger too close to viewport edges (within 20px)
+        if (triggerRect.top < 20 || triggerRect.bottom > viewportHeight - 20) {
+            setOffset(fb);
+            return;
+        }
+
+        // Goal: align item's top edge with trigger's top edge.
+        // The Positioner is placed at: triggerRect.bottom + sideOffset
+        // We want: positionerTop + itemOffsetInPositioner = triggerRect.top
+        // => newOffset = triggerRect.top - triggerRect.bottom - itemOffsetInPositioner
+        //
+        // Since the positioner is already rendered at its current position, we can
+        // read itemRect.top directly and compute how much to shift:
+        //   delta = triggerRect.top - itemRect.top
+        //   newOffset = fallbackSideOffset + delta
+        const delta = triggerRect.top - itemRect.top;
+        const computed = fb + delta;
+
+        // Fallback: popup would be too small or start above viewport
+        const wouldBeTop = triggerRect.bottom + computed;
+        const minHeight = 80;
+        if (wouldBeTop < 0 || triggerRect.bottom - wouldBeTop < minHeight) {
+            setOffset(fb);
+            return;
+        }
+
+        setOffset(computed);
+    }, [enabled]); // `enabled` is the only dep that should cause recreation
+
+    useEffect(() => {
+        if (!enabled) {
+            setOffset(fallbackSideOffset);
+            return;
+        }
+
+        const positioner = positionerRef.current;
+        if (!positioner) return;
+
+        // Observe the positioner: fires when the Positioner's own ResizeObserver
+        // places it, giving us accurate item positions to measure against.
+        const ro = new ResizeObserver(() => compute());
+        ro.observe(positioner);
+
+        compute();
+
+        return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [enabled, fallbackSideOffset, compute]);
+
+    return offset;
+}
+
+// ---------------------------------------------------------------------------------------------------- //
+
+interface SelectPositionerProps extends Omit<React.ComponentPropsWithoutRef<typeof Positioner>, 'anchor' | 'enabled'> {
+    alignItemWithTrigger?: boolean;
+}
+
+function SelectPositioner({
+    alignItemWithTrigger = true,
+    side = "bottom",
+    sideOffset = 4,
+    align = "start",
+    alignOffset = 0,
+    collisionAvoidance,
+    collisionBoundary = "clipping-ancestors",
+    collisionPadding = 8,
+    sticky = false,
+    positionMethod = "fixed",
+    disableAnchorTracking = false,
+    className,
+    style,
+    zIndex = 50,
+    children,
+    ...props
+}: SelectPositionerProps) {
+    const { open, triggerRef, positionerRef } = useSelectContext();
+    const [pointerType, setPointerType] = useState<string>("mouse");
+
+    useEffect(() => {
+        const trigger = triggerRef.current;
+        if (!trigger) return;
+        const handler = (e: PointerEvent) => setPointerType(e.pointerType);
+        trigger.addEventListener("pointerdown", handler);
+        return () => trigger.removeEventListener("pointerdown", handler);
+    }, [triggerRef]);
+
+    const resolvedFallback = typeof sideOffset === "number" ? sideOffset : 4;
+
+    const computedSideOffset = useAlignItemWithTrigger({
+        enabled: alignItemWithTrigger && pointerType !== "touch" && open,
+        triggerRef,
+        positionerRef,
+        fallbackSideOffset: resolvedFallback,
+    });
+
+    const effectiveSideOffset = alignItemWithTrigger && pointerType !== "touch"
+        ? computedSideOffset
+        : sideOffset;
+
+    return (
+        <Positioner
+            anchor={triggerRef}
+            enabled={open}
+            side={side}
+            align={align}
+            sideOffset={effectiveSideOffset}
+            alignOffset={alignOffset}
+            collisionAvoidance={collisionAvoidance}
+            collisionBoundary={collisionBoundary}
+            collisionPadding={collisionPadding}
+            sticky={sticky}
+            positionMethod={positionMethod}
+            disableAnchorTracking={disableAnchorTracking}
+            ref={positionerRef}
+            className={className}
+            style={style}
+            zIndex={zIndex}
+            {...props}
+        >
+            {children}
+        </Positioner>
+    );
 }
 
 // ---------------------------------------------------------------------------------------------------- //
@@ -642,84 +840,44 @@ interface SelectContentProps extends HTMLAttributes<HTMLElement> {
     onPointerDownOutside?: (event: PointerEvent) => void;
     onCloseAutoFocus?: (event: Event) => void;
 
-    align?: Align;
-    side?: Side;
-
-    alignOffset?: number;
-    sideOffset?: number;
-
-    sticky?: Sticky;
-
-    collisionBoundary?: Boundary;
-    collisionPadding?: Padding;
-    avoidCollisions?: boolean;
-
-    hideWhenDetached?: boolean;
     forceMount?: boolean;
-
-    position?: "item-aligned" | "popper";
 }
 
 function SelectContent({
     asChild = false,
 
     onPointerDownOutside,
-    onCloseAutoFocus,
+    onCloseAutoFocus: _onCloseAutoFocus,
     onEscapeKeyDown,
 
-    align = "start",
-    side = "bottom",
-
-    alignOffset = 0,
-    sideOffset = 4,
-
-    sticky = "partial",
-
-    avoidCollisions = true,
-    collisionBoundary = [],
-    collisionPadding = 8,
-
-    hideWhenDetached = false,
     forceMount = false,
-
-    position = "popper",
 
     className,
     children,
 
     ...props
 }: SelectContentProps) {
-
-    const { open, setOpen, triggerRef, contentRef, viewportRef, scrollRequestRef, scrollTrigger, state, dispatch } = useSelectContext();
+    const { open, setOpen, triggerRef, positionerRef, contentRef, viewportRef, scrollRequestRef, scrollTrigger, state, dispatch } = useSelectContext();
 
     // Collection pass: mount invisibly on first render to collect item labels, then unmount
     const [hasCollected, setHasCollected] = useState(false);
     const isCollectionPass = !hasCollected && !open;
-    
+
     const [isMounted, setIsMounted] = useState(open || isCollectionPass);
     const lastProcessedRef = useRef<{ trigger: number; positioned: boolean }>({ trigger: 0, positioned: false });
 
-    const {
-        top,
-        left,
-        actualSide,
-        maxHeight,
-        isPositioned,
-        isReferenceHidden
-    } = usePosition({
-        relativeTo: triggerRef,
-        target: contentRef,
-        isTargetRendered: isMounted,
-        side,
-        align,
-        sideOffset,
-        alignOffset,
-        avoidCollisions,
-        collisionBoundary,
-        collisionPadding,
-        sticky,
-        hideWhenDetached,
-    });
+    // isPositioned: true once the Positioner wrapper has been placed (visibility flips to visible)
+    const [isPositioned, setIsPositioned] = useState(false);
+
+    useLayoutEffect(() => {
+        const el = positionerRef.current;
+        if (!el) return;
+        const observer = new MutationObserver(() => {
+            setIsPositioned(el.style.visibility === "visible");
+        });
+        observer.observe(el, { attributes: true, attributeFilter: ["style"] });
+        return () => observer.disconnect();
+    }, [positionerRef]);
 
     useLayoutEffect(() => {
         if (!open || !isPositioned) return;
@@ -737,7 +895,7 @@ function SelectContent({
         const { element } = state.items[targetIndex];
         if (!element) return;
 
-        lastProcessedRef.current = { trigger: scrollTrigger, positioned: true }
+        lastProcessedRef.current = { trigger: scrollTrigger, positioned: true };
 
         if (type === 'edge-start') viewport.scrollTo({ top: 0, behavior: 'instant' });
         else if (type === 'edge-end') viewport.scrollTo({ top: viewport.scrollHeight - viewport.clientHeight, behavior: 'instant' });
@@ -768,14 +926,14 @@ function SelectContent({
             else if (elementBottom > scrollBottom) viewport.scrollTo({ top: elementBottom - viewport.clientHeight, behavior: 'instant' });
         }
 
-        scrollRequestRef.current = { type: 'none', targetIndex: -1 }
+        scrollRequestRef.current = { type: 'none', targetIndex: -1 };
     }, [open, isPositioned, scrollTrigger, state.items, scrollRequestRef, viewportRef]);
 
     useEffect(() => {
-        if (!open) lastProcessedRef.current = { trigger: 0, positioned: false }
+        if (!open) lastProcessedRef.current = { trigger: 0, positioned: false };
     }, [open]);
 
-    useEffect(() => { if (open) setIsMounted(true) }, [open]);
+    useEffect(() => { if (open) setIsMounted(true); }, [open]);
 
     // End collection pass after one frame (items have registered via useLayoutEffect)
     useLayoutEffect(() => {
@@ -804,7 +962,7 @@ function SelectContent({
         Array.from(document.body.children).forEach((child) => {
             if (
                 child.hasAttribute("inert") ||
-                child.contains(contentRef.current) ||
+                child.contains(positionerRef.current) ||
                 child.contains(triggerRef.current)
             ) return;
 
@@ -815,14 +973,14 @@ function SelectContent({
         return () => {
             document.body.style.overflow = originalOverflow;
             elementsToInert.forEach((el) => { el.removeAttribute("inert") });
-        }
-    }, [open, contentRef, triggerRef]);
+        };
+    }, [open, positionerRef, triggerRef]);
 
     useEffect(() => {
         if (!open) return;
 
         const outsideClickHandler = (event: MouseEvent) => {
-            if (contentRef.current && !contentRef.current.contains(event.target as Node)) {
+            if (positionerRef.current && !positionerRef.current.contains(event.target as Node)) {
                 if (triggerRef.current && triggerRef.current.contains(event.target as Node)) return;
                 onPointerDownOutside?.(event as PointerEvent);
                 setOpen(false);
@@ -830,12 +988,11 @@ function SelectContent({
                 dispatch({ type: 'SET_CURSOR', payload: -1 });
                 dispatch({ type: 'SET_PENDING_CURSOR_ACTION', payload: null });
             }
-        }
+        };
 
         document.addEventListener("mousedown", outsideClickHandler);
-
-        return () => { document.removeEventListener("mousedown", outsideClickHandler) }
-    }, [open, contentRef, triggerRef, onPointerDownOutside, setOpen, dispatch]);
+        return () => { document.removeEventListener("mousedown", outsideClickHandler); };
+    }, [open, positionerRef, triggerRef, onPointerDownOutside, setOpen, dispatch]);
 
     useEffect(() => {
         if (!open) return;
@@ -850,11 +1007,10 @@ function SelectContent({
 
                 triggerRef.current?.focus();
             }
-        }
+        };
 
         document.addEventListener("keydown", keyDownHandler);
-
-        return () => { document.removeEventListener("keydown", keyDownHandler) }
+        return () => { document.removeEventListener("keydown", keyDownHandler); };
     }, [open, onEscapeKeyDown, setOpen, dispatch, triggerRef]);
 
     if (!isMounted && !forceMount && !isCollectionPass) return null;
@@ -865,7 +1021,6 @@ function SelectContent({
         <Component
             data-ui="select-content"
             data-state={open ? "open" : "closed"}
-            data-side={actualSide}
 
             role="listbox"
 
@@ -874,27 +1029,23 @@ function SelectContent({
 
             onAnimationEnd={animationEndHandler}
 
-            style={{
+            style={isCollectionPass ? {
                 position: 'fixed',
-                top: isCollectionPass ? '-9999px' : `${top}px`,
-                left: isCollectionPass ? '-9999px' : `${left}px`,
-                zIndex: 50,
-                maxHeight: maxHeight ? `${maxHeight}px` : undefined,
-                display: 'flex',
-                flexDirection: 'column',
-                visibility: isCollectionPass ? 'hidden' : (isPositioned && !isReferenceHidden ? "visible" : "hidden"),
-                pointerEvents: isCollectionPass ? 'none' : 'auto',
-                opacity: isCollectionPass ? 0 : undefined,
-            }}
+                top: '-9999px',
+                left: '-9999px',
+                visibility: 'hidden',
+                pointerEvents: 'none',
+                opacity: 0,
+            } : undefined}
 
             className={cn(
-                'min-w-64 w-fit rounded border border-bound bg-surface shadow',
+                'min-w-64 w-fit rounded border border-bound bg-surface shadow flex flex-col',
                 "data-[state='open']:animate-in data-[state='open']:zoom-in-95 data-[state='open']:fade-in-0",
-                "data-[state='closed']:animate-out data-[state='closed']:zoom-out-95 data-[state=closed]:fade-out-0",
-                "data-[side=bottom]:slide-in-from-top-2",
-                "data-[side=left]:slide-in-from-right-2",
-                "data-[side=right]:slide-in-from-left-2",
-                "data-[side=top]:slide-in-from-bottom-2",
+                "data-[state='closed']:animate-out data-[state='closed']:zoom-out-95 data-[state='closed']:fade-out-0",
+                "[[data-side=bottom]_&]:slide-in-from-top-2",
+                "[[data-side=left]_&]:slide-in-from-right-2",
+                "[[data-side=right]_&]:slide-in-from-left-2",
+                "[[data-side=top]_&]:slide-in-from-bottom-2",
                 className
             )}
 
@@ -990,10 +1141,10 @@ function SelectItem({ children, className, value, disabled, textValue, asChild, 
         }
 
         dispatch({ type: 'REGISTER_ITEM', payload: item });
-        
+
         // Register label for initial value display
         registerItemLabel(value, resolvedTextValue);
-        
+
         return () => dispatch({ type: 'UNREGISTER_ITEM', payload: itemId });
     }, [itemId, value, textValue, disabled, dispatch, registerItemLabel]);
 
@@ -1442,6 +1593,7 @@ export {
     SelectValue,
     SelectTriggerIndicator,
     SelectPortal,
+    SelectPositioner,
     SelectContent,
     SelectViewport,
     SelectItem,
@@ -1455,6 +1607,7 @@ export {
     type SelectProps,
     type SelectItemProps,
     type SelectValueProps,
+    type SelectPositionerProps,
     type SelectContentProps,
     type SelectItemTextProps,
     type SelectItemIndicatorProps,
@@ -1467,6 +1620,8 @@ export {
     type SelectTriggerIndicatorProps,
     type SelectPortalProps,
     type SelectViewportProps,
+    type Side,
+    type Align,
 }
 
 // ---------------------------------------------------------------------------------------------------- //

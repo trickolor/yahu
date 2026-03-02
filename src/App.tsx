@@ -19,7 +19,7 @@ import { MultiSelectDemo } from "./demos/multi-select-demo";
 import { ComboboxDemo } from "./demos/combobox-demo";
 import { AutocompleteDemo } from "./demos/autocomplete-demo";
 import { ListboxDemo } from "./demos/listbox-demo";
-import { Calendar, CalendarPreviousButton, CalendarHeading, CalendarNextButton, CalendarYear, CalendarMonth, CalendarGrid, CalendarGridHeader, CalendarGridHeaderCell, CalendarGridBodyCell, CalendarGridBody, CalendarYearSelect, CalendarMonthSelect } from "./ui/calendar";
+import { Calendar, CalendarPreviousButton, CalendarHeading, CalendarNextButton, CalendarGrid, CalendarGridHeader, CalendarGridHeaderCell, CalendarGridBodyCell, CalendarGridBody, CalendarYearSelect, CalendarMonthSelect } from "./ui/calendar";
 
 function App() {
     const [quantity, setQuantity] = useState(1);
@@ -61,10 +61,10 @@ function App() {
                 <Calendar>
                     <CalendarHeading>
                         <CalendarPreviousButton />
-                       
+
                         <CalendarYearSelect />
                         <CalendarMonthSelect />
-                       
+
                         <CalendarNextButton />
                     </CalendarHeading>
 
