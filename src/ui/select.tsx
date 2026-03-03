@@ -24,6 +24,7 @@ import {
     Positioner,
     type Side,
     type Align,
+    type VirtualElement,
 } from "@/ui/positioner";
 
 import { Slot } from "@/ui/slot";
@@ -173,12 +174,15 @@ interface SelectContextState {
     contentRef: RefObject<HTMLDivElement | null>;
 
     scrollRequestRef: RefObject<{
-        type: 'none' | 'center' | 'ensure-visible' | 'edge-start' | 'edge-end';
+        type: 'none' | 'center' | 'item-top' | 'ensure-visible' | 'edge-start' | 'edge-end';
         targetIndex: number;
     }>;
 
     scrollTrigger: number;
     triggerScroll: () => void;
+
+    // Written by SelectPositioner; read by Select to pick the right scroll type on open.
+    alignItemWithTriggerActiveRef: RefObject<boolean>;
 }
 
 const SelectContext = createContext<SelectContextState | null>(null);
@@ -243,9 +247,11 @@ function Select({
     const contentRef = useRef<HTMLDivElement>(null);
 
     const scrollRequestRef = useRef<{
-        type: 'none' | 'center' | 'ensure-visible' | 'edge-start' | 'edge-end';
+        type: 'none' | 'center' | 'item-top' | 'ensure-visible' | 'edge-start' | 'edge-end';
         targetIndex: number;
     }>({ type: 'none', targetIndex: -1 });
+
+    const alignItemWithTriggerActiveRef = useRef<boolean>(false);
 
     const [scrollTrigger, setScrollTrigger] = useState(0);
     const triggerScroll = useCallback(() => setScrollTrigger(prev => prev + 1), []);
@@ -289,7 +295,8 @@ function Select({
         else if (state.pendingCursorAction === 'default') {
             const currentIndex = state.items.findIndex(item => item.value === valueState);
             const initialCursor = currentIndex >= 0 ? currentIndex : 0;
-            scrollRequestRef.current = { type: 'center', targetIndex: initialCursor }
+            const scrollType = alignItemWithTriggerActiveRef.current ? 'item-top' : 'center';
+            scrollRequestRef.current = { type: scrollType, targetIndex: initialCursor }
             dispatch({ type: 'SET_CURSOR', payload: initialCursor });
             triggerScroll();
         }
@@ -314,6 +321,7 @@ function Select({
         scrollRequestRef,
         scrollTrigger,
         triggerScroll,
+        alignItemWithTriggerActiveRef,
     }), [valueState, setValue, openState, setOpen, disabled, state, activeDescendant, registerItemLabel, scrollTrigger, triggerScroll]);
 
     return (
@@ -637,125 +645,20 @@ function SelectPortal({ container, children }: SelectPortalProps) {
 
 // ---------------------------------------------------------------------------------------------------- //
 
-// Computes the sideOffset needed to overlap the trigger so the selected item's
-// text aligns with the trigger's value text. Returns the fallback offset when
-// conditions for alignment are not met (touch input, insufficient space, trigger
-// too close to viewport edge).
-//
-// How the math works:
-//   The Positioner is placed at triggerRect.bottom + sideOffset (side=bottom).
-//   We want the selected item's top edge to land at triggerRect.top.
-//   So we need:  positionerTop + itemOffsetInPositioner = triggerRect.top
-//   Where positionerTop = triggerRect.bottom + newOffset
-//   => triggerRect.bottom + newOffset + itemOffsetInPositioner = triggerRect.top
-//   => newOffset = triggerRect.top - triggerRect.bottom - itemOffsetInPositioner
-//   => newOffset = -(triggerRect.height + itemOffsetInPositioner)
-//
-// itemOffsetInPositioner is measured from the positioner's current rendered top,
-// so we must read it AFTER the positioner has been positioned (useEffect, not
-// useLayoutEffect, and only when the positioner has a real result).
-function useAlignItemWithTrigger({
-    enabled,
-    triggerRef,
-    positionerRef,
-    fallbackSideOffset,
-}: {
-    enabled: boolean;
-    triggerRef: RefObject<HTMLButtonElement | null>;
-    positionerRef: RefObject<HTMLDivElement | null>;
-    fallbackSideOffset: number;
-}): number {
-    const [offset, setOffset] = useState(fallbackSideOffset);
+// Returns whether alignItemWithTrigger mode should be active (not in fallback).
+// Checks touch input and viewport edge proximity only — space check happens
+// after the positioner is sized, inside SelectContent's scroll logic.
+function shouldAlignItemWithTrigger(
+    triggerEl: HTMLButtonElement,
+    minHeight: number
+): boolean {
+    const triggerRect = triggerEl.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
 
-    // Keep stable refs so the compute function doesn't need to be recreated.
-    const fallbackRef = useRef(fallbackSideOffset);
-    fallbackRef.current = fallbackSideOffset;
-    const triggerRefRef = useRef(triggerRef);
-    triggerRefRef.current = triggerRef;
-    const positionerRefRef = useRef(positionerRef);
-    positionerRefRef.current = positionerRef;
+    if (triggerRect.top < 20 || triggerRect.bottom > viewportHeight - 20) return false;
+    if (viewportHeight - triggerRect.top < minHeight) return false;
 
-    const compute = useCallback(() => {
-        const fb = fallbackRef.current;
-
-        if (!enabled) {
-            setOffset(fb);
-            return;
-        }
-
-        const trigger = triggerRefRef.current.current;
-        const positioner = positionerRefRef.current.current;
-        if (!trigger || !positioner) {
-            setOffset(fb);
-            return;
-        }
-
-        // Skip if the positioner hasn't been placed yet (still at unmeasured position).
-        if (positioner.style.visibility === "hidden") {
-            setOffset(fb);
-            return;
-        }
-
-        const selected = positioner.querySelector<HTMLElement>('[data-state="checked"]');
-        if (!selected) {
-            setOffset(fb);
-            return;
-        }
-
-        const triggerRect = trigger.getBoundingClientRect();
-        const itemRect = selected.getBoundingClientRect();
-        const viewportHeight = window.innerHeight;
-
-        // Fallback: trigger too close to viewport edges (within 20px)
-        if (triggerRect.top < 20 || triggerRect.bottom > viewportHeight - 20) {
-            setOffset(fb);
-            return;
-        }
-
-        // Goal: align item's top edge with trigger's top edge.
-        // The Positioner is placed at: triggerRect.bottom + sideOffset
-        // We want: positionerTop + itemOffsetInPositioner = triggerRect.top
-        // => newOffset = triggerRect.top - triggerRect.bottom - itemOffsetInPositioner
-        //
-        // Since the positioner is already rendered at its current position, we can
-        // read itemRect.top directly and compute how much to shift:
-        //   delta = triggerRect.top - itemRect.top
-        //   newOffset = fallbackSideOffset + delta
-        const delta = triggerRect.top - itemRect.top;
-        const computed = fb + delta;
-
-        // Fallback: popup would be too small or start above viewport
-        const wouldBeTop = triggerRect.bottom + computed;
-        const minHeight = 80;
-        if (wouldBeTop < 0 || triggerRect.bottom - wouldBeTop < minHeight) {
-            setOffset(fb);
-            return;
-        }
-
-        setOffset(computed);
-    }, [enabled]); // `enabled` is the only dep that should cause recreation
-
-    useEffect(() => {
-        if (!enabled) {
-            setOffset(fallbackSideOffset);
-            return;
-        }
-
-        const positioner = positionerRef.current;
-        if (!positioner) return;
-
-        // Observe the positioner: fires when the Positioner's own ResizeObserver
-        // places it, giving us accurate item positions to measure against.
-        const ro = new ResizeObserver(() => compute());
-        ro.observe(positioner);
-
-        compute();
-
-        return () => ro.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [enabled, fallbackSideOffset, compute]);
-
-    return offset;
+    return true;
 }
 
 // ---------------------------------------------------------------------------------------------------- //
@@ -767,7 +670,7 @@ interface SelectPositionerProps extends Omit<React.ComponentPropsWithoutRef<type
 function SelectPositioner({
     alignItemWithTrigger = true,
     side = "bottom",
-    sideOffset = 4,
+    sideOffset = 0,
     align = "start",
     alignOffset = 0,
     collisionAvoidance,
@@ -782,7 +685,7 @@ function SelectPositioner({
     children,
     ...props
 }: SelectPositionerProps) {
-    const { open, triggerRef, positionerRef } = useSelectContext();
+    const { open, triggerRef, positionerRef, alignItemWithTriggerActiveRef } = useSelectContext();
     const [pointerType, setPointerType] = useState<string>("mouse");
 
     useEffect(() => {
@@ -793,37 +696,61 @@ function SelectPositioner({
         return () => trigger.removeEventListener("pointerdown", handler);
     }, [triggerRef]);
 
-    const resolvedFallback = typeof sideOffset === "number" ? sideOffset : 4;
+    // Resolve the minimum height for the align mode from the positioner's CSS min-height.
+    // Defaults to 80px if not set.
+    const minHeight = useMemo(() => {
+        const el = positionerRef.current;
+        if (!el) return 80;
+        const parsed = parseFloat(getComputedStyle(el).minHeight);
+        return isNaN(parsed) ? 80 : parsed;
+    }, [positionerRef, open]); // re-read when open changes so the element is mounted
 
-    const computedSideOffset = useAlignItemWithTrigger({
-        enabled: alignItemWithTrigger && pointerType !== "touch" && open,
-        triggerRef,
-        positionerRef,
-        fallbackSideOffset: resolvedFallback,
-    });
+    const alignActive =
+        alignItemWithTrigger &&
+        pointerType !== "touch" &&
+        open &&
+        !!triggerRef.current &&
+        shouldAlignItemWithTrigger(triggerRef.current, minHeight);
 
-    const effectiveSideOffset = alignItemWithTrigger && pointerType !== "touch"
-        ? computedSideOffset
-        : sideOffset;
+    // Keep the ref in sync so Select's scroll logic can read it synchronously.
+    alignItemWithTriggerActiveRef.current = alignActive;
+
+    // When align mode is active, use a VirtualElement whose getBoundingClientRect
+    // returns a zero-height rect at triggerRect.top. With side="bottom" sideOffset=0
+    // the positioner's top edge lands exactly at triggerRect.top.
+    // The target item is then scrolled to the top of the viewport by SelectContent.
+    const virtualAnchor = useMemo<VirtualElement | null>(() => {
+        if (!alignActive || !triggerRef.current) return null;
+        const trigger = triggerRef.current;
+        return {
+            getBoundingClientRect(): DOMRect {
+                const r = trigger.getBoundingClientRect();
+                return DOMRect.fromRect({ x: r.left, y: r.top, width: r.width, height: 0 });
+            },
+            contextElement: trigger,
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [alignActive]);
 
     return (
         <Positioner
-            anchor={triggerRef}
+            anchor={virtualAnchor ?? triggerRef}
             enabled={open}
-            side={side}
-            align={align}
-            sideOffset={effectiveSideOffset}
-            alignOffset={alignOffset}
-            collisionAvoidance={collisionAvoidance}
+            side={alignActive ? "bottom" : side}
+            align={alignActive ? "start" : align}
+            sideOffset={alignActive ? 0 : sideOffset}
+            alignOffset={alignActive ? 0 : alignOffset}
+            collisionAvoidance={alignActive ? { side: "none", align: "none" } : collisionAvoidance}
             collisionBoundary={collisionBoundary}
             collisionPadding={collisionPadding}
-            sticky={sticky}
+            sticky={alignActive ? false : sticky}
             positionMethod={positionMethod}
             disableAnchorTracking={disableAnchorTracking}
             ref={positionerRef}
             className={className}
             style={style}
             zIndex={zIndex}
+            data-align-mode={alignActive ? "item" : undefined}
             {...props}
         >
             {children}
@@ -899,6 +826,12 @@ function SelectContent({
 
         if (type === 'edge-start') viewport.scrollTo({ top: 0, behavior: 'instant' });
         else if (type === 'edge-end') viewport.scrollTo({ top: viewport.scrollHeight - viewport.clientHeight, behavior: 'instant' });
+
+        else if (type === 'item-top') {
+            // Scroll so the target item's top edge is at the top of the viewport.
+            // Used with alignItemWithTrigger so the item aligns with the positioner top = trigger top.
+            viewport.scrollTo({ top: element.offsetTop, behavior: 'instant' });
+        }
 
         else if (type === 'center') {
             const elementRect = element.getBoundingClientRect();

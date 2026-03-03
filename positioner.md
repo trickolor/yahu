@@ -164,34 +164,3 @@ Whether to maintain the popup in the viewport after the anchor element was scrol
 | **Default** | `'absolute'` |
 
 Determines which CSS `position` property to use.
-
----
-
-## `className`
-
-| | |
-|---|---|
-| **Type** | `string \| ((state: Select.Positioner.State) => string \| undefined)` |
-| **Default** | `—` |
-
-CSS class applied to the element, or a function that returns a class based on the component's state.
-
----
-
-## `style`
-
-| | |
-|---|---|
-| **Type** | `React.CSSProperties \| ((state: Select.Positioner.State) => CSSProperties \| undefined)` |
-| **Default** | `—` |
-
----
-
-## `render`
-
-| | |
-|---|---|
-| **Type** | `ReactElement \| ((props: HTMLProps, state: Select.Positioner.State) => ReactElement)` |
-| **Default** | `—` |
-
-Allows you to replace the component's HTML element with a different tag, or compose it with another component. Accepts a `ReactElement` or a function that returns the element to render.
