@@ -11,17 +11,15 @@ import {
 
 // ---------------------------------------------------------------------------------------------------- //
 
+export interface Size { width: number; height: number }
+
 export interface VirtualElement {
     getBoundingClientRect(): DOMRect;
     contextElement?: Element;
 }
 
-export type OffsetFunction = (data: {
-    side: PhysicalSide;
-    align: Align;
-    anchor: { width: number; height: number };
-    positioner: { width: number; height: number };
-}) => number;
+interface OffsetFunctionData { side: PhysicalSide; align: Align; anchor: Size; positioner: Size }
+export type OffsetFunction = (data: OffsetFunctionData) => number;
 
 export type Anchor =
     | Element
@@ -39,7 +37,7 @@ export type Side =
     | "inline-end"
     | "inline-start";
 
-type PhysicalSide = "top" | "bottom" | "left" | "right";
+export type PhysicalSide = "top" | "bottom" | "left" | "right";
 
 export type Align = "start" | "center" | "end";
 
@@ -58,19 +56,19 @@ export type CollisionBoundary =
 
 export type CollisionAvoidance =
     | {
-          side?: "flip" | "none";
-          align?: "flip" | "shift" | "none";
-          fallbackAxisSide?: "start" | "end" | "none";
-      }
+        side?: "flip" | "none";
+        align?: "flip" | "shift" | "none";
+        fallbackAxisSide?: "start" | "end" | "none";
+    }
     | {
-          side?: "shift" | "none";
-          align?: "shift" | "none";
-          fallbackAxisSide?: "start" | "end" | "none";
-      };
+        side?: "shift" | "none";
+        align?: "shift" | "none";
+        fallbackAxisSide?: "start" | "end" | "none";
+    }
 
 export type Padding =
     | number
-    | { top?: number; right?: number; bottom?: number; left?: number };
+    | { top?: number; right?: number; bottom?: number; left?: number }
 
 // ---------------------------------------------------------------------------------------------------- //
 
@@ -164,15 +162,15 @@ function resolveLogicalSide(side: Side): PhysicalSide {
 // ---------------------------------------------------------------------------------------------------- //
 
 function normalizePadding(padding: Padding): NormalizedPadding {
-    if (typeof padding === "number") {
-        return { top: padding, right: padding, bottom: padding, left: padding };
-    }
+    if (typeof padding === "number")
+        return { top: padding, right: padding, bottom: padding, left: padding }
+
     return {
         top: padding.top ?? 0,
         right: padding.right ?? 0,
         bottom: padding.bottom ?? 0,
         left: padding.left ?? 0,
-    };
+    }
 }
 
 // ---------------------------------------------------------------------------------------------------- //
@@ -184,9 +182,8 @@ function getClippingAncestors(element: Element): Element[] {
     while (current && current !== document.documentElement) {
         const style = getComputedStyle(current);
         const overflow = style.overflow + style.overflowX + style.overflowY;
-        if (/auto|scroll|hidden|clip/.test(overflow)) {
-            ancestors.push(current);
-        }
+        if (/auto|scroll|hidden|clip/.test(overflow)) ancestors.push(current);
+
         current = current.parentElement;
     }
 
@@ -202,7 +199,7 @@ function getCollisionRect(
         left: 0,
         right: window.innerWidth,
         bottom: window.innerHeight,
-    };
+    }
 
     if (!boundary) return viewport;
 
@@ -213,41 +210,43 @@ function getCollisionRect(
         if (ancestors.length === 0) return viewport;
 
         return ancestors.reduce<Rect>((acc, el) => {
-            const r = el.getBoundingClientRect();
+            const rect = el.getBoundingClientRect();
+
             return {
-                top: Math.max(acc.top, r.top),
-                left: Math.max(acc.left, r.left),
-                right: Math.min(acc.right, r.right),
-                bottom: Math.min(acc.bottom, r.bottom),
-            };
+                top: Math.max(acc.top, rect.top),
+                left: Math.max(acc.left, rect.left),
+                right: Math.min(acc.right, rect.right),
+                bottom: Math.min(acc.bottom, rect.bottom),
+            }
         }, viewport);
     }
 
     if (boundary instanceof Element) {
-        const r = boundary.getBoundingClientRect();
-        // Intersect with viewport so the popup never escapes the screen.
+        const rect = boundary.getBoundingClientRect();
+
         return {
-            top: Math.max(viewport.top, r.top),
-            left: Math.max(viewport.left, r.left),
-            right: Math.min(viewport.right, r.right),
-            bottom: Math.min(viewport.bottom, r.bottom),
-        };
+            top: Math.max(viewport.top, rect.top),
+            left: Math.max(viewport.left, rect.left),
+            right: Math.min(viewport.right, rect.right),
+            bottom: Math.min(viewport.bottom, rect.bottom),
+        }
     }
 
     if (Array.isArray(boundary)) {
         if (boundary.length === 0) return viewport;
+
         return boundary.reduce<Rect>((acc, el) => {
-            const r = el.getBoundingClientRect();
+            const rect = el.getBoundingClientRect();
+
             return {
-                top: Math.max(acc.top, r.top),
-                left: Math.max(acc.left, r.left),
-                right: Math.min(acc.right, r.right),
-                bottom: Math.min(acc.bottom, r.bottom),
-            };
+                top: Math.max(acc.top, rect.top),
+                left: Math.max(acc.left, rect.left),
+                right: Math.min(acc.right, rect.right),
+                bottom: Math.min(acc.bottom, rect.bottom),
+            }
         }, viewport);
     }
 
-    // Plain Rect
     return boundary;
 }
 
@@ -270,20 +269,10 @@ function getBasePosition(
     sideOffset: number
 ): { x: number; y: number } {
     switch (side) {
-        case "bottom":
-            return { x: anchorRect.left, y: anchorRect.bottom + sideOffset };
-        case "top":
-            return {
-                x: anchorRect.left,
-                y: anchorRect.top - floatingSize.height - sideOffset,
-            };
-        case "right":
-            return { x: anchorRect.right + sideOffset, y: anchorRect.top };
-        case "left":
-            return {
-                x: anchorRect.left - floatingSize.width - sideOffset,
-                y: anchorRect.top,
-            };
+        case "bottom": return { x: anchorRect.left, y: anchorRect.bottom + sideOffset }
+        case "top": return { x: anchorRect.left, y: anchorRect.top - floatingSize.height - sideOffset }
+        case "right": return { x: anchorRect.right + sideOffset, y: anchorRect.top }
+        case "left": return { x: anchorRect.left - floatingSize.width - sideOffset, y: anchorRect.top }
     }
 }
 
@@ -297,50 +286,22 @@ function applyAlignment(
     align: Align,
     alignOffset: number
 ): { x: number; y: number } {
-    const vertical = side === "top" || side === "bottom";
+    const vertical =
+        side === "top" ||
+        side === "bottom";
 
-    if (vertical) {
-        switch (align) {
-            case "start":
-                return { ...pos, x: anchorRect.left + alignOffset };
-            case "center":
-                return {
-                    ...pos,
-                    x:
-                        anchorRect.left +
-                        anchorRect.width / 2 -
-                        floatingSize.width / 2 +
-                        alignOffset,
-                };
-            case "end":
-                return {
-                    ...pos,
-                    x: anchorRect.right - floatingSize.width + alignOffset,
-                };
-            default:
-                return pos;
-        }
-    } else {
-        switch (align) {
-            case "start":
-                return { ...pos, y: anchorRect.top + alignOffset };
-            case "center":
-                return {
-                    ...pos,
-                    y:
-                        anchorRect.top +
-                        anchorRect.height / 2 -
-                        floatingSize.height / 2 +
-                        alignOffset,
-                };
-            case "end":
-                return {
-                    ...pos,
-                    y: anchorRect.bottom - floatingSize.height + alignOffset,
-                };
-            default:
-                return pos;
-        }
+    if (vertical) switch (align) {
+        case "start": return { ...pos, x: anchorRect.left + alignOffset }
+        case "center": return { ...pos, x: anchorRect.left + anchorRect.width / 2 - floatingSize.width / 2 + alignOffset }
+        case "end": return { ...pos, x: anchorRect.right - floatingSize.width + alignOffset }
+        default: return pos;
+    }
+
+    else switch (align) {
+        case "start": return { ...pos, y: anchorRect.top + alignOffset }
+        case "center": return { ...pos, y: anchorRect.top + anchorRect.height / 2 - floatingSize.height / 2 + alignOffset }
+        case "end": return { ...pos, y: anchorRect.bottom - floatingSize.height + alignOffset }
+        default: return pos;
     }
 }
 
@@ -354,16 +315,10 @@ function getOverflow(
 ): NormalizedPadding {
     return {
         top: Math.max(collisionRect.top + padding.top - pos.y, 0),
-        bottom: Math.max(
-            pos.y + floatingSize.height - (collisionRect.bottom - padding.bottom),
-            0
-        ),
+        bottom: Math.max(pos.y + floatingSize.height - (collisionRect.bottom - padding.bottom), 0),
         left: Math.max(collisionRect.left + padding.left - pos.x, 0),
-        right: Math.max(
-            pos.x + floatingSize.width - (collisionRect.right - padding.right),
-            0
-        ),
-    };
+        right: Math.max(pos.x + floatingSize.width - (collisionRect.right - padding.right), 0),
+    }
 }
 
 function getOppositeSide(side: PhysicalSide): PhysicalSide {
@@ -410,11 +365,13 @@ function resolveCollision(
     const testPosition = (side: PhysicalSide) => {
         const base = getBasePosition(anchorRect, floatingSize, side, sideOffset);
         const aligned = applyAlignment(base, anchorRect, floatingSize, side, align, alignOffset);
+
         const constrained = sticky
             ? applySticky(aligned, floatingSize, collisionRect, padding, anchorRect, side)
             : aligned;
+
         return getSideOverflow(getOverflow(constrained, floatingSize, collisionRect, padding), side);
-    };
+    }
 
     const preferredOverflow = testPosition(preferredSide);
     if (preferredOverflow <= 0) return preferredSide;
@@ -423,15 +380,13 @@ function resolveCollision(
         const opposite = getOppositeSide(preferredSide);
         const oppositeOverflow = testPosition(opposite);
 
-        // Only flip if the opposite side fits completely (no overflow on its main axis).
-        // Using "strictly less" caused oscillation with constrained-height lists because
-        // both sides overflow and the winner kept changing as the user scrolled.
         if (oppositeOverflow === 0) return opposite;
 
-        // fallbackAxisSide: try perpendicular axis sides
         const fallback = (avoidance as { fallbackAxisSide?: string }).fallbackAxisSide;
+
         if (fallback && fallback !== "none") {
             const isVertical = preferredSide === "top" || preferredSide === "bottom";
+
             const fallbackSide: PhysicalSide = isVertical
                 ? fallback === "start" ? "left" : "right"
                 : fallback === "start" ? "top" : "bottom";
@@ -443,7 +398,6 @@ function resolveCollision(
         return preferredSide;
     }
 
-    // shift mode: keep preferred side, clamping is handled in applyShift
     return preferredSide;
 }
 
@@ -457,11 +411,14 @@ function applySticky(
     anchorRect: DOMRect,
     side: PhysicalSide
 ): { x: number; y: number } {
-    const vertical = side === "top" || side === "bottom";
+    const vertical =
+        side === "top" ||
+        side === "bottom";
 
     if (vertical) {
         const minX = collisionRect.left + padding.left;
         const maxX = collisionRect.right - padding.right - floatingSize.width;
+
         const anchorInBounds =
             anchorRect.right > collisionRect.left + padding.left &&
             anchorRect.left < collisionRect.right - padding.right;
@@ -470,11 +427,12 @@ function applySticky(
             ? Math.max(minX, Math.min(pos.x, maxX))
             : pos.x;
 
-        return { ...pos, x: clampedX };
+        return { ...pos, x: clampedX }
     }
 
     const minY = collisionRect.top + padding.top;
     const maxY = collisionRect.bottom - padding.bottom - floatingSize.height;
+
     const anchorInBounds =
         anchorRect.bottom > collisionRect.top + padding.top &&
         anchorRect.top < collisionRect.bottom - padding.bottom;
@@ -483,7 +441,7 @@ function applySticky(
         ? Math.max(minY, Math.min(pos.y, maxY))
         : pos.y;
 
-    return { ...pos, y: clampedY };
+    return { ...pos, y: clampedY }
 }
 
 // ---------------------------------------------------------------------------------------------------- //
@@ -499,17 +457,19 @@ function applyShift(
     const alignMode = avoidance.align ?? "shift";
     if (alignMode === "none") return pos;
 
-    const vertical = side === "top" || side === "bottom";
+    const vertical =
+        side === "top" ||
+        side === "bottom";
 
     if (vertical) {
         const minX = collisionRect.left + padding.left;
         const maxX = collisionRect.right - padding.right - floatingSize.width;
-        return { ...pos, x: Math.max(minX, Math.min(pos.x, maxX)) };
+        return { ...pos, x: Math.max(minX, Math.min(pos.x, maxX)) }
     }
 
     const minY = collisionRect.top + padding.top;
     const maxY = collisionRect.bottom - padding.bottom - floatingSize.height;
-    return { ...pos, y: Math.max(minY, Math.min(pos.y, maxY)) };
+    return { ...pos, y: Math.max(minY, Math.min(pos.y, maxY)) }
 }
 
 // ---------------------------------------------------------------------------------------------------- //
@@ -527,7 +487,7 @@ function resolveAlignCollision(
 ): { x: number; y: number; actualAlign: Align } {
     const alignMode = avoidance.align ?? "shift";
 
-    if (alignMode === "none") return { ...pos, actualAlign: align };
+    if (alignMode === "none") return { ...pos, actualAlign: align }
 
     if (alignMode === "flip") {
         const overflow = getOverflow(pos, floatingSize, collisionRect, padding);
@@ -539,6 +499,7 @@ function resolveAlignCollision(
 
         if (hasOverflow && align !== "center") {
             const flippedAlign = getOppositeAlign(align);
+
             const flippedPos = applyAlignment(
                 getBasePosition(anchorRect, floatingSize, side, 0),
                 anchorRect,
@@ -547,22 +508,18 @@ function resolveAlignCollision(
                 flippedAlign,
                 alignOffset
             );
+
             const flippedOverflow = getOverflow(flippedPos, floatingSize, collisionRect, padding);
             const currentTotal = overflow.left + overflow.right + overflow.top + overflow.bottom;
-            const flippedTotal =
-                flippedOverflow.left + flippedOverflow.right + flippedOverflow.top + flippedOverflow.bottom;
-
-            if (flippedTotal < currentTotal) {
-                return { ...flippedPos, actualAlign: flippedAlign };
-            }
+            const flippedTotal = flippedOverflow.left + flippedOverflow.right + flippedOverflow.top + flippedOverflow.bottom;
+            if (flippedTotal < currentTotal) return { ...flippedPos, actualAlign: flippedAlign }
         }
 
-        return { ...pos, actualAlign: align };
+        return { ...pos, actualAlign: align }
     }
 
-    // shift
     const shifted = applyShift(pos, floatingSize, collisionRect, padding, side, avoidance);
-    return { ...shifted, actualAlign: align };
+    return { ...shifted, actualAlign: align }
 }
 
 // ---------------------------------------------------------------------------------------------------- //
@@ -590,21 +547,17 @@ function getAvailableDimensions(
     return {
         availableWidth: Math.max(availableWidth, 0),
         availableHeight: Math.max(availableHeight, 0),
-    };
+    }
 }
 
 // ---------------------------------------------------------------------------------------------------- //
 
 function getTransformOrigin(side: PhysicalSide, align: Align): string {
     switch (side) {
-        case "bottom":
-            return align === "start" ? "top left" : align === "end" ? "top right" : "top center";
-        case "top":
-            return align === "start" ? "bottom left" : align === "end" ? "bottom right" : "bottom center";
-        case "left":
-            return align === "start" ? "top right" : align === "end" ? "bottom right" : "center right";
-        case "right":
-            return align === "start" ? "top left" : align === "end" ? "bottom left" : "center left";
+        case "bottom": return align === "start" ? "top left" : align === "end" ? "top right" : "top center";
+        case "top": return align === "start" ? "bottom left" : align === "end" ? "bottom right" : "bottom center";
+        case "left": return align === "start" ? "top right" : align === "end" ? "bottom right" : "center right";
+        case "right": return align === "start" ? "top left" : align === "end" ? "bottom left" : "center left";
     }
 }
 
@@ -623,13 +576,15 @@ function isAnchorHidden(anchorRect: DOMRect, collisionRect: Rect): boolean {
 
 function getOffsetParentRect(el: HTMLElement): { x: number; y: number } {
     const offsetParent = el.offsetParent;
-    if (!offsetParent) return { x: 0, y: 0 };
-    const r = offsetParent.getBoundingClientRect();
+    if (!offsetParent) return { x: 0, y: 0 }
+
+    const rect = offsetParent.getBoundingClientRect();
     const style = getComputedStyle(offsetParent);
+
     return {
-        x: r.left + parseFloat(style.borderLeftWidth || "0"),
-        y: r.top + parseFloat(style.borderTopWidth || "0"),
-    };
+        x: rect.left + parseFloat(style.borderLeftWidth || "0"),
+        y: rect.top + parseFloat(style.borderTopWidth || "0"),
+    }
 }
 
 function computePosition(
@@ -645,26 +600,22 @@ function computePosition(
         collisionPadding: Padding;
         sticky: boolean;
         positionMethod: "fixed" | "absolute";
-        // When provided, skip side resolution and use this side directly (scroll updates).
         forceSide?: PhysicalSide;
     }
 ): PositionResult {
     const anchorRect = getAnchorRect(anchorEl);
     const contextEl = getContextElement(anchorEl);
 
-    // Use getBoundingClientRect for accurate size even when element is off-screen.
-    // offsetWidth/offsetHeight can return 0 when visibility:hidden before first paint.
     const floatingRect = floatingEl.getBoundingClientRect();
+
     const floatingSize = {
         width: floatingRect.width || floatingEl.offsetWidth,
         height: floatingRect.height || floatingEl.offsetHeight,
-    };
+    }
 
-    // For absolute positioning, all coordinates must be relative to the offset parent.
-    const offsetParentPos =
-        options.positionMethod === "absolute"
-            ? getOffsetParentRect(floatingEl)
-            : { x: 0, y: 0 };
+    const offsetParentPos = options.positionMethod === "absolute"
+        ? getOffsetParentRect(floatingEl)
+        : { x: 0, y: 0 }
 
     const physicalSide = resolveLogicalSide(options.side);
     const padding = normalizePadding(options.collisionPadding);
@@ -675,12 +626,11 @@ function computePosition(
         align: options.align,
         anchor: { width: anchorRect.width, height: anchorRect.height },
         positioner: floatingSize,
-    };
+    }
 
     const resolvedSideOffset = resolveOffset(options.sideOffset, offsetData);
     const resolvedAlignOffset = resolveOffset(options.alignOffset, offsetData);
 
-    // Use forceSide when provided (scroll updates) to prevent oscillation.
     const actualSide = options.forceSide ?? resolveCollision(
         physicalSide,
         anchorRect,
@@ -695,6 +645,7 @@ function computePosition(
     );
 
     const basePos = getBasePosition(anchorRect, floatingSize, actualSide, resolvedSideOffset);
+
     const alignedPos = applyAlignment(
         basePos,
         anchorRect,
@@ -704,9 +655,10 @@ function computePosition(
         resolvedAlignOffset
     );
 
-    const stickyPos = options.sticky
-        ? applySticky(alignedPos, floatingSize, collisionRect, padding, anchorRect, actualSide)
-        : alignedPos;
+    const stickyPos =
+        options.sticky
+            ? applySticky(alignedPos, floatingSize, collisionRect, padding, anchorRect, actualSide)
+            : alignedPos;
 
     const { x, y, actualAlign } = resolveAlignCollision(
         stickyPos,
@@ -738,215 +690,201 @@ function computePosition(
         availableWidth,
         availableHeight,
         transformOrigin: getTransformOrigin(actualSide, actualAlign),
-    };
+    }
 }
 
 // ---------------------------------------------------------------------------------------------------- //
 
-const Positioner = forwardRef<HTMLDivElement, PositionerProps>(function Positioner(
-    {
-        anchor,
-        enabled = true,
+const Positioner = forwardRef<HTMLDivElement, PositionerProps>(
+    function Positioner(
+        {
+            anchor,
+            enabled = true,
 
-        side = "bottom",
-        sideOffset = 4,
-        align = "start",
-        alignOffset = 0,
+            side = "bottom",
+            sideOffset = 4,
+            align = "start",
+            alignOffset = 0,
 
-        collisionAvoidance = { side: "flip", align: "shift" },
-        collisionBoundary = "clipping-ancestors",
-        collisionPadding = 8,
+            collisionAvoidance = { side: "flip", align: "shift" },
+            collisionBoundary = "clipping-ancestors",
+            collisionPadding = 8,
 
-        sticky = false,
-        positionMethod = "fixed",
-        disableAnchorTracking = false,
+            sticky = false,
+            positionMethod = "fixed",
+            disableAnchorTracking = false,
 
-        children,
-        className,
-        style,
-        zIndex = 50,
-    },
-    ref
-) {
-    const [result, setResult] = useState<PositionResult | null>(null);
-    const floatingRef = useRef<HTMLDivElement | null>(null);
+            children,
+            className,
+            style,
+            zIndex = 50,
+        },
+        ref
+    ) {
+        const [result, setResult] = useState<PositionResult | null>(null);
 
-    // Stores the resolved physical side so scroll updates don't re-run flip logic
-    // (which would oscillate when both sides overflow).
-    const resolvedSideRef = useRef<PhysicalSide | null>(null);
+        const floatingRef = useRef<HTMLDivElement | null>(null);
+        const resolvedSideRef = useRef<PhysicalSide | null>(null);
 
-    // Keep latest prop values in a ref so callbacks never need to be recreated
-    // when object-valued props change identity (e.g. inline object literals).
-    const optionsRef = useRef({
-        anchor,
-        enabled,
-        side,
-        sideOffset,
-        align,
-        alignOffset,
-        collisionAvoidance,
-        collisionBoundary,
-        collisionPadding,
-        sticky,
-        positionMethod,
-    });
-    optionsRef.current = {
-        anchor,
-        enabled,
-        side,
-        sideOffset,
-        align,
-        alignOffset,
-        collisionAvoidance,
-        collisionBoundary,
-        collisionPadding,
-        sticky,
-        positionMethod,
-    };
-
-    // Full update: re-resolves the side (flip/shift decision) AND coordinates.
-    // Call this when the popup opens or when positioning props change.
-    const updateFull = useCallback(() => {
-        const floating = floatingRef.current;
-        const opts = optionsRef.current;
-        if (!floating || !opts.enabled) return;
-
-        const resolved = resolveAnchor(opts.anchor);
-        if (!resolved) return;
-
-        const pos = computePosition(resolved, floating, {
-            side: opts.side,
-            sideOffset: opts.sideOffset,
-            align: opts.align,
-            alignOffset: opts.alignOffset,
-            collisionAvoidance: opts.collisionAvoidance,
-            collisionBoundary: opts.collisionBoundary,
-            collisionPadding: opts.collisionPadding,
-            sticky: opts.sticky,
-            positionMethod: opts.positionMethod,
+        const optionsRef = useRef({
+            anchor,
+            enabled,
+            side,
+            sideOffset,
+            align,
+            alignOffset,
+            collisionAvoidance,
+            collisionBoundary,
+            collisionPadding,
+            sticky,
+            positionMethod,
         });
 
-        resolvedSideRef.current = pos.actualSide;
-        setResult(pos);
-    }, []);
-
-    // Scroll update: reuses the already-resolved side to prevent oscillation.
-    // Only x/y and overflow-dependent values are recomputed.
-    const updateScroll = useCallback(() => {
-        const floating = floatingRef.current;
-        const opts = optionsRef.current;
-        if (!floating || !opts.enabled) return;
-
-        const resolved = resolveAnchor(opts.anchor);
-        if (!resolved) return;
-
-        const pos = computePosition(resolved, floating, {
-            side: opts.side,
-            sideOffset: opts.sideOffset,
-            align: opts.align,
-            alignOffset: opts.alignOffset,
-            collisionAvoidance: opts.collisionAvoidance,
-            collisionBoundary: opts.collisionBoundary,
-            collisionPadding: opts.collisionPadding,
-            sticky: opts.sticky,
-            positionMethod: opts.positionMethod,
-            forceSide: resolvedSideRef.current ?? undefined,
-        });
-
-        setResult(pos);
-    }, []);
-
-    // Run a full update (including side resolution) whenever the popup opens or
-    // positioning props change. useEffect fires after paint, so the floating
-    // element has real dimensions from the browser's layout engine.
-    useEffect(() => {
-        if (!enabled) {
-            resolvedSideRef.current = null;
-            setResult(null);
-            return;
+        optionsRef.current = {
+            anchor,
+            enabled,
+            side,
+            sideOffset,
+            align,
+            alignOffset,
+            collisionAvoidance,
+            collisionBoundary,
+            collisionPadding,
+            sticky,
+            positionMethod,
         }
 
-        const floating = floatingRef.current;
-        if (!floating) return;
+        const updateFull = useCallback(() => {
+            const floating = floatingRef.current;
+            const opts = optionsRef.current;
+            if (!floating || !opts.enabled) return;
 
-        updateFull();
+            const resolved = resolveAnchor(opts.anchor);
+            if (!resolved) return;
 
-        // ResizeObserver catches the initial layout (first paint) and any
-        // subsequent content-driven size changes (e.g. dynamic item lists).
-        const ro = new ResizeObserver(() => updateFull());
-        ro.observe(floating);
+            const pos = computePosition(resolved, floating, {
+                side: opts.side,
+                sideOffset: opts.sideOffset,
+                align: opts.align,
+                alignOffset: opts.alignOffset,
+                collisionAvoidance: opts.collisionAvoidance,
+                collisionBoundary: opts.collisionBoundary,
+                collisionPadding: opts.collisionPadding,
+                sticky: opts.sticky,
+                positionMethod: opts.positionMethod,
+            });
 
-        return () => ro.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [enabled, updateFull, side, sideOffset, align, alignOffset, sticky]);
+            resolvedSideRef.current = pos.actualSide;
+            setResult(pos);
+        }, []);
 
-    // Scroll/resize listeners use updateScroll to preserve the resolved side.
-    useEffect(() => {
-        if (!enabled || disableAnchorTracking) return;
+        const updateScroll = useCallback(() => {
+            const floating = floatingRef.current;
+            const opts = optionsRef.current;
+            if (!floating || !opts.enabled) return;
 
-        window.addEventListener("scroll", updateScroll, { capture: true, passive: true });
-        window.addEventListener("resize", updateScroll, { passive: true });
+            const resolved = resolveAnchor(opts.anchor);
+            if (!resolved) return;
 
-        return () => {
-            window.removeEventListener("scroll", updateScroll, true);
-            window.removeEventListener("resize", updateScroll);
-        };
-    }, [enabled, disableAnchorTracking, updateScroll]);
+            const pos = computePosition(resolved, floating, {
+                side: opts.side,
+                sideOffset: opts.sideOffset,
+                align: opts.align,
+                alignOffset: opts.alignOffset,
+                collisionAvoidance: opts.collisionAvoidance,
+                collisionBoundary: opts.collisionBoundary,
+                collisionPadding: opts.collisionPadding,
+                sticky: opts.sticky,
+                positionMethod: opts.positionMethod,
+                forceSide: resolvedSideRef.current ?? undefined,
+            });
 
-    const setRefs = useCallback(
-        (node: HTMLDivElement | null) => {
+            setResult(pos);
+        }, []);
+
+        useEffect(() => {
+            if (!enabled) {
+                resolvedSideRef.current = null;
+                setResult(null);
+                return;
+            }
+
+            const floating = floatingRef.current;
+            if (!floating) return;
+
+            updateFull();
+
+            const observer = new ResizeObserver(() => updateFull());
+            observer.observe(floating);
+
+            return () => observer.disconnect();
+        }, [enabled, updateFull, side, sideOffset, align, alignOffset, sticky]);
+
+        useEffect(() => {
+            if (!enabled || disableAnchorTracking) return;
+
+            window.addEventListener("scroll", updateScroll, { capture: true, passive: true });
+            window.addEventListener("resize", updateScroll, { passive: true });
+
+            return () => {
+                window.removeEventListener("scroll", updateScroll, true);
+                window.removeEventListener("resize", updateScroll);
+            }
+        }, [enabled, disableAnchorTracking, updateScroll]);
+
+        const setRefs = useCallback((node: HTMLDivElement | null) => {
             floatingRef.current = node;
+
             if (typeof ref === "function") ref(node);
-            else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
-        },
-        [ref]
-    );
+            else if (ref) ref.current = node;
+        }, [ref]);
 
-    const isPositioned = result !== null;
+        const isPositioned = result !== null;
 
-    const positionStyle: CSSProperties = result
-        ? {
-              position: positionMethod,
-              top: `${result.y}px`,
-              left: `${result.x}px`,
-              ["--anchor-width" as string]: `${result.anchorWidth}px`,
-              ["--anchor-height" as string]: `${result.anchorHeight}px`,
-              ["--available-width" as string]: `${result.availableWidth}px`,
-              ["--available-height" as string]: `${result.availableHeight}px`,
-              ["--transform-origin" as string]: result.transformOrigin,
-          }
-        : {
-              // Keep at top:0 left:0 while hidden so the browser lays out the
-              // element and ResizeObserver fires with real dimensions.
-              position: positionMethod,
-              top: "0px",
-              left: "0px",
-          };
+        const positionStyle: CSSProperties = result
 
-    return (
-        <div
-            ref={setRefs}
-            className={className}
-            data-open={enabled ? "" : undefined}
-            data-closed={!enabled ? "" : undefined}
-            data-side={result?.actualSide}
-            data-align={result?.actualAlign}
-            data-anchor-hidden={result?.anchorHidden ? "" : undefined}
-            style={{
-                ...positionStyle,
-                zIndex,
-                visibility: isPositioned ? "visible" : "hidden",
-                ...style,
-            }}
-        >
-            {children}
-        </div>
-    );
-});
+            ? {
+                position: positionMethod,
+                top: `${result.y}px`,
+                left: `${result.x}px`,
+                ["--anchor-width" as string]: `${result.anchorWidth}px`,
+                ["--anchor-height" as string]: `${result.anchorHeight}px`,
+                ["--available-width" as string]: `${result.availableWidth}px`,
+                ["--available-height" as string]: `${result.availableHeight}px`,
+                ["--transform-origin" as string]: result.transformOrigin,
+            }
+
+            : {
+                position: positionMethod,
+                top: "0px",
+                left: "0px",
+            }
+
+        return (
+            <div data-ui="positioner"
+                ref={setRefs}
+                className={className}
+
+                data-open={enabled ? "" : undefined}
+                data-closed={!enabled ? "" : undefined}
+                data-side={result?.actualSide}
+                data-align={result?.actualAlign}
+                data-anchor-hidden={result?.anchorHidden ? "" : undefined}
+
+                style={{
+                    ...positionStyle,
+                    zIndex,
+                    visibility: isPositioned ? "visible" : "hidden",
+                    ...style,
+                }}
+            >
+                {children}
+            </div>
+        );
+    });
 
 Positioner.displayName = "Positioner";
 
 // ---------------------------------------------------------------------------------------------------- //
 
-export { Positioner };
-export type { PhysicalSide };
+export { Positioner }

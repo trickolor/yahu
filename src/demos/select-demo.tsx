@@ -107,7 +107,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectPositioner side="top">
+                                <SelectPositioner alignItemWithTrigger={false} side="top">
                                     <SelectContent>
                                         <SelectViewport>
                                             <SelectItem value="top"><SelectItemText>Top Side</SelectItemText><SelectItemIndicator /></SelectItem>
@@ -125,7 +125,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectPositioner side="bottom">
+                                <SelectPositioner alignItemWithTrigger={false} side="bottom">
                                     <SelectContent>
                                         <SelectViewport>
                                             <SelectItem value="bottom"><SelectItemText>Bottom Side</SelectItemText><SelectItemIndicator /></SelectItem>
@@ -143,7 +143,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectPositioner side="left">
+                                <SelectPositioner alignItemWithTrigger={false} side="left">
                                     <SelectContent>
                                         <SelectViewport>
                                             <SelectItem value="left"><SelectItemText>Left Side</SelectItemText><SelectItemIndicator /></SelectItem>
@@ -161,7 +161,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectPositioner side="right">
+                                <SelectPositioner alignItemWithTrigger={false} side="right">
                                     <SelectContent>
                                         <SelectViewport>
                                             <SelectItem value="right"><SelectItemText>Right Side</SelectItemText><SelectItemIndicator /></SelectItem>
@@ -184,7 +184,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectPositioner sideOffset={2}>
+                                <SelectPositioner alignItemWithTrigger={false} sideOffset={2}>
                                     <SelectContent>
                                         <SelectViewport>
                                             <SelectItem value="offset2"><SelectItemText>Side Offset: 2px</SelectItemText><SelectItemIndicator /></SelectItem>
@@ -202,7 +202,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectPositioner sideOffset={12}>
+                                <SelectPositioner alignItemWithTrigger={false} sideOffset={12}>
                                     <SelectContent>
                                         <SelectViewport>
                                             <SelectItem value="offset12"><SelectItemText>Side Offset: 12px</SelectItemText><SelectItemIndicator /></SelectItem>
@@ -220,7 +220,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectPositioner sideOffset={24}>
+                                <SelectPositioner alignItemWithTrigger={false} sideOffset={24}>
                                     <SelectContent>
                                         <SelectViewport>
                                             <SelectItem value="offset24"><SelectItemText>Side Offset: 24px</SelectItemText><SelectItemIndicator /></SelectItem>
@@ -243,7 +243,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectPositioner align="start">
+                                <SelectPositioner alignItemWithTrigger={false} align="start">
                                     <SelectContent className="min-w-32">
                                         <SelectViewport>
                                             <SelectItem value="start"><SelectItemText>Align: Start</SelectItemText><SelectItemIndicator /></SelectItem>
@@ -261,7 +261,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectPositioner align="center">
+                                <SelectPositioner alignItemWithTrigger={false} align="center">
                                     <SelectContent className="min-w-32">
                                         <SelectViewport>
                                             <SelectItem value="center"><SelectItemText>Align: Center</SelectItemText><SelectItemIndicator /></SelectItem>
@@ -279,7 +279,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectPositioner align="end">
+                                <SelectPositioner alignItemWithTrigger={false} align="end">
                                     <SelectContent className="min-w-32">
                                         <SelectViewport>
                                             <SelectItem value="end"><SelectItemText>Align: End</SelectItemText><SelectItemIndicator /></SelectItem>
@@ -302,7 +302,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectPositioner alignOffset={-10}>
+                                <SelectPositioner alignItemWithTrigger={false} alignOffset={-10}>
                                     <SelectContent>
                                         <SelectViewport>
                                             <SelectItem value="offset-10"><SelectItemText>Align Offset: -10px</SelectItemText><SelectItemIndicator /></SelectItem>
@@ -320,7 +320,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectPositioner alignOffset={0}>
+                                <SelectPositioner alignItemWithTrigger={false} alignOffset={0}>
                                     <SelectContent>
                                         <SelectViewport>
                                             <SelectItem value="offset0"><SelectItemText>Align Offset: 0px</SelectItemText><SelectItemIndicator /></SelectItem>
@@ -338,7 +338,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectPositioner alignOffset={10}>
+                                <SelectPositioner alignItemWithTrigger={false} alignOffset={10}>
                                     <SelectContent>
                                         <SelectViewport>
                                             <SelectItem value="offset10"><SelectItemText>Align Offset: 10px</SelectItemText><SelectItemIndicator /></SelectItem>
@@ -361,7 +361,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectPositioner sticky={false}>
+                                <SelectPositioner alignItemWithTrigger={false} sticky={false}>
                                     <SelectContent>
                                         <SelectViewport>
                                             <SelectItem value="no-sticky"><SelectItemText>Sticky: Off</SelectItemText><SelectItemIndicator /></SelectItem>
@@ -379,7 +379,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 <SelectTriggerIndicator />
                             </SelectTrigger>
                             <SelectPortal>
-                                <SelectPositioner sticky={true}>
+                                <SelectPositioner alignItemWithTrigger={false} sticky={true}>
                                     <SelectContent>
                                         <SelectViewport>
                                             <SelectItem value="sticky"><SelectItemText>Sticky: On</SelectItemText><SelectItemIndicator /></SelectItem>
@@ -404,7 +404,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                             <SelectPositioner>
                                 <SelectContent>
                                     <SelectScrollUpButton />
-                                    <SelectViewport className="max-h-64">
+                                    <SelectViewport>
                                         {Array.from({ length: 50 }, (_, i) => (
                                             <SelectItem key={`item${i + 1}`} value={`item${i + 1}`}>
                                                 <SelectItemText>{`Item ${i + 1}`}</SelectItemText>
@@ -436,6 +436,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 </SelectTrigger>
                                 <SelectPortal>
                                     <SelectPositioner
+                                        alignItemWithTrigger={false}
                                         collisionBoundary={collisionBoundary ?? undefined}
                                         collisionPadding={4}
                                     >
@@ -458,6 +459,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 </SelectTrigger>
                                 <SelectPortal>
                                     <SelectPositioner
+                                        alignItemWithTrigger={false}
                                         collisionBoundary={collisionBoundary ?? undefined}
                                         collisionPadding={16}
                                     >
@@ -480,6 +482,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 </SelectTrigger>
                                 <SelectPortal>
                                     <SelectPositioner
+                                        alignItemWithTrigger={false}
                                         collisionBoundary={collisionBoundary ?? undefined}
                                         collisionPadding={32}
                                     >
@@ -502,6 +505,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 </SelectTrigger>
                                 <SelectPortal>
                                     <SelectPositioner
+                                        alignItemWithTrigger={false}
                                         collisionBoundary={collisionBoundary ?? undefined}
                                         collisionPadding={{ top: 8, right: 16, bottom: 24, left: 32 }}
                                     >
@@ -535,7 +539,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                     <SelectTriggerIndicator />
                                 </SelectTrigger>
                                 <SelectPortal>
-                                    <SelectPositioner collisionBoundary={collisionBoundary2 ?? undefined}>
+                                    <SelectPositioner alignItemWithTrigger={false} collisionBoundary={collisionBoundary2 ?? undefined}>
                                         <SelectContent>
                                             <SelectScrollUpButton />
                                             <SelectViewport className="max-h-64">
@@ -558,7 +562,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                     <SelectTriggerIndicator />
                                 </SelectTrigger>
                                 <SelectPortal>
-                                    <SelectPositioner collisionBoundary={collisionBoundary2 ?? undefined}>
+                                    <SelectPositioner alignItemWithTrigger={false} collisionBoundary={collisionBoundary2 ?? undefined}>
                                         <SelectContent>
                                             <SelectScrollUpButton />
                                             <SelectViewport className="max-h-64">
@@ -581,7 +585,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                     <SelectTriggerIndicator />
                                 </SelectTrigger>
                                 <SelectPortal>
-                                    <SelectPositioner collisionBoundary={collisionBoundary2 ?? undefined}>
+                                    <SelectPositioner alignItemWithTrigger={false} collisionBoundary={collisionBoundary2 ?? undefined}>
                                         <SelectContent>
                                             <SelectScrollUpButton />
                                             <SelectViewport className="max-h-64">
@@ -619,6 +623,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 </SelectTrigger>
                                 <SelectPortal>
                                     <SelectPositioner
+                                        alignItemWithTrigger={false}
                                         collisionBoundary={collisionBoundary3 ?? undefined}
                                         className="[&[data-anchor-hidden]]:invisible"
                                     >
@@ -640,6 +645,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 </SelectTrigger>
                                 <SelectPortal>
                                     <SelectPositioner
+                                        alignItemWithTrigger={false}
                                         collisionBoundary={collisionBoundary3 ?? undefined}
                                         className="[&[data-anchor-hidden]]:invisible"
                                     >
@@ -661,6 +667,7 @@ export function SelectDemo({ quantity, setQuantity }: SelectDemoProps) {
                                 </SelectTrigger>
                                 <SelectPortal>
                                     <SelectPositioner
+                                        alignItemWithTrigger={false}
                                         collisionBoundary={collisionBoundary3 ?? undefined}
                                         className="[&[data-anchor-hidden]]:invisible"
                                     >

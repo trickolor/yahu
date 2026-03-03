@@ -14,6 +14,8 @@ import {
     type ReactNode,
     type RefObject,
     type Dispatch,
+    type ComponentPropsWithoutRef,
+    type CSSProperties,
 } from "react";
 
 import { createPortal } from "react-dom";
@@ -24,7 +26,6 @@ import {
     Positioner,
     type Side,
     type Align,
-    type VirtualElement,
 } from "@/ui/positioner";
 
 import { Slot } from "@/ui/slot";
@@ -49,7 +50,10 @@ const SelectActions = {
 
 type SelectAction = typeof SelectActions[keyof typeof SelectActions];
 
-const getSelectAction = (event: KeyboardEvent<HTMLButtonElement>, open: boolean): SelectAction => {
+const getSelectAction = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    open: boolean
+): SelectAction => {
     const { key, altKey, ctrlKey, metaKey } = event;
 
     const openKeys = ['ArrowDown', 'ArrowUp', 'Enter', ' '];
@@ -149,66 +153,89 @@ function selectStateReducer(state: SelectState, action: SelectStateAction): Sele
 
 // ---------------------------------------------------------------------------------------------------- //
 
-interface SelectContextState {
-    value: string;
+type ScrollRequestType = 'none' | 'center' | 'item-top' | 'ensure-visible' | 'edge-start' | 'edge-end';
+type ScrollRequest = { type: ScrollRequestType; targetIndex: number };
+
+interface SelectStableContextState {
     setValue: (value: string) => void;
-
-    open: boolean;
     setOpen: (open: boolean) => void;
-
-    disabled: boolean;
-
-    state: SelectState;
     dispatch: Dispatch<SelectStateAction>;
-
-    activeDescendant: string | null;
-
-    // For registering item labels
     registerItemLabel: (itemValue: string, textValue: string) => void;
+    triggerScroll: () => void;
 
     viewportRef: RefObject<HTMLDivElement | null>;
     triggerRef: RefObject<HTMLButtonElement | null>;
-    // positionerRef: the Positioner wrapper div (owns position styles)
     positionerRef: RefObject<HTMLDivElement | null>;
-    // contentRef: the inner content div (listbox role, outside-click target)
     contentRef: RefObject<HTMLDivElement | null>;
-
-    scrollRequestRef: RefObject<{
-        type: 'none' | 'center' | 'item-top' | 'ensure-visible' | 'edge-start' | 'edge-end';
-        targetIndex: number;
-    }>;
-
-    scrollTrigger: number;
-    triggerScroll: () => void;
-
-    // Written by SelectPositioner; read by Select to pick the right scroll type on open.
+    valueRef: RefObject<HTMLElement | null>;
+    selectedItemTextRef: RefObject<HTMLElement | null>;
+    scrollRequestRef: RefObject<ScrollRequest>;
     alignItemWithTriggerActiveRef: RefObject<boolean>;
 }
 
-const SelectContext = createContext<SelectContextState | null>(null);
+interface SelectReactiveContextState {
+    value: string;
+    open: boolean;
+    disabled: boolean;
+    state: SelectState;
+    activeDescendant: string | null;
+    scrollTrigger: number;
+}
+
+type SelectContextState =
+    & SelectStableContextState
+    & SelectReactiveContextState;
+
+const SelectStableContext = createContext<SelectStableContextState | null>(null);
+const SelectReactiveContext = createContext<SelectReactiveContextState | null>(null);
 
 function useSelectContext(): SelectContextState {
-    const context = useContext(SelectContext);
-    if (!context) throw new Error("useSelectContext must be used within a <Select> component");
-    return context;
+    const error = useCallback(() => {
+        throw new Error("useSelectContext must be used within a <Select> component");
+    }, []);
+
+    const stable = useContext(SelectStableContext);
+    if (!stable) error();
+
+    const reactive = useContext(SelectReactiveContext);
+    if (!reactive) error();
+
+    return { ...stable!, ...reactive! };
 }
 
 // ---------------------------------------------------------------------------------------------------- //
 
-interface SelectProps {
-    value?: string;
-    defaultValue?: string;
+interface SelectProps<V> { // todo the V generic
+    name?: string; // todo
+    id?: string; // todo
+
+    disabled?: boolean; // todo
+    required?: boolean; // todo
+    readOnly?: boolean; // todo
+    autoComplete?: string; // todo
+
+    inputRef?: RefObject<HTMLInputElement | null>; // todo
+
+    isItemEqualToValue?: (itemValue: V, selectedValue: V) => boolean; // todo
+    itemToStringLabel?: (itemValue: V) => string; // todo
+    itemToStringValue?: (itemValue: V) => string; // todo
+
+    highlightItemOnHover?: boolean; // todo
+
+    actionsRef?: RefObject<unknown | null>; // todo - we need to create imperative ref handling for unmount
+
+    items?:
+    | Record<string, ReactNode>
+    | Array<{ label: ReactNode, value: any }> // todo
+
+    value?: V;
+    defaultValue?: V;
     onValueChange?: (value: string) => void;
 
     defaultOpen?: boolean;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
-
-    dir?: "ltr" | "rtl";
-
-    name?: string;
-    disabled?: boolean;
-    required?: boolean;
+    onOpenChangeComplete?: (open: boolean) => void; // todo
 
     children?: ReactNode;
 }
@@ -219,6 +246,11 @@ function Select({
     disabled = false,
     children,
 }: SelectProps) {
+    const [scrollTrigger, setScrollTrigger] = useState(0);
+
+    const triggerScroll = useCallback(() => {
+        setScrollTrigger(prev => prev + 1);
+    }, []);
 
     const [valueState, setValue] = useControllableState({
         defaultValue: defaultValue ?? '',
@@ -232,52 +264,57 @@ function Select({
         value: open,
     });
 
-    const [state, dispatch] = useReducer(selectStateReducer, {
+    const defaultState = useMemo(() => ({
         textValue: null,
         cursor: -1,
         items: [],
         typeaheadValue: '',
         typeaheadTimeout: null,
         pendingCursorAction: null,
-    });
+    }), []);
+
+    const [state, dispatch] = useReducer(selectStateReducer, defaultState);
 
     const viewportRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
     const positionerRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
+    const valueRef = useRef<HTMLElement>(null);
+    const selectedItemTextRef = useRef<HTMLElement>(null);
 
-    const scrollRequestRef = useRef<{
-        type: 'none' | 'center' | 'item-top' | 'ensure-visible' | 'edge-start' | 'edge-end';
-        targetIndex: number;
-    }>({ type: 'none', targetIndex: -1 });
-
+    const scrollRequestRef = useRef<ScrollRequest>({ type: 'none', targetIndex: -1 });
     const alignItemWithTriggerActiveRef = useRef<boolean>(false);
 
-    const [scrollTrigger, setScrollTrigger] = useState(0);
-    const triggerScroll = useCallback(() => setScrollTrigger(prev => prev + 1), []);
 
     const activeDescendant = useMemo(() => {
-        return state.cursor >= 0 && state.cursor < state.items.length
-            ? state.items[state.cursor].id
-            : null;
+        if (state.cursor < 0 || state.cursor >= state.items.length) return null;
+        return state.items[state.cursor].id;
     }, [state.cursor, state.items]);
 
-    // Register item label - if it matches current value and textValue is null, set it
-    const registerItemLabel = useCallback((itemValue: string, textValue: string) => {
-        if (itemValue === valueState && state.textValue === null) {
+    const registerItemLabelImpl = useCallback((itemValue: string, textValue: string) => {
+        if (itemValue === valueState && state.textValue === null)
             dispatch({ type: 'SET_TEXT_VALUE', payload: textValue });
-        }
     }, [valueState, state.textValue, dispatch]);
 
+    const registerItemLabelRef = useRef(registerItemLabelImpl);
+    registerItemLabelRef.current = registerItemLabelImpl;
+
+    const registerItemLabel = useCallback((itemValue: string, textValue: string) => {
+        registerItemLabelRef.current(itemValue, textValue);
+    }, []);
+
     useEffect(() => {
-        if (!openState) {
-            dispatch({ type: 'CLEAR_TYPEAHEAD' });
-            dispatch({ type: 'SET_PENDING_CURSOR_ACTION', payload: null });
-        }
+        if (openState) return;
+        dispatch({ type: 'CLEAR_TYPEAHEAD' });
+        dispatch({ type: 'SET_PENDING_CURSOR_ACTION', payload: null });
     }, [openState]);
 
     useEffect(() => {
-        if (!openState || state.items.length === 0 || !state.pendingCursorAction) return;
+        if (
+            !openState
+            || state.items.length === 0
+            || !state.pendingCursorAction
+        ) return;
 
         if (state.pendingCursorAction === 'first') {
             scrollRequestRef.current = { type: 'edge-start', targetIndex: 0 }
@@ -295,50 +332,82 @@ function Select({
         else if (state.pendingCursorAction === 'default') {
             const currentIndex = state.items.findIndex(item => item.value === valueState);
             const initialCursor = currentIndex >= 0 ? currentIndex : 0;
-            const scrollType = alignItemWithTriggerActiveRef.current ? 'item-top' : 'center';
-            scrollRequestRef.current = { type: scrollType, targetIndex: initialCursor }
+
+            if (alignItemWithTriggerActiveRef.current)
+                scrollRequestRef.current = { type: 'none', targetIndex: -1 };
+
+            else {
+                scrollRequestRef.current = { type: 'center', targetIndex: initialCursor };
+                triggerScroll();
+            }
+
             dispatch({ type: 'SET_CURSOR', payload: initialCursor });
-            triggerScroll();
         }
 
         dispatch({ type: 'SET_PENDING_CURSOR_ACTION', payload: null });
     }, [openState, state.items.length, state.pendingCursorAction, valueState, triggerScroll]);
 
-    const context: SelectContextState = useMemo(() => ({
-        value: valueState,
+    const stableContextRef = useRef<SelectStableContextState | null>(null);
+
+    if (!stableContextRef.current) stableContextRef.current = {
         setValue,
-        open: openState,
         setOpen,
-        disabled,
-        state,
         dispatch,
-        activeDescendant,
+        triggerScroll,
         registerItemLabel,
         triggerRef,
         positionerRef,
         contentRef,
         viewportRef,
+        valueRef,
+        selectedItemTextRef,
         scrollRequestRef,
-        scrollTrigger,
-        triggerScroll,
         alignItemWithTriggerActiveRef,
-    }), [valueState, setValue, openState, setOpen, disabled, state, activeDescendant, registerItemLabel, scrollTrigger, triggerScroll]);
+    };
+
+    const reactiveContext = useMemo<SelectReactiveContextState>(() => ({
+        value: valueState,
+        open: openState,
+        disabled,
+        state,
+        activeDescendant,
+        scrollTrigger,
+    }), [valueState, openState, disabled, state, activeDescendant, scrollTrigger]);
 
     return (
-        <SelectContext.Provider data-ui="select" value={context}>
-            {children}
-        </SelectContext.Provider>
+        <SelectStableContext.Provider value={stableContextRef.current}>
+            <SelectReactiveContext.Provider value={reactiveContext}>
+                {children}
+            </SelectReactiveContext.Provider>
+        </SelectStableContext.Provider>
     );
 }
 
 // ---------------------------------------------------------------------------------------------------- //
 
-interface SelectTriggerProps extends HTMLAttributes<HTMLElement> {
+interface SelectTriggerProps {
+    disabled?: boolean;
+
+    className?: string;
+    style?: CSSProperties;
+    children?: ReactNode;
+
     asChild?: boolean;
 }
 
 function SelectTrigger({ className, children, asChild, ...props }: SelectTriggerProps) {
-    const { open, setOpen, state, dispatch, setValue, activeDescendant, triggerRef, scrollRequestRef, triggerScroll, disabled } = useSelectContext();
+    const {
+        open,
+        setOpen,
+        state,
+        dispatch,
+        setValue,
+        activeDescendant,
+        triggerRef,
+        scrollRequestRef,
+        triggerScroll,
+        disabled,
+    } = useSelectContext();
 
     const clickHandler = useCallback(() => {
         if (disabled) return;
@@ -530,8 +599,16 @@ function SelectTrigger({ className, children, asChild, ...props }: SelectTrigger
     return (
         <Component
             data-ui="select-trigger"
-            data-state={open ? "open" : "closed"}
-            data-disabled={disabled || undefined}
+
+            // todo - set these data attrs
+            data-content-open
+            data-pressed
+            data-disabled
+            data-readonly
+            data-required
+            data-valid
+            data-invalid
+            data-placeholder
 
             aria-activedescendant={activeDescendant || undefined}
             aria-haspopup="listbox"
@@ -548,7 +625,7 @@ function SelectTrigger({ className, children, asChild, ...props }: SelectTrigger
             tabIndex={disabled ? -1 : 0}
 
             className={cn(
-                'w-fit min-w-64 h-9 inline-flex items-center justify-between gap-2 px-3 py-2 rounded text-write border border-bound bg-surface transition-all',
+                'w-fit min-w-64 h-8 inline-flex items-center justify-between gap-2 px-3 py-2 rounded text-write border border-bound bg-surface transition-all',
                 'focus-visible:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outer-bound focus-visible:ring-offset-muted-bound focus-visible:ring-offset-1',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 className
@@ -563,13 +640,18 @@ function SelectTrigger({ className, children, asChild, ...props }: SelectTrigger
 
 // ---------------------------------------------------------------------------------------------------- //
 
-interface SelectValueProps extends HTMLAttributes<HTMLElement> {
+interface SelectValueProps {
     placeholder?: ReactNode;
+
+    className?: string;
+    style?: CSSProperties;
+    children?: ReactNode;
+
     asChild?: boolean;
 }
 
 function SelectValue({ className, children, placeholder, asChild, ...props }: SelectValueProps) {
-    const { state } = useSelectContext();
+    const { state, valueRef } = useSelectContext();
 
     const displayed = children ?? state.textValue ?? placeholder ?? '';
 
@@ -578,6 +660,11 @@ function SelectValue({ className, children, placeholder, asChild, ...props }: Se
     return (
         <Component
             data-ui="select-value"
+
+            // todo - set this data attr
+            data-placeholder
+
+            ref={valueRef}
 
             className={cn(
                 'text-sm font-medium text-write overflow-hidden truncate',
@@ -603,6 +690,9 @@ function SelectTriggerIndicator({ className, asChild, children, ...props }: Sele
     return (
         <Component
             data-ui="select-trigger-indicator"
+
+            // todo - set this data attr
+            data-content-open
 
             aria-hidden
 
@@ -637,6 +727,28 @@ function SelectTriggerIndicator({ className, asChild, children, ...props }: Sele
 
 // ---------------------------------------------------------------------------------------------------- //
 
+interface SelectBackdropProps {
+    className?: string;
+    style?: CSSProperties;
+    children?: ReactNode;
+    asChild?: boolean;
+}
+
+function SelectBackdrop({ className, children, asChild, ...props }: SelectBackdropProps) {
+    // Todo - properly create this component, will have data-open data-closed data-animation-in data-animation-out
+}
+
+// ---------------------------------------------------------------------------------------------------- //
+
+// TODO (!) - we will create a separate portal component in portal.tsx, 
+// will have: container prop set to: 
+// | HTMLElement
+// | ShadowRoot
+// | React.RefObject<HTMLElement | ShadowRoot | null>
+// | null
+// | undefined
+// + className, style, asChild and children 
+
 interface SelectPortalProps { container?: HTMLElement; children?: ReactNode }
 
 function SelectPortal({ container, children }: SelectPortalProps) {
@@ -645,13 +757,7 @@ function SelectPortal({ container, children }: SelectPortalProps) {
 
 // ---------------------------------------------------------------------------------------------------- //
 
-// Returns whether alignItemWithTrigger mode should be active (not in fallback).
-// Checks touch input and viewport edge proximity only — space check happens
-// after the positioner is sized, inside SelectContent's scroll logic.
-function shouldAlignItemWithTrigger(
-    triggerEl: HTMLButtonElement,
-    minHeight: number
-): boolean {
+function shouldAlignItemWithTrigger(triggerEl: HTMLButtonElement, minHeight: number): boolean {
     const triggerRect = triggerEl.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
 
@@ -663,14 +769,15 @@ function shouldAlignItemWithTrigger(
 
 // ---------------------------------------------------------------------------------------------------- //
 
-interface SelectPositionerProps extends Omit<React.ComponentPropsWithoutRef<typeof Positioner>, 'anchor' | 'enabled'> {
+interface SelectPositionerProps extends
+    Omit<ComponentPropsWithoutRef<typeof Positioner>, 'anchor' | 'enabled'> {
     alignItemWithTrigger?: boolean;
 }
 
 function SelectPositioner({
     alignItemWithTrigger = true,
     side = "bottom",
-    sideOffset = 0,
+    sideOffset = 2,
     align = "start",
     alignOffset = 0,
     collisionAvoidance,
@@ -685,25 +792,32 @@ function SelectPositioner({
     children,
     ...props
 }: SelectPositionerProps) {
-    const { open, triggerRef, positionerRef, alignItemWithTriggerActiveRef } = useSelectContext();
     const [pointerType, setPointerType] = useState<string>("mouse");
+
+    const {
+        open,
+        triggerRef,
+        positionerRef,
+        alignItemWithTriggerActiveRef,
+    } = useSelectContext();
 
     useEffect(() => {
         const trigger = triggerRef.current;
         if (!trigger) return;
+
         const handler = (e: PointerEvent) => setPointerType(e.pointerType);
         trigger.addEventListener("pointerdown", handler);
+
         return () => trigger.removeEventListener("pointerdown", handler);
     }, [triggerRef]);
 
-    // Resolve the minimum height for the align mode from the positioner's CSS min-height.
-    // Defaults to 80px if not set.
     const minHeight = useMemo(() => {
         const el = positionerRef.current;
         if (!el) return 80;
+
         const parsed = parseFloat(getComputedStyle(el).minHeight);
         return isNaN(parsed) ? 80 : parsed;
-    }, [positionerRef, open]); // re-read when open changes so the element is mounted
+    }, [positionerRef, open]);
 
     const alignActive =
         alignItemWithTrigger &&
@@ -712,45 +826,53 @@ function SelectPositioner({
         !!triggerRef.current &&
         shouldAlignItemWithTrigger(triggerRef.current, minHeight);
 
-    // Keep the ref in sync so Select's scroll logic can read it synchronously.
     alignItemWithTriggerActiveRef.current = alignActive;
 
-    // When align mode is active, use a VirtualElement whose getBoundingClientRect
-    // returns a zero-height rect at triggerRect.top. With side="bottom" sideOffset=0
-    // the positioner's top edge lands exactly at triggerRect.top.
-    // The target item is then scrolled to the top of the viewport by SelectContent.
-    const virtualAnchor = useMemo<VirtualElement | null>(() => {
-        if (!alignActive || !triggerRef.current) return null;
-        const trigger = triggerRef.current;
-        return {
-            getBoundingClientRect(): DOMRect {
-                const r = trigger.getBoundingClientRect();
-                return DOMRect.fromRect({ x: r.left, y: r.top, width: r.width, height: 0 });
-            },
-            contextElement: trigger,
-        };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [alignActive]);
+    if (alignActive) {
+        return (
+            <div data-ui="select-positioner"
+                ref={positionerRef}
+                className={className}
+                data-align-mode="item"
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    visibility: 'hidden',
+                    zIndex,
+                    ...style,
+                }}
+                {...props}
+            >
+                {children}
+            </div>
+        );
+    }
 
     return (
-        <Positioner
-            anchor={virtualAnchor ?? triggerRef}
-            enabled={open}
-            side={alignActive ? "bottom" : side}
-            align={alignActive ? "start" : align}
-            sideOffset={alignActive ? 0 : sideOffset}
-            alignOffset={alignActive ? 0 : alignOffset}
-            collisionAvoidance={alignActive ? { side: "none", align: "none" } : collisionAvoidance}
-            collisionBoundary={collisionBoundary}
-            collisionPadding={collisionPadding}
-            sticky={alignActive ? false : sticky}
-            positionMethod={positionMethod}
-            disableAnchorTracking={disableAnchorTracking}
+        <Positioner data-ui="select-positioner"
             ref={positionerRef}
             className={className}
-            style={style}
             zIndex={zIndex}
-            data-align-mode={alignActive ? "item" : undefined}
+            style={style}
+
+            disableAnchorTracking={disableAnchorTracking}
+            anchor={triggerRef}
+            enabled={open}
+
+            side={side}
+            sideOffset={sideOffset}
+
+            align={align}
+            alignOffset={alignOffset}
+
+            collisionAvoidance={collisionAvoidance}
+            collisionBoundary={collisionBoundary}
+            collisionPadding={collisionPadding}
+
+            sticky={sticky}
+            positionMethod={positionMethod}
+
             {...props}
         >
             {children}
@@ -760,8 +882,15 @@ function SelectPositioner({
 
 // ---------------------------------------------------------------------------------------------------- //
 
+type InteractionType = 'mouse' | 'keyboard' | 'touch' | 'pen';
+
 interface SelectContentProps extends HTMLAttributes<HTMLElement> {
     asChild?: boolean;
+
+    finalFocus?:
+    | boolean
+    | React.RefObject<HTMLElement | null>
+    | ((closeType: InteractionType,) => boolean | void | HTMLElement | null)
 
     onEscapeKeyDown?: (event: React.KeyboardEvent) => void;
     onPointerDownOutside?: (event: PointerEvent) => void;
@@ -784,19 +913,25 @@ function SelectContent({
 
     ...props
 }: SelectContentProps) {
-    const { open, setOpen, triggerRef, positionerRef, contentRef, viewportRef, scrollRequestRef, scrollTrigger, state, dispatch } = useSelectContext();
+    const {
+        open, setOpen, value, triggerRef, positionerRef, contentRef, viewportRef,
+        scrollRequestRef, scrollTrigger, state, dispatch,
+        valueRef, selectedItemTextRef, alignItemWithTriggerActiveRef,
+    } = useSelectContext();
 
-    // Collection pass: mount invisibly on first render to collect item labels, then unmount
     const [hasCollected, setHasCollected] = useState(false);
     const isCollectionPass = !hasCollected && !open;
 
     const [isMounted, setIsMounted] = useState(open || isCollectionPass);
     const lastProcessedRef = useRef<{ trigger: number; positioned: boolean }>({ trigger: 0, positioned: false });
 
-    // isPositioned: true once the Positioner wrapper has been placed (visibility flips to visible)
     const [isPositioned, setIsPositioned] = useState(false);
+    const initialPlacedRef = useRef(false);
+
+    const originalPositionerStylesRef = useRef<Record<string, string>>({});
 
     useLayoutEffect(() => {
+        if (alignItemWithTriggerActiveRef.current) return;
         const el = positionerRef.current;
         if (!el) return;
         const observer = new MutationObserver(() => {
@@ -804,7 +939,78 @@ function SelectContent({
         });
         observer.observe(el, { attributes: true, attributeFilter: ["style"] });
         return () => observer.disconnect();
-    }, [positionerRef]);
+    }, [positionerRef, alignItemWithTriggerActiveRef, open]);
+
+    useLayoutEffect(() => {
+        if (!open || !alignItemWithTriggerActiveRef.current) return;
+
+        const positioner = positionerRef.current;
+        const trigger = triggerRef.current;
+        const content = contentRef.current;
+        const scroller = viewportRef.current || contentRef.current;
+
+        if (!positioner || !trigger || !content || !scroller) return;
+        if (state.items.length === 0) return;
+
+        queueMicrotask(() => {
+            const selectedIndex = state.items.findIndex(item => item.value === value);
+            const targetIndex = selectedIndex >= 0 ? selectedIndex : 0;
+            const targetItem = state.items[targetIndex]?.element;
+            if (!targetItem) return;
+
+            let textElement: HTMLElement | null = selectedItemTextRef.current;
+            if (!textElement) {
+                textElement = targetItem.querySelector('[data-ui="select-item-text"]');
+            }
+            const valueElement = valueRef.current;
+
+            const triggerRect = trigger.getBoundingClientRect();
+
+            let desiredTop: number;
+            let desiredLeft: number;
+
+            if (textElement && valueElement) {
+                const textRect = textElement.getBoundingClientRect();
+                const valueRect = valueElement.getBoundingClientRect();
+                desiredTop = valueRect.top - textRect.top;
+                desiredLeft = valueRect.left - textRect.left;
+            } else {
+                const itemRect = targetItem.getBoundingClientRect();
+                desiredTop = triggerRect.top - itemRect.top;
+                desiredLeft = triggerRect.left - itemRect.left;
+            }
+
+            const vpW = document.documentElement.clientWidth;
+            const vpH = document.documentElement.clientHeight;
+            const posW = positioner.offsetWidth;
+            const posH = positioner.offsetHeight;
+            const pad = 8;
+
+            const clampedLeft = Math.max(pad, Math.min(desiredLeft, vpW - posW - pad));
+            let clampedTop = Math.max(pad, Math.min(desiredTop, vpH - posH - pad));
+
+            if (posH > vpH - 2 * pad) clampedTop = pad;
+
+            const topShift = clampedTop - desiredTop;
+            if (topShift !== 0) {
+                scroller.scrollTop = Math.max(0, scroller.scrollTop + topShift);
+            }
+
+            originalPositionerStylesRef.current = {
+                top: positioner.style.top,
+                left: positioner.style.left,
+                visibility: positioner.style.visibility,
+            };
+
+            positioner.style.top = `${clampedTop}px`;
+            positioner.style.left = `${clampedLeft}px`;
+            positioner.style.visibility = 'visible';
+
+            scrollRequestRef.current = { type: 'none', targetIndex: -1 };
+            setIsPositioned(true);
+            initialPlacedRef.current = true;
+        });
+    }, [open, value, state.items.length, positionerRef, triggerRef, contentRef, viewportRef, selectedItemTextRef, valueRef, alignItemWithTriggerActiveRef, scrollRequestRef]);
 
     useLayoutEffect(() => {
         if (!open || !isPositioned) return;
@@ -827,13 +1033,7 @@ function SelectContent({
         if (type === 'edge-start') viewport.scrollTo({ top: 0, behavior: 'instant' });
         else if (type === 'edge-end') viewport.scrollTo({ top: viewport.scrollHeight - viewport.clientHeight, behavior: 'instant' });
 
-        else if (type === 'item-top') {
-            // Scroll so the target item's top edge is at the top of the viewport.
-            // Used with alignItemWithTrigger so the item aligns with the positioner top = trigger top.
-            viewport.scrollTo({ top: element.offsetTop, behavior: 'instant' });
-        }
-
-        else if (type === 'center') {
+        else if (type === 'item-top' || type === 'center') {
             const elementRect = element.getBoundingClientRect();
             const viewportRect = viewport.getBoundingClientRect();
             const elementTop = elementRect.top - viewportRect.top + viewport.scrollTop;
@@ -863,12 +1063,23 @@ function SelectContent({
     }, [open, isPositioned, scrollTrigger, state.items, scrollRequestRef, viewportRef]);
 
     useEffect(() => {
-        if (!open) lastProcessedRef.current = { trigger: 0, positioned: false };
-    }, [open]);
+        if (!open) {
+            lastProcessedRef.current = { trigger: 0, positioned: false };
+            initialPlacedRef.current = false;
+            setIsPositioned(false);
+
+            const positioner = positionerRef.current;
+            const content = contentRef.current;
+            if (positioner && Object.keys(originalPositionerStylesRef.current).length > 0) {
+                Object.assign(positioner.style, originalPositionerStylesRef.current);
+                originalPositionerStylesRef.current = {};
+            }
+            if (content) content.style.height = '';
+        }
+    }, [open, positionerRef, contentRef]);
 
     useEffect(() => { if (open) setIsMounted(true); }, [open]);
 
-    // End collection pass after one frame (items have registered via useLayoutEffect)
     useLayoutEffect(() => {
         if (isCollectionPass) {
             setHasCollected(true);
@@ -953,7 +1164,14 @@ function SelectContent({
     return (
         <Component
             data-ui="select-content"
-            data-state={open ? "open" : "closed"}
+
+            // todo - set these data attrs
+            data-open
+            data-closed
+            data-align
+            data-side
+            data-animation-in
+            data-animation-out
 
             role="listbox"
 
@@ -973,8 +1191,10 @@ function SelectContent({
 
             className={cn(
                 'min-w-64 w-fit rounded border border-bound bg-surface shadow flex flex-col',
-                "data-[state='open']:animate-in data-[state='open']:zoom-in-95 data-[state='open']:fade-in-0",
-                "data-[state='closed']:animate-out data-[state='closed']:zoom-out-95 data-[state='closed']:fade-out-0",
+                "data-[state='open']:animate-in data-[state='open']:fade-in-0",
+                "data-[state='closed']:animate-out data-[state='closed']:fade-out-0",
+                !alignItemWithTriggerActiveRef.current && "data-[state='open']:zoom-in-95",
+                !alignItemWithTriggerActiveRef.current && "data-[state='closed']:zoom-out-95",
                 "[[data-side=bottom]_&]:slide-in-from-top-2",
                 "[[data-side=left]_&]:slide-in-from-right-2",
                 "[[data-side=right]_&]:slide-in-from-left-2",
@@ -991,7 +1211,10 @@ function SelectContent({
 
 // ---------------------------------------------------------------------------------------------------- //
 
-interface SelectViewportProps extends HTMLAttributes<HTMLElement> {
+interface SelectViewportProps {
+    className?: string;
+    style?: CSSProperties;
+    children?: ReactNode;
     asChild?: boolean;
 }
 
@@ -1036,10 +1259,15 @@ function useSelectItemContext(): SelectItemContextState {
 
 // ---------------------------------------------------------------------------------------------------- //
 
-interface SelectItemProps extends HTMLAttributes<HTMLElement> {
-    value?: string;
+interface SelectItemProps {
+    className?: string;
+    style?: CSSProperties;
+    children?: ReactNode;
+
+    label?: string; // instead of textValue
+    value?: any;
+
     disabled?: boolean;
-    textValue?: string;
     asChild?: boolean;
 }
 
@@ -1115,9 +1343,10 @@ function SelectItem({ children, className, value, disabled, textValue, asChild, 
         <SelectItemContext.Provider value={context}>
             <Component
                 data-ui="select-item"
-                data-state={selected ? 'checked' : 'unchecked'}
-                data-highlighted={highlighted}
-                data-disabled={disabled}
+
+                data-selected
+                data-highlighted
+                data-disabled
 
                 aria-selected={selected}
                 aria-disabled={disabled}
@@ -1149,13 +1378,21 @@ function SelectItem({ children, className, value, disabled, textValue, asChild, 
 
 // ---------------------------------------------------------------------------------------------------- //
 
-interface SelectItemTextProps extends HTMLAttributes<HTMLElement> {
-    children?: string;
+interface SelectItemTextProps {
+    className?: string;
+    style?: CSSProperties;
+    children?: ReactNode;
     asChild?: boolean;
 }
 
 function SelectItemText({ className, children, asChild, ...props }: SelectItemTextProps) {
-    const { textElementRef } = useSelectItemContext();
+    const { textElementRef, selected } = useSelectItemContext();
+    const { selectedItemTextRef } = useSelectContext();
+
+    const setRef = useCallback((node: HTMLElement | null) => {
+        if (typeof textElementRef === 'object' && textElementRef) textElementRef.current = node;
+        if (selected) selectedItemTextRef.current = node;
+    }, [textElementRef, selected, selectedItemTextRef]);
 
     const Component = asChild ? Slot : 'span';
 
@@ -1163,7 +1400,7 @@ function SelectItemText({ className, children, asChild, ...props }: SelectItemTe
         <Component
             data-ui="select-item-text"
 
-            ref={textElementRef}
+            ref={setRef}
 
             className={cn(
                 'flex-1 truncate',
@@ -1179,7 +1416,11 @@ function SelectItemText({ className, children, asChild, ...props }: SelectItemTe
 
 // ---------------------------------------------------------------------------------------------------- //
 
-interface SelectItemIndicatorProps extends HTMLAttributes<HTMLElement> {
+interface SelectItemIndicatorProps {
+    className?: string;
+    style?: CSSProperties;
+    children?: ReactNode;
+    keepMounted?: boolean; // todo
     asChild?: boolean;
 }
 
@@ -1237,7 +1478,10 @@ function useSelectGroupContext(): SelectGroupContextState {
 
 // ---------------------------------------------------------------------------------------------------- //
 
-interface SelectGroupProps extends HTMLAttributes<HTMLElement> {
+interface SelectGroupProps {
+    className?: string;
+    style?: CSSProperties;
+    children?: ReactNode;
     asChild?: boolean;
 }
 
@@ -1276,7 +1520,10 @@ function SelectGroup({ children, className, asChild, ...props }: SelectGroupProp
 
 // ---------------------------------------------------------------------------------------------------- //
 
-interface SelectLabelProps extends HTMLAttributes<HTMLElement> {
+interface SelectLabelProps {
+    className?: string;
+    style?: CSSProperties;
+    children?: ReactNode;
     asChild?: boolean;
 }
 
@@ -1307,7 +1554,11 @@ function SelectLabel({ children, className, asChild, ...props }: SelectLabelProp
 
 // ---------------------------------------------------------------------------------------------------- //
 
-interface SelectSeparatorProps extends HTMLAttributes<HTMLElement> {
+interface SelectSeparatorProps {
+    className?: string;
+    style?: CSSProperties;
+    children?: ReactNode;
+    orientation?: 'horizontal' | 'vertical';
     asChild?: boolean;
 }
 
@@ -1317,6 +1568,8 @@ function SelectSeparator({ className, children, asChild, ...props }: SelectSepar
     return (
         <Component
             data-ui="select-separator"
+
+
 
             aria-orientation="horizontal"
             role="separator"
@@ -1335,7 +1588,10 @@ function SelectSeparator({ className, children, asChild, ...props }: SelectSepar
 
 // ---------------------------------------------------------------------------------------------------- //
 
-interface ScrollUpButtonProps extends HTMLAttributes<HTMLElement> {
+interface ScrollUpButtonProps {
+    className?: string;
+    style?: CSSProperties;
+    children?: ReactNode;
     asChild?: boolean;
 }
 
@@ -1383,6 +1639,13 @@ function SelectScrollUpButton({ className, asChild, children, ...props }: Scroll
     return (
         <Component
             data-ui="select-scroll-up-button"
+
+            // todo - set these data attrs
+            data-direction
+            data-side
+            data-visible
+            data-animation-in
+            data-animation-out
 
             onMouseEnter={startScrolling}
             onMouseLeave={stopScrolling}
